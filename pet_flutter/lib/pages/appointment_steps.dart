@@ -708,12 +708,27 @@ class _DateTimeStepState extends State<DateTimeStep> {
   // Initialize SignalR connection
   Future<void> _initializeSignalR() async {
     try {
+      print('🔌 [DEBUG] Starting SignalR initialization...');
       final success = await _signalRService.initialize();
+      print('🔌 [DEBUG] SignalR initialize result: $success');
+      
       if (success) {
+        setState(() {
+          _signalRConnected = true;
+        });
         _setupSignalRListeners();
+        print('✅ [DEBUG] SignalR initialized and listeners setup');
+      } else {
+        setState(() {
+          _signalRConnected = false;
+        });
+        print('❌ [DEBUG] SignalR initialization failed');
       }
     } catch (e) {
       print('❌ Failed to initialize SignalR: $e');
+      setState(() {
+        _signalRConnected = false;
+      });
     }
   }
 
@@ -721,44 +736,81 @@ class _DateTimeStepState extends State<DateTimeStep> {
   void _setupSignalRListeners() {
     // Listen for connection status changes
     _connectionStatusSubscription = _signalRService.connectionStatusStream.listen((isConnected) {
+      print('🔌 [DEBUG] SignalR connection status changed: $isConnected');
       setState(() {
         _signalRConnected = isConnected;
       });
       
       if (isConnected && _currentRoomKey != null) {
         // Rejoin room after reconnection
+        print('🔄 [DEBUG] Rejoining room after reconnection: $_currentRoomKey');
         _signalRService.joinTimeSlotRoom(_currentRoomKey!);
+      }
+      
+      if (isConnected) {
+        // Try to join room if we have all required data
+        _joinSignalRRoom();
       }
     });
 
     // Listen for other users selecting slots
     _slotSelectedSubscription = _signalRService.timeSlotSelectedStream.listen((event) {
+      print('🔔 [DEBUG] Received TimeSlotSelected: ${event.timeSlot} by ${event.userName}');
+      print('🔔 [DEBUG] Current room: $_currentRoomKey');
+      print('🔔 [DEBUG] Event room: ${event.roomKey}');
+      
       setState(() {
         _otherUsersSelections[event.timeSlot] = event;
       });
+      
+      print('🔔 [DEBUG] Total selections: ${_otherUsersSelections.length}');
       
       // Auto-clear after 15 seconds (same as web)
       Timer(const Duration(seconds: 15), () {
         setState(() {
           _otherUsersSelections.remove(event.timeSlot);
         });
+        print('⏰ [DEBUG] Auto-cleared ${event.timeSlot}');
       });
     });
 
     // Listen for other users clearing slots
     _slotClearedSubscription = _signalRService.timeSlotClearedStream.listen((event) {
+      print('🔕 [DEBUG] Received TimeSlotCleared: ${event.timeSlot}');
+      
       setState(() {
         _otherUsersSelections.remove(event.timeSlot);
       });
+      
+      print('🔕 [DEBUG] Total selections after clear: ${_otherUsersSelections.length}');
     });
   }
 
   // Join SignalR room when conditions are met
   Future<void> _joinSignalRRoom() async {
-    if (!_signalRConnected || 
-        widget.bookingData.selectedService == null || 
-        selectedStaff == null || 
-        selectedDate == null) {
+    print('🚪 [DEBUG] _joinSignalRRoom called');
+    print('🚪 [DEBUG] Connected: $_signalRConnected');
+    print('🚪 [DEBUG] Service: ${widget.bookingData.selectedService?.serviceId}');
+    print('🚪 [DEBUG] Staff: ${selectedStaff?.staffId}');
+    print('🚪 [DEBUG] Date: $selectedDate');
+    
+    if (!_signalRConnected) {
+      print('⚠️ [DEBUG] Cannot join room: Not connected');
+      return;
+    }
+    
+    if (widget.bookingData.selectedService == null) {
+      print('⚠️ [DEBUG] Cannot join room: No service selected');
+      return;
+    }
+    
+    if (selectedStaff == null) {
+      print('⚠️ [DEBUG] Cannot join room: No staff selected');
+      return;
+    }
+    
+    if (selectedDate == null) {
+      print('⚠️ [DEBUG] Cannot join room: No date selected');
       return;
     }
 
@@ -767,15 +819,25 @@ class _DateTimeStepState extends State<DateTimeStep> {
       staffId: selectedStaff!.staffId.toString(),
       date: selectedDate!.toIso8601String().split('T')[0],
     );
+    
+    print('🚪 [DEBUG] Generated room key: $roomKey');
+    print('🚪 [DEBUG] Current room key: $_currentRoomKey');
 
     if (_currentRoomKey != roomKey) {
       await _leaveCurrentRoom();
       
+      print('🚪 [DEBUG] Attempting to join room: $roomKey');
       final success = await _signalRService.joinTimeSlotRoom(roomKey);
       if (success) {
-        _currentRoomKey = roomKey;
+        setState(() {
+          _currentRoomKey = roomKey;
+        });
         print('✅ Joined SignalR room: $roomKey');
+      } else {
+        print('❌ Failed to join room: $roomKey');
       }
+    } else {
+      print('ℹ️ [DEBUG] Already in room: $roomKey');
     }
   }
 
@@ -792,24 +854,36 @@ class _DateTimeStepState extends State<DateTimeStep> {
 
   // Notify slot selection via SignalR
   Future<void> _notifySlotSelection(TimeSlot slot) async {
-    if (_currentRoomKey == null || !_signalRConnected) return;
+    if (_currentRoomKey == null || !_signalRConnected) {
+      print('⚠️ [DEBUG] Cannot notify: room=$_currentRoomKey, connected=$_signalRConnected');
+      return;
+    }
 
     final timeStr = '${slot.startTime.hour.toString().padLeft(2, '0')}:${slot.startTime.minute.toString().padLeft(2, '0')}';
+    
+    print('📤 [DEBUG] Broadcasting slot selection: $timeStr in room $_currentRoomKey');
     
     await _signalRService.notifyTimeSlotSelected(
       roomKey: _currentRoomKey!,
       timeSlot: timeStr,
-      serviceId: widget.bookingData.selectedService!.serviceId.toString(),
-      staffId: selectedStaff!.staffId.toString(),
+      serviceId: widget.bookingData.selectedService!.serviceId.toString(),  // Send as string - backend will accept it
+      staffId: selectedStaff!.staffId.toString(),  // Send as string - backend will accept it
       date: selectedDate!.toIso8601String().split('T')[0],
     );
+    
+    print('✅ [DEBUG] Broadcast complete for $timeStr');
   }
 
   // Notify slot deselection via SignalR
   Future<void> _notifySlotDeselection(TimeSlot slot) async {
-    if (_currentRoomKey == null || !_signalRConnected) return;
+    if (_currentRoomKey == null || !_signalRConnected) {
+      print('⚠️ [DEBUG] Cannot notify clear: room=$_currentRoomKey, connected=$_signalRConnected');
+      return;
+    }
 
     final timeStr = '${slot.startTime.hour.toString().padLeft(2, '0')}:${slot.startTime.minute.toString().padLeft(2, '0')}';
+    
+    print('📤 [DEBUG] Broadcasting slot clear: $timeStr');
     
     await _signalRService.notifyTimeSlotCleared(
       roomKey: _currentRoomKey!,
@@ -818,6 +892,8 @@ class _DateTimeStepState extends State<DateTimeStep> {
       staffId: selectedStaff!.staffId.toString(),
       date: selectedDate!.toIso8601String().split('T')[0],
     );
+    
+    print('✅ [DEBUG] Broadcast clear complete for $timeStr');
   }
 
   Widget _buildLegendItem(String icon, String label, Color color) {
@@ -905,22 +981,48 @@ class _DateTimeStepState extends State<DateTimeStep> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      // SignalR status indicator
-                      Row(
+                      // SignalR status indicator with room info
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            _signalRConnected ? Icons.wifi : Icons.wifi_off,
-                            size: 12,
-                            color: _signalRConnected ? Colors.green : Colors.grey,
+                          Row(
+                            children: [
+                              Icon(
+                                _signalRConnected ? Icons.wifi : Icons.wifi_off,
+                                size: 12,
+                                color: _signalRConnected ? Colors.green : Colors.grey,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _signalRConnected ? 'Real-time: Hoạt động' : 'Real-time: Tắt',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: _signalRConnected ? Colors.green : Colors.grey,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _signalRConnected ? 'Real-time: Hoạt động' : 'Real-time: Tắt',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: _signalRConnected ? Colors.green : Colors.grey,
+                          if (_currentRoomKey != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              'Room: $_currentRoomKey',
+                              style: const TextStyle(
+                                fontSize: 8,
+                                color: Colors.grey,
+                              ),
                             ),
-                          ),
+                          ],
+                          if (_otherUsersSelections.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              '${_otherUsersSelections.length} người khác đang chọn',
+                              style: const TextStyle(
+                                fontSize: 8,
+                                color: Colors.orange,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ],
@@ -1279,102 +1381,124 @@ class _DateTimeStepState extends State<DateTimeStep> {
                           await _notifySlotSelection(slot);
                         }
                       : null,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                    decoration: BoxDecoration(
-                      gradient: isSelected
-                          ? LinearGradient(
-                              colors: [
-                                Theme.of(context).colorScheme.primary,
-                                Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            )
-                          : LinearGradient(
-                              colors: [backgroundColor, backgroundColor],
-                            ),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isSelected 
-                            ? Theme.of(context).colorScheme.primary
-                            : borderColor,
-                        width: isSelected ? 3 : 2,
-                      ),
-                      boxShadow: [
-                        if (isSelected)
-                          BoxShadow(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
-                            blurRadius: 12,
-                            spreadRadius: 2,
-                          )
-                        else if (isBeingSelectedByOthers)
-                          BoxShadow(
-                            color: Colors.purple.withOpacity(0.3),
-                            blurRadius: 8,
-                            spreadRadius: 2,
-                          )
-                        else
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            blurRadius: 4,
-                            spreadRadius: 1,
+                  child: Stack(
+                    children: [
+                      // Main time slot card with pulse animation
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        decoration: BoxDecoration(
+                          gradient: isSelected
+                              ? LinearGradient(
+                                  colors: [
+                                    Theme.of(context).colorScheme.primary,
+                                    Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                )
+                              : LinearGradient(
+                                  colors: [backgroundColor, backgroundColor],
+                                ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected 
+                                ? Theme.of(context).colorScheme.primary
+                                : borderColor,
+                            width: isSelected ? 3 : 2,
                           ),
-                      ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: isEnabled && selectedStaff != null && !isBeingSelectedByOthers
-                            ? () async {
-                                // Notify deselection of previous slot
-                                if (selectedSlot != null) {
-                                  await _notifySlotDeselection(selectedSlot!);
-                                }
-                                
-                                setState(() { selectedSlot = slot; });
-                                widget.onChanged(
-                                  selectedDate!,
-                                  slot,
-                                  selectedStaff!,
-                                );
-                                
-                                // Notify selection of new slot
-                                await _notifySlotSelection(slot);
-                              }
-                            : null,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Enhanced Icon and Time
-                              Row(
+                          boxShadow: [
+                            if (isSelected)
+                              BoxShadow(
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                                blurRadius: 12,
+                                spreadRadius: 2,
+                              )
+                            else if (isBeingSelectedByOthers)
+                              BoxShadow(
+                                color: Colors.purple.withOpacity(0.3),
+                                blurRadius: 8,
+                                spreadRadius: 2,
+                              )
+                            else
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.1),
+                                blurRadius: 4,
+                                spreadRadius: 1,
+                              ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: isEnabled && selectedStaff != null && !isBeingSelectedByOthers
+                                ? () async {
+                                    // Notify deselection of previous slot
+                                    if (selectedSlot != null) {
+                                      await _notifySlotDeselection(selectedSlot!);
+                                    }
+                                    
+                                    setState(() { selectedSlot = slot; });
+                                    widget.onChanged(
+                                      selectedDate!,
+                                      slot,
+                                      selectedStaff!,
+                                    );
+                                    
+                                    // Notify selection of new slot
+                                    await _notifySlotSelection(slot);
+                                  }
+                                : null,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                              child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  if (statusIcon.isNotEmpty) ...[
-                                    Text(
-                                      statusIcon,
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: isSelected ? Colors.white : borderColor,
+                                  // Enhanced Icon and Time
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (statusIcon.isNotEmpty) ...[
+                                        Text(
+                                          statusIcon,
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: isSelected ? Colors.white : borderColor,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 2),
+                                      ],
+                                      Flexible(
+                                        child: Text(
+                                          slot.formattedTime,
+                                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: isSelected 
+                                                ? Colors.white
+                                                : borderColor,
+                                            fontSize: 10,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 2),
-                                  ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  // Enhanced Status
                                   Flexible(
                                     child: Text(
-                                      slot.formattedTime,
-                                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                        fontWeight: FontWeight.bold,
+                                      statusText,
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         color: isSelected 
-                                            ? Colors.white
+                                            ? Colors.white.withOpacity(0.9)
                                             : borderColor,
-                                        fontSize: 10,
+                                        fontSize: 7,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                       textAlign: TextAlign.center,
                                       maxLines: 1,
@@ -1383,28 +1507,47 @@ class _DateTimeStepState extends State<DateTimeStep> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 2),
-                              // Enhanced Status
-                              Flexible(
-                                child: Text(
-                                  statusText,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: isSelected 
-                                        ? Colors.white.withOpacity(0.9)
-                                        : borderColor,
-                                    fontSize: 7,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                      
+                      // User indicator badge (giống web - top-right corner)
+                      if (isBeingSelectedByOthers)
+                        Positioned(
+                          top: -4,
+                          right: -4,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.purple,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.purple.withOpacity(0.5),
+                                  blurRadius: 4,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.person,
+                              color: Colors.white,
+                              size: 12,
+                            ),
+                          ),
+                        ),
+                      
+                      // Pulse animation overlay cho slots being selected by others
+                      if (isBeingSelectedByOthers)
+                        Positioned.fill(
+                          child: _PulsingBorder(),
+                        ),
+                    ],
                   ),
                 );
               },
@@ -1521,9 +1664,9 @@ class ConfirmStep extends StatelessWidget {
             ),
           
           if (isComplete) ...[
-            // Ghi chú section
+            // Ghi chú section - Compact
             Container(
-              margin: const EdgeInsets.only(bottom: 24),
+              margin: const EdgeInsets.only(bottom: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1535,8 +1678,8 @@ class ConfirmStep extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   TextField(
-                controller: _notesController,
-                decoration: InputDecoration(
+                    controller: _notesController,
+                    decoration: InputDecoration(
                       hintText: 'Nhập ghi chú cho lịch hẹn (bắt buộc)',
                       prefixIcon: const Icon(Icons.note_add),
                       border: OutlineInputBorder(
@@ -1549,13 +1692,13 @@ class ConfirmStep extends StatelessWidget {
                       filled: true,
                       fillColor: Colors.grey.shade50,
                     ),
-                    maxLines: 3,
-                onChanged: (value) {
-                  bookingData.notes = value;
-                },
-              ),
+                    maxLines: 2,
+                    onChanged: (value) {
+                      bookingData.notes = value;
+                    },
+                  ),
                 ],
-            ),
+              ),
             ),
             // Enhanced Dịch vụ đã chọn
             AnimatedContainer(
@@ -1656,57 +1799,73 @@ class ConfirmStep extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Row(
+                    // Responsive service info cards
+                    Column(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                                Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                            ),
-                          ),
-                          child: Text(
-                            service.category,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.access_time, size: 16, color: Colors.blue.shade600),
-                              const SizedBox(width: 6),
-                              Text(
-                                '${service.duration} phút',
-                                style: TextStyle(
-                                  color: Colors.blue.shade600,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
+                        // First row - Category and Duration
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                      Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                                  ),
+                                ),
+                                child: Text(
+                                  service.category,
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 12),
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.access_time, size: 14, color: Colors.blue.shade600),
+                                    const SizedBox(width: 4),
+                                    Flexible(
+                                      child: Text(
+                                        '${service.duration} phút',
+                                        style: TextStyle(
+                                          color: Colors.blue.shade600,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        const Spacer(),
+                        const SizedBox(height: 12),
+                        // Second row - Price (full width)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
@@ -1714,7 +1873,7 @@ class ConfirmStep extends StatelessWidget {
                                 Colors.green.shade500,
                               ],
                             ),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.green.withOpacity(0.3),
@@ -1724,16 +1883,16 @@ class ConfirmStep extends StatelessWidget {
                             ],
                           ),
                           child: Row(
-                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.attach_money, size: 18, color: Colors.white),
-                              const SizedBox(width: 6),
+                              const Icon(Icons.attach_money, size: 20, color: Colors.white),
+                              const SizedBox(width: 8),
                               Text(
                                 '${service.price.toStringAsFixed(0)}₫',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                  fontSize: 18,
                                 ),
                               ),
                             ],
@@ -1745,9 +1904,9 @@ class ConfirmStep extends StatelessWidget {
                 ),
               ),
             ),
-            // Thông tin thú cưng
+            // Compact Summary Section
             Container(
-              margin: const EdgeInsets.only(bottom: 16),
+              margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
@@ -1763,8 +1922,8 @@ class ConfirmStep extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Pet Info Row
                     Row(
                       children: [
                         Container(
@@ -1773,73 +1932,32 @@ class ConfirmStep extends StatelessWidget {
                             color: Colors.orange.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(
-                            Icons.pets,
-                            color: Colors.orange,
-                            size: 20,
-                          ),
+                          child: const Icon(Icons.pets, color: Colors.orange, size: 20),
                         ),
                         const SizedBox(width: 12),
-                        Text(
-                          'Thông tin thú cưng',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange.shade700,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                pet.name,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '${pet.species} • ${pet.age ?? '-'} tuổi • ${pet.weight ?? '-'} kg',
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      pet.name,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      pet.species,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Icon(Icons.cake, size: 16, color: Colors.grey.shade600),
-                        const SizedBox(width: 8),
-                        Text('Tuổi: ${pet.age ?? '-'} tuổi'),
-                        const SizedBox(width: 24),
-                        Icon(Icons.monitor_weight, size: 16, color: Colors.grey.shade600),
-                        const SizedBox(width: 8),
-                    Text('Cân nặng: ${pet.weight ?? '-'} kg'),
-                  ],
-                ),
-                  ],
-                ),
-              ),
-            ),
-            
-            // Nhân viên thực hiện
-            Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                    // Staff Info Row
                     Row(
                       children: [
                         Container(
@@ -1848,63 +1966,33 @@ class ConfirmStep extends StatelessWidget {
                             color: Colors.green.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(
-                            Icons.person,
-                            color: Colors.green,
-                            size: 20,
-                          ),
+                          child: const Icon(Icons.person, color: Colors.green, size: 20),
                         ),
                         const SizedBox(width: 12),
-                        Text(
-                          'Nhân viên thực hiện',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green.shade700,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                staff.fullName,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              if (staff.specialization != null)
+                                Text(
+                                  staff.specialization!,
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      staff.fullName,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (staff.specialization != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        staff.specialization!,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            
-            // Thời gian hẹn
-            Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                    // Time Info Row
                     Row(
                       children: [
                         Container(
@@ -1913,44 +2001,26 @@ class ConfirmStep extends StatelessWidget {
                             color: Colors.purple.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(
-                            Icons.schedule,
-                            color: Colors.purple,
-                            size: 20,
-                          ),
+                          child: const Icon(Icons.schedule, color: Colors.purple, size: 20),
                         ),
                         const SizedBox(width: 12),
-                        Text(
-                          'Thời gian hẹn',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.purple.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Icon(Icons.calendar_today, size: 20, color: Colors.purple.shade600),
-                        const SizedBox(width: 12),
-                        Text(
-                          '${date != null ? '${date.day}/${date.month}/${date.year}' : '-'}',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-                    ),
-                    const SizedBox(height: 8),
-            Row(
-              children: [
-                        Icon(Icons.access_time, size: 20, color: Colors.purple.shade600),
-                        const SizedBox(width: 12),
-                        Text(
-                          slot.formattedTime,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${date != null ? '${date.day}/${date.month}/${date.year}' : '-'}',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                slot.formattedTime,
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -1959,20 +2029,13 @@ class ConfirmStep extends StatelessWidget {
                 ),
               ),
             ),
-            // Lưu ý quan trọng
+            // Compact Important Notes
             Container(
-              margin: const EdgeInsets.only(bottom: 24),
-              padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.only(bottom: 20),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                    Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                 ),
@@ -1983,7 +2046,7 @@ class ConfirmStep extends StatelessWidget {
                   Icon(
                     Icons.info_outline,
                     color: Theme.of(context).colorScheme.primary,
-                    size: 24,
+                    size: 20,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -1992,17 +2055,17 @@ class ConfirmStep extends StatelessWidget {
                       children: [
                         Text(
                           'Lưu ý quan trọng',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
                         Text(
-                          '• Vui lòng đến sớm 10-15 phút trước giờ hẹn\n• Nếu cần hủy hoặc đổi lịch, thông báo trước ít nhất 24 giờ\n• Mang theo giấy tờ tùy thân khi đến hẹn',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          '• Đến sớm 10-15 phút • Hủy/đổi lịch trước 24h • Mang theo CMND',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                            height: 1.5,
+                            height: 1.3,
                           ),
                         ),
                       ],
@@ -2109,6 +2172,54 @@ class ConfirmStep extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+// Widget for pulsing border animation (giống web)
+class _PulsingBorder extends StatefulWidget {
+  const _PulsingBorder({Key? key}) : super(key: key);
+
+  @override
+  State<_PulsingBorder> createState() => _PulsingBorderState();
+}
+
+class _PulsingBorderState extends State<_PulsingBorder> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: false);
+    
+    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.purple.withOpacity(0.7 - (_animation.value * 0.4)),
+              width: 2,
+            ),
+          ),
+        );
+      },
     );
   }
 }

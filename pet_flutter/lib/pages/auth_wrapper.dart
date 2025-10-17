@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import '../services/secure_storage.dart';
+import '../services/onesignal_service.dart';
 import 'root_nav.dart';
 import 'guest_navigation.dart';
 import 'staff_navigation.dart';
@@ -26,6 +28,20 @@ class _AuthWrapperState extends State<AuthWrapper> {
     try {
       final token = await _storage.readToken();
       final user = await _storage.readUser();
+      
+      // 🔔 Set OneSignal External User ID if user is logged in
+      if (user != null) {
+        try {
+          final userMap = jsonDecode(user);
+          final userId = userMap['userId']?.toString(); // Changed from 'id' to 'userId'
+          if (userId != null) {
+            await OneSignalService().setExternalUserId(userId);
+            print('🔔 [AuthWrapper] OneSignal External User ID set: $userId');
+          }
+        } catch (e) {
+          print('⚠️ [AuthWrapper] Failed to set OneSignal External User ID: $e');
+        }
+      }
       
       setState(() {
         _isAuthenticated = token != null && user != null;

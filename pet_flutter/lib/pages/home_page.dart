@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:lottie/lottie.dart';
 import 'package:pet_flutter/services/secure_storage.dart';
 import 'package:pet_flutter/pages/profile_page.dart';
 import 'package:pet_flutter/pages/reviews_page.dart';
@@ -21,6 +22,7 @@ class _HomePageState extends State<HomePage> {
   int? _userId;
   String? _token;
   bool _isLoading = true;
+  bool _hasShownWelcome = false;
 
   @override
   void initState() {
@@ -41,6 +43,16 @@ class _HomePageState extends State<HomePage> {
         _userId = (map['userId'] as num?)?.toInt();
         _isLoading = false;
       });
+      
+      // Show welcome animation after loading
+      if (!_hasShownWelcome && mounted) {
+        _hasShownWelcome = true;
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            _showWelcomeAnimation();
+          }
+        });
+      }
     } else {
       setState(() {
         _isLoading = false;
@@ -48,6 +60,97 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _showWelcomeAnimation() async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.6),
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Lottie animation
+                Lottie.asset(
+                  'assets/animations/congratulation.json',
+                  width: 200,
+                  height: 200,
+                  fit: BoxFit.contain,
+                  repeat: true,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Chào mừng bạn trở lại!',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  _username != null ? 'Xin chào, $_username!' : 'Xin chào!',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade800,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Chúc bạn có một ngày tuyệt vời 🎉',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                // Close button
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Bắt đầu',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -201,21 +304,25 @@ class _HomePageState extends State<HomePage> {
                     const Spacer(),
                     // Notifications
                     Container(
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: IconButton(
-            onPressed: () {
+                        padding: EdgeInsets.zero,
+                        onPressed: () {
                           // TODO: Navigate to notifications page
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Tính năng thông báo đang được phát triển')),
                           );
                         },
-                        icon: const FaIcon(
-                          FontAwesomeIcons.bell,
-                          color: Colors.white,
-                          size: 20,
+                        icon: Lottie.asset(
+                          'assets/animations/notification_bell.json',
+                          width: 32,
+                          height: 32,
+                          fit: BoxFit.contain,
                         ),
                         tooltip: 'Thông báo',
                       ),

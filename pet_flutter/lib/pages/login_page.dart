@@ -2,8 +2,10 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:lottie/lottie.dart';
 import 'package:pet_flutter/services/auth_service.dart';
 import 'package:pet_flutter/services/secure_storage.dart';
+import 'package:pet_flutter/services/onesignal_service.dart';
 import 'package:pet_flutter/pages/register_page.dart';
 import 'package:pet_flutter/widgets/shimmer_placeholders.dart';
 
@@ -91,12 +93,25 @@ class _LoginPageState extends State<LoginPage> {
         print('💾 Saving user data...');
         await _storage.saveUser(jsonEncode(user));
         print('✅ User data saved');
+        
+        // 🔔 Set OneSignal External User ID
+        try {
+          final userId = user['userId']?.toString(); // Changed from 'id' to 'userId'
+          if (userId != null) {
+            await OneSignalService().setExternalUserId(userId);
+            print('🔔 OneSignal External User ID set: $userId');
+          }
+        } catch (e) {
+          print('⚠️ Failed to set OneSignal External User ID: $e');
+        }
       } else {
         print('⚠️ No user data in response');
       }
       
       if (mounted) {
         print('🏠 Navigating to home...');
+        // Show success animation
+        await _showSuccessAnimation();
         // Navigate back to AuthWrapper which will automatically show RootNav for authenticated users
         Navigator.of(context).pushNamedAndRemoveUntil(
           '/',
@@ -109,6 +124,11 @@ class _LoginPageState extends State<LoginPage> {
       setState(() {
         _error = e.toString();
       });
+      
+      // Show error animation
+      if (mounted) {
+        await _showErrorAnimation(e.toString());
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -117,6 +137,176 @@ class _LoginPageState extends State<LoginPage> {
         print('🔄 Loading state reset');
       }
     }
+  }
+
+  Future<void> _showSuccessAnimation() async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (BuildContext context) {
+        // Auto close dialog after animation completes
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
+        });
+
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Lottie animation
+                Lottie.asset(
+                  'assets/animations/check_mark_success.json',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.contain,
+                  repeat: false,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Đăng nhập thành công!',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Chào mừng bạn trở lại',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showErrorAnimation(String errorMessage) async {
+    // Parse error message to get user-friendly text
+    String displayMessage = 'Đăng nhập thất bại';
+    String detailMessage = 'Vui lòng kiểm tra lại thông tin';
+    
+    if (errorMessage.contains('Invalid username or password') || 
+        errorMessage.contains('Tên đăng nhập hoặc mật khẩu không đúng')) {
+      displayMessage = 'Sai tài khoản hoặc mật khẩu';
+      detailMessage = 'Vui lòng kiểm tra lại thông tin đăng nhập';
+    } else if (errorMessage.contains('Network') || 
+               errorMessage.contains('connection') ||
+               errorMessage.contains('SocketException')) {
+      displayMessage = 'Không thể kết nối';
+      detailMessage = 'Vui lòng kiểm tra kết nối mạng';
+    } else if (errorMessage.contains('timeout')) {
+      displayMessage = 'Hết thời gian chờ';
+      detailMessage = 'Vui lòng thử lại';
+    }
+    
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (BuildContext context) {
+        // Auto close dialog after animation completes
+        Future.delayed(const Duration(milliseconds: 2500), () {
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
+        });
+
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Lottie error animation
+                Lottie.asset(
+                  'assets/animations/connectionerror.json',
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.contain,
+                  repeat: true,
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  displayMessage,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  detailMessage,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.grey.shade700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Thử lại',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override

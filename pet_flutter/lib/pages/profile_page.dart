@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:lottie/lottie.dart';
 import 'package:pet_flutter/services/secure_storage.dart';
 import 'package:pet_flutter/services/user_service.dart';
 import 'package:pet_flutter/services/signalr_service.dart';
@@ -1010,51 +1011,78 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         children: [
           // Avatar preview
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.primary.withOpacity(0.7),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                  spreadRadius: 2,
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: _avatarController.text.isNotEmpty
-                ? ClipOval(
-                    child: Image.network(
-                      _avatarController.text,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Center(
-                          child: FaIcon(
-                            FontAwesomeIcons.user,
-                            color: Colors.white,
-                            size: 32,
-                          ),
-                        );
-                      },
+          Stack(
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                      spreadRadius: 2,
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
-                  )
-                : const Center(
-                    child: FaIcon(
-                      FontAwesomeIcons.user,
-                      color: Colors.white,
-                      size: 32,
+                  ],
+                ),
+                child: _avatarController.text.isNotEmpty
+                    ? ClipOval(
+                        child: Image.network(
+                          _avatarController.text,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: FaIcon(
+                                FontAwesomeIcons.user,
+                                color: Colors.white,
+                                size: 32,
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    : const Center(
+                        child: FaIcon(
+                          FontAwesomeIcons.user,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+              ),
+              // Online status indicator with animation
+              Positioned(
+                right: -2,
+                bottom: -2,
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  padding: const EdgeInsets.all(2),
+                  child: ClipOval(
+                    child: Lottie.asset(
+                      'assets/animations/alert_on.json',
+                      width: 24,
+                      height: 24,
+                      fit: BoxFit.cover,
+                      repeat: true,
                     ),
                   ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           Text(

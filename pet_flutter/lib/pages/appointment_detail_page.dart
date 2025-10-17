@@ -3,11 +3,14 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import '../models/appointment.dart';
 import '../models/review.dart';
+import '../models/store.dart';
 import '../services/appointment_service.dart';
 import '../services/review_service.dart';
 import '../widgets/review_dialog.dart';
 import '../widgets/review_list.dart';
 import '../widgets/time_progress_bar.dart';
+import '../widgets/store_map_picker.dart';
+import '../widgets/appointment_reminder_status_widget.dart';
 
 class AppointmentDetailPage extends StatefulWidget {
   final Appointment appointment;
@@ -25,6 +28,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
   List<Review> _reviews = [];
   bool _isLoadingReviews = false;
   bool _hasReview = false; // Track if this appointment has a review
+  Store? _selectedStore; // Cửa hàng được chọn
 
   @override
   void initState() {
@@ -216,32 +220,32 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
   }
 
   void _openMap() {
-    // Hiển thị dialog với thông tin địa chỉ
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Địa chỉ phòng khám'),
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('📍 123 Đường ABC, Quận 1, TP.HCM'),
-              SizedBox(height: 8),
-              Text('📞 Hotline: 1900 1234'),
-              SizedBox(height: 8),
-              Text('🕒 Giờ hoạt động: 8:00 - 21:30'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Đóng'),
-            ),
-          ],
-        );
-      },
-    );
+    // Mở màn hình chọn cửa hàng với Google Maps
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StoreMapPicker(
+          onStoreSelected: (store) {
+            setState(() {
+              _selectedStore = store;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Đã chọn: ${store.name}'),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          },
+        ),
+      ),
+    ).then((selectedStore) {
+      if (selectedStore != null && selectedStore is Store) {
+        setState(() {
+          _selectedStore = selectedStore;
+        });
+      }
+    });
   }
 
   @override
@@ -329,6 +333,24 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
             ),
             
             const SizedBox(height: 20),
+
+            // Reminder Status Widget - only show for future appointments
+            if (appointment.status.toLowerCase() != 'completed' && 
+                appointment.status.toLowerCase() != 'cancelled' &&
+                appointment.appointmentDate.isAfter(DateTime.now()))
+              AppointmentReminderStatusWidget(
+                appointmentId: appointment.appointmentId.toString(),
+                appointmentTime: appointment.appointmentDate,
+                petName: appointment.petName,
+                serviceName: appointment.serviceName,
+                userId: appointment.userId.toString(),
+              ),
+
+            // Add spacing if reminder widget is shown
+            if (appointment.status.toLowerCase() != 'completed' && 
+                appointment.status.toLowerCase() != 'cancelled' &&
+                appointment.appointmentDate.isAfter(DateTime.now()))
+              const SizedBox(height: 20),
 
             // Service Info
             _buildInfoCard(
@@ -473,18 +495,80 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                 _buildInfoRow('Giờ', timeFormat.format(appointment.appointmentDate)),
                 if (appointment.endTime != null)
                   _buildInfoRow('Kết thúc', timeFormat.format(appointment.endTime!)),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildInfoRow('Địa điểm', '123 Đường ABC, Quận 1, TP.HCM'),
-                    ),
-                    IconButton(
-                      onPressed: _openMap,
-                      icon: const FaIcon(FontAwesomeIcons.mapLocationDot),
-                      color: Colors.green,
-                    ),
-                  ],
-                ),
+                
+                // Hiển thị cửa hàng đã chọn hoặc địa điểm mặc định
+                if (_selectedStore != null) ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildInfoRow('Cửa hàng', _selectedStore!.name),
+                            _buildInfoRow('Địa chỉ', _selectedStore!.address),
+                            if (_selectedStore!.phone != null)
+                              _buildInfoRow('Điện thoại', _selectedStore!.phone!),
+                            if (_selectedStore!.distance != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.blue.shade200),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.directions_walk, size: 16, color: Colors.blue),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Cách ${_selectedStore!.distance!.toStringAsFixed(2)} km',
+                                        style: const TextStyle(
+                                          color: Colors.blue,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        children: [
+                          IconButton(
+                            onPressed: _openMap,
+                            icon: const FaIcon(FontAwesomeIcons.mapLocationDot),
+                            color: Colors.green,
+                            tooltip: 'Đổi cửa hàng',
+                          ),
+                          const Text(
+                            'Đổi',
+                            style: TextStyle(fontSize: 10, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ] else ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildInfoRow('Địa điểm', '123 Đường ABC, Quận 1, TP.HCM'),
+                      ),
+                      IconButton(
+                        onPressed: _openMap,
+                        icon: const FaIcon(FontAwesomeIcons.mapLocationDot),
+                        color: Colors.green,
+                        tooltip: 'Chọn cửa hàng',
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
 

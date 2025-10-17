@@ -2,13 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:pet_flutter/pages/login_page.dart';
 import 'package:pet_flutter/pages/register_page.dart';
 import 'package:pet_flutter/pages/auth_wrapper.dart';
+import 'package:pet_flutter/services/onesignal_service.dart';
 
 class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
 }
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize OneSignal
+  await OneSignalService().initialize();
+  
   runApp(const MyApp());
 }
 

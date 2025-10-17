@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:pet_flutter/services/pet_service.dart';
 import 'package:pet_flutter/services/secure_storage.dart';
 import 'package:pet_flutter/utils/format_utils.dart';
+import 'package:pet_flutter/utils/onesignal_notification_helper.dart';
 
 class EditPetPage extends StatefulWidget {
   const EditPetPage({super.key, required this.pet});
@@ -116,8 +117,16 @@ class _EditPetPageState extends State<EditPetPage> {
         description: _descController.text.trim().isEmpty ? null : _descController.text.trim(),
         photo: _photo,
       );
+      
+      // 🔔 Gửi OneSignal notification khi cập nhật thành công
+      await OneSignalNotificationHelper.sendPetUpdateNotification(
+        petName: _nameController.text.trim(),
+      );
+      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã cập nhật thú cưng')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('✅ Đã cập nhật thú cưng và gửi thông báo!')),
+        );
         Navigator.of(context).pop(true);
       }
     } catch (e) {

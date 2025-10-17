@@ -113,12 +113,16 @@ class SignalRService {
       if (arguments != null && arguments.isNotEmpty) {
         try {
           final data = arguments[0] as Map<String, dynamic>;
+          print('📩 [DEBUG] Raw TimeSlotSelected data: $data');
+          
           final event = TimeSlotSelectionEvent.fromJson(data);
           
           // Only process events from other users
           if (event.userId != _currentUserId) {
             print('📥 [SignalR] TimeSlotSelected received: ${event.timeSlot} by ${event.userName}');
             _timeSlotSelectedController.add(event);
+          } else {
+            print('⏭️ [DEBUG] Skipping own event for slot ${event.timeSlot}');
           }
         } catch (e) {
           print('❌ Error parsing TimeSlotSelected event: $e');
@@ -130,12 +134,16 @@ class SignalRService {
       if (arguments != null && arguments.isNotEmpty) {
         try {
           final data = arguments[0] as Map<String, dynamic>;
+          print('📩 [DEBUG] Raw TimeSlotCleared data: $data');
+          
           final event = TimeSlotSelectionEvent.fromJson(data);
           
           // Only process events from other users
           if (event.userId != _currentUserId) {
             print('📥 [SignalR] TimeSlotCleared received: ${event.timeSlot} by ${event.userName}');
             _timeSlotClearedController.add(event);
+          } else {
+            print('⏭️ [DEBUG] Skipping own clear event for slot ${event.timeSlot}');
           }
         } catch (e) {
           print('❌ Error parsing TimeSlotCleared event: $e');
@@ -214,17 +222,26 @@ class SignalRService {
     }
 
     try {
+      // Parse serviceId and staffId to int for backend
+      final serviceIdInt = int.tryParse(serviceId);
+      final staffIdInt = int.tryParse(staffId);
+
+      // Format data exactly as backend expects - PascalCase to match C# properties
       final data = {
-        'roomKey': roomKey,
-        'timeSlot': timeSlot,
-        'userId': _currentUserId,
-        'userName': _currentUserName,
-        'serviceId': serviceId,
-        'staffId': staffId,
-        'date': date,
+        'RoomKey': roomKey,  // Capital R to match TimeSlotSelectionRequest
+        'TimeSlot': timeSlot,  // Capital T to match TimeSlotSelectionRequest
+        'UserId': _currentUserId ?? 'anonymous',  // Capital U
+        'UserName': _currentUserName ?? 'Anonymous User',  // Capital U
+        'ServiceId': serviceIdInt,  // int? type - parsed from string
+        'StaffId': staffIdInt,  // int? type - parsed from string
+        'Date': date,  // Capital D
       };
 
+      print('📤 [DEBUG] Sending data to NotifyTimeSlotSelected: $data');
+      
+      // Send as single argument (the data object)
       await _connection!.invoke('NotifyTimeSlotSelected', args: [data]);
+      
       print('📤 [SignalR] Notified time slot selected: $timeSlot');
       return true;
     } catch (e) {
@@ -247,17 +264,26 @@ class SignalRService {
     }
 
     try {
+      // Parse serviceId and staffId to int for backend
+      final serviceIdInt = int.tryParse(serviceId);
+      final staffIdInt = int.tryParse(staffId);
+
+      // Format data exactly as backend expects - PascalCase to match C# properties
       final data = {
-        'roomKey': roomKey,
-        'timeSlot': timeSlot,
-        'userId': _currentUserId,
-        'userName': _currentUserName,
-        'serviceId': serviceId,
-        'staffId': staffId,
-        'date': date,
+        'RoomKey': roomKey,  // Capital R to match TimeSlotSelectionRequest
+        'TimeSlot': timeSlot,  // Capital T to match TimeSlotSelectionRequest
+        'UserId': _currentUserId ?? 'anonymous',  // Capital U
+        'UserName': _currentUserName ?? 'Anonymous User',  // Capital U
+        'ServiceId': serviceIdInt,  // int? type - parsed from string
+        'StaffId': staffIdInt,  // int? type - parsed from string
+        'Date': date,  // Capital D
       };
 
+      print('📤 [DEBUG] Sending data to NotifyTimeSlotCleared: $data');
+      
+      // Send as single argument (the data object)
       await _connection!.invoke('NotifyTimeSlotCleared', args: [data]);
+      
       print('📤 [SignalR] Notified time slot cleared: $timeSlot');
       return true;
     } catch (e) {
@@ -327,13 +353,15 @@ class TimeSlotSelectionEvent {
 
   factory TimeSlotSelectionEvent.fromJson(Map<String, dynamic> json) {
     return TimeSlotSelectionEvent(
-      roomKey: json['roomKey'] ?? '',
-      timeSlot: json['timeSlot'] ?? '',
-      userId: json['userId'] ?? '',
-      userName: json['userName'] ?? 'Unknown User',
-      serviceId: json['serviceId'] ?? '',
-      staffId: json['staffId'] ?? '',
-      date: json['date'] ?? '',
+      // Backend sends PascalCase (TimeSlot, UserId, etc.)
+      roomKey: json['RoomKey']?.toString() ?? json['roomKey']?.toString() ?? '',
+      timeSlot: json['TimeSlot']?.toString() ?? json['timeSlot']?.toString() ?? '',
+      userId: json['UserId']?.toString() ?? json['userId']?.toString() ?? '',
+      userName: json['UserName']?.toString() ?? json['userName']?.toString() ?? 'Unknown User',
+      // Backend sends int for serviceId and staffId, convert to string
+      serviceId: json['ServiceId']?.toString() ?? json['serviceId']?.toString() ?? '',
+      staffId: json['StaffId']?.toString() ?? json['staffId']?.toString() ?? '',
+      date: json['Date']?.toString() ?? json['date']?.toString() ?? '',
       timestamp: DateTime.now(),
     );
   }

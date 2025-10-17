@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import '../models/appointment.dart';
 import '../models/time_slot.dart';
 import '../services/appointment_service.dart';
 import '../services/service_service.dart';
+import '../services/appointment_reminder_service.dart';
+import '../services/secure_storage.dart';
+import '../utils/onesignal_notification_helper.dart';
+import 'dart:convert';
 import 'appointment_steps.dart';
 
 class AppointmentBookingPage extends StatefulWidget {
@@ -398,6 +403,69 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
       Navigator.of(context).pop(); // Close loading dialog
       
       if (appointment != null) {
+        // 🔔 Schedule appointment reminders (1 hour, 30 min, 10 min before)
+        try {
+          final storage = SecureStorageService();
+          final userJson = await storage.readUser();
+          String? userId;
+          if (userJson != null) {
+            final user = jsonDecode(userJson);
+            userId = user['userId']?.toString(); // Changed from 'id' to 'userId'
+          }
+          
+          await AppointmentReminderService().scheduleReminders(
+            appointmentId: appointment.appointmentId.toString(),
+            appointmentTime: appointment.appointmentDate,
+            petName: _bookingData.selectedPet?.name ?? 'thú cưng',
+            serviceName: _bookingData.selectedService?.name ?? 'dịch vụ',
+            userId: userId,
+          );
+          
+          debugPrint('✅ [Booking] Reminders scheduled for appointment ${appointment.appointmentId}');
+        } catch (e) {
+          debugPrint('⚠️ [Booking] Failed to schedule reminders: $e');
+        }
+        
+        // 🎉 Send OneSignal notification for successful booking
+        try {
+          debugPrint('🔔 [Booking] Attempting to send success notification...');
+          final storage = SecureStorageService();
+          final userJson = await storage.readUser();
+          debugPrint('🔔 [Booking] User JSON: $userJson');
+          
+          if (userJson != null) {
+            final user = jsonDecode(userJson);
+            final userId = user['userId']?.toString(); // Changed from 'id' to 'userId'
+            debugPrint('🔔 [Booking] User ID from storage: $userId');
+            
+            if (userId != null) {
+              final dateFormat = '${appointment.appointmentDate.day}/${appointment.appointmentDate.month}/${appointment.appointmentDate.year}';
+              final timeFormat = '${appointment.appointmentDate.hour}:${appointment.appointmentDate.minute.toString().padLeft(2, '0')}';
+              
+              debugPrint('🔔 [Booking] Calling sendNotificationToUser...');
+              await OneSignalNotificationHelper.sendNotificationToUser(
+                userId: userId,
+                title: '🎉 Đặt lịch thành công!',
+                message: 'Lịch hẹn ${_bookingData.selectedService?.name ?? 'dịch vụ'} cho ${_bookingData.selectedPet?.name ?? 'thú cưng'} vào lúc $timeFormat, ngày $dateFormat đã được tạo.',
+                data: {
+                  'type': 'booking_success',
+                  'appointmentId': appointment.appointmentId.toString(),
+                  'timestamp': DateTime.now().toIso8601String(),
+                },
+              );
+              
+              debugPrint('✅ [Booking] Success notification sent to user $userId');
+            } else {
+              debugPrint('⚠️ [Booking] User ID is null!');
+            }
+          } else {
+            debugPrint('⚠️ [Booking] User JSON is null!');
+          }
+        } catch (e) {
+          debugPrint('⚠️ [Booking] Failed to send success notification: $e');
+          debugPrint('⚠️ [Booking] Stack trace: ${StackTrace.current}');
+        }
+        
         _showSuccessDialog();
       } else {
         _showErrorDialog('Không thể tạo lịch hẹn. Vui lòng thử lại.');
@@ -412,20 +480,100 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        icon: const Icon(Icons.check_circle, color: Colors.green, size: 48),
-        title: const Text('Đặt lịch thành công!'),
-        content: const Text('Lịch hẹn của bạn đã được tạo thành công. Chúng tôi sẽ liên hệ với bạn để xác nhận.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Close dialog
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (dialogContext) {
+        // Auto close after animation
+        Future.delayed(const Duration(milliseconds: 2500), () {
+          if (dialogContext.mounted && Navigator.canPop(dialogContext)) {
+            Navigator.of(dialogContext).pop(); // Close dialog
+            if (context.mounted && Navigator.canPop(context)) {
               Navigator.of(context).pop(); // Close booking page
-            },
-            child: const Text('OK'),
+            }
+          }
+        });
+
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Lottie animation
+                Lottie.asset(
+                  'assets/animations/check_mark_success.json',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.contain,
+                  repeat: false,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Đặt lịch thành công!',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Lịch hẹn của bạn đã được tạo thành công.\nChúng tôi sẽ liên hệ với bạn để xác nhận.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                // Optional: Add button to close immediately
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (Navigator.canPop(dialogContext)) {
+                        Navigator.of(dialogContext).pop(); // Close dialog
+                      }
+                      if (context.mounted && Navigator.canPop(context)) {
+                        Navigator.of(context).pop(); // Close booking page
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(dialogContext).colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Hoàn tất',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -772,71 +920,67 @@ class _ServiceSelectionStepState extends State<ServiceSelectionStep> {
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                               const SizedBox(height: 12),
-                                              Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                              Wrap(
+                                                spacing: 8,
+                                                runSpacing: 8,
                                                 children: [
-                                                  // Row đầu tiên: Thời gian và lượt xem
-                                                  Row(
-                                                    children: [
-                                                      Container(
-                                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                        decoration: BoxDecoration(
-                                                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                                                          borderRadius: BorderRadius.circular(12),
-                                                        ),
-                                                        child: Row(
-                                                          mainAxisSize: MainAxisSize.min,
-                                                          children: [
-                                                            Icon(
-                                                              Icons.access_time,
-                                                              size: 14,
-                                                              color: Theme.of(context).colorScheme.primary,
-                                                            ),
-                                                            const SizedBox(width: 4),
-                                                            Text(
-                                                              '${service.duration} phút',
-                                                              style: TextStyle(
-                                                                color: Theme.of(context).colorScheme.primary,
-                                                                fontSize: 12,
-                                                                fontWeight: FontWeight.w600,
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 8),
-                                                      Container(
-                                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                        decoration: BoxDecoration(
-                                                          color: Colors.blue.withOpacity(0.1),
-                                                          borderRadius: BorderRadius.circular(12),
-                                                        ),
-                                                        child: Row(
-                                                          mainAxisSize: MainAxisSize.min,
-                                                          children: [
-                                                            Icon(
-                                                              Icons.visibility,
-                                                              size: 14,
-                                                              color: Colors.blue.shade600,
-                                                            ),
-                                                            const SizedBox(width: 4),
-                                                            Text(
-                                                              '${service.viewCount ?? 0} lượt xem',
-                                                              style: TextStyle(
-                                                                color: Colors.blue.shade600,
-                                                                fontSize: 12,
-                                                                fontWeight: FontWeight.w600,
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 6),
-                                                  // Row thứ hai: Số lượng đặt lịch
+                                                  // Thời gian
                                                   Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                    decoration: BoxDecoration(
+                                                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                                      borderRadius: BorderRadius.circular(12),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Icon(
+                                                          Icons.access_time,
+                                                          size: 14,
+                                                          color: Theme.of(context).colorScheme.primary,
+                                                        ),
+                                                        const SizedBox(width: 4),
+                                                        Text(
+                                                          '${service.duration} phút',
+                                                          style: TextStyle(
+                                                            color: Theme.of(context).colorScheme.primary,
+                                                            fontSize: 12,
+                                                            fontWeight: FontWeight.w600,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  // Lượt xem
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.blue.withOpacity(0.1),
+                                                      borderRadius: BorderRadius.circular(12),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Icon(
+                                                          Icons.visibility,
+                                                          size: 14,
+                                                          color: Colors.blue.shade600,
+                                                        ),
+                                                        const SizedBox(width: 4),
+                                                        Text(
+                                                          '${service.viewCount ?? 0} lượt xem',
+                                                          style: TextStyle(
+                                                            color: Colors.blue.shade600,
+                                                            fontSize: 12,
+                                                            fontWeight: FontWeight.w600,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  // Lượt đặt
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                                     decoration: BoxDecoration(
                                                       gradient: LinearGradient(
                                                         colors: [
@@ -844,12 +988,12 @@ class _ServiceSelectionStepState extends State<ServiceSelectionStep> {
                                                           Colors.orange.shade500,
                                                         ],
                                                       ),
-                                                      borderRadius: BorderRadius.circular(14),
+                                                      borderRadius: BorderRadius.circular(12),
                                                       boxShadow: [
                                                         BoxShadow(
-                                                          color: Colors.orange.withOpacity(0.3),
+                                                          color: Colors.orange.withOpacity(0.25),
                                                           blurRadius: 4,
-                                                          spreadRadius: 1,
+                                                          offset: const Offset(0, 2),
                                                         ),
                                                       ],
                                                     ),
@@ -861,7 +1005,7 @@ class _ServiceSelectionStepState extends State<ServiceSelectionStep> {
                                                           size: 14,
                                                           color: Colors.white,
                                                         ),
-                                                        const SizedBox(width: 6),
+                                                        const SizedBox(width: 4),
                                                         Text(
                                                           '${service.bookingCount ?? 0} lượt đặt',
                                                           style: const TextStyle(
@@ -873,8 +1017,7 @@ class _ServiceSelectionStepState extends State<ServiceSelectionStep> {
                                                       ],
                                                     ),
                                                   ),
-                                                  const SizedBox(height: 8),
-                                                  // Row thứ ba: Giá
+                                                  // Giá
                                                   Container(
                                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                                     decoration: BoxDecoration(
@@ -884,12 +1027,12 @@ class _ServiceSelectionStepState extends State<ServiceSelectionStep> {
                                                           Colors.green.shade500,
                                                         ],
                                                       ),
-                                                      borderRadius: BorderRadius.circular(16),
+                                                      borderRadius: BorderRadius.circular(12),
                                                       boxShadow: [
                                                         BoxShadow(
-                                                          color: Colors.green.withOpacity(0.3),
+                                                          color: Colors.green.withOpacity(0.25),
                                                           blurRadius: 4,
-                                                          spreadRadius: 1,
+                                                          offset: const Offset(0, 2),
                                                         ),
                                                       ],
                                                     ),
@@ -898,16 +1041,16 @@ class _ServiceSelectionStepState extends State<ServiceSelectionStep> {
                                                       children: [
                                                         const Icon(
                                                           Icons.attach_money,
-                                                          size: 16,
+                                                          size: 15,
                                                           color: Colors.white,
                                                         ),
-                                                        const SizedBox(width: 6),
+                                                        const SizedBox(width: 2),
                                                         Text(
                                                           _formatCurrency(service.price),
                                                           style: const TextStyle(
                                                             color: Colors.white,
                                                             fontWeight: FontWeight.bold,
-                                                            fontSize: 16,
+                                                            fontSize: 14,
                                                           ),
                                                         ),
                                                       ],
