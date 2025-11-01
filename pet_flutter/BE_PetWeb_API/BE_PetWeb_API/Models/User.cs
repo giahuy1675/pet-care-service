@@ -52,6 +52,10 @@ public partial class User
 
     public bool? IsActive { get; set; }
 
+    [MaxLength(255)]
+    [Column(TypeName = "nvarchar(255)")]
+    public string? FcmToken { get; set; }
+
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 
     public virtual ICollection<BlogPost> BlogPosts { get; set; } = new List<BlogPost>();

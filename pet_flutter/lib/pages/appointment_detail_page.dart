@@ -6,11 +6,15 @@ import '../models/review.dart';
 import '../models/store.dart';
 import '../services/appointment_service.dart';
 import '../services/review_service.dart';
+import '../services/firebase_chat_service.dart';
+import '../services/secure_storage.dart';
 import '../widgets/review_dialog.dart';
 import '../widgets/review_list.dart';
 import '../widgets/time_progress_bar.dart';
 import '../widgets/store_map_picker.dart';
 import '../widgets/appointment_reminder_status_widget.dart';
+import 'staff_detail_page.dart';
+import 'chat_detail_page.dart';
 
 class AppointmentDetailPage extends StatefulWidget {
   final Appointment appointment;
@@ -129,6 +133,92 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
         return FontAwesomeIcons.timesCircle;
       default:
         return FontAwesomeIcons.questionCircle;
+    }
+  }
+
+  Future<void> _openChatRoom() async {
+    try {
+      // Get user data from secure storage
+      final secureStorage = SecureStorageService();
+      final userId = await secureStorage.readUserId();
+      final username = await secureStorage.readUserName();
+      final role = await secureStorage.readUserRole();
+      
+      if (userId == null || username == null || role == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể mở chat. Vui lòng đăng nhập lại.')),
+        );
+        return;
+      }
+
+      // Ensure staffId is not null
+      if (appointment.staffId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Chưa có nhân viên được phân công cho lịch hẹn này.')),
+        );
+        return;
+      }
+
+      // Create or get chat room for this appointment
+      print('🔵 [AppointmentDetail] Creating chat for appointment ${appointment.appointmentId}');
+      final chatService = FirebaseChatService();
+      final chatRoom = await chatService.createChatRoomFromAppointment(
+        appointmentId: appointment.appointmentId,
+        customerId: appointment.userId,
+        customerName: appointment.userName,
+        customerAvatar: appointment.user?.avatarUrl ?? '',
+        staffId: appointment.staffId!,
+        staffName: appointment.staffName,
+        staffAvatar: appointment.staff?.avatarUrl ?? '',
+        appointmentStatus: appointment.status,
+        serviceName: appointment.serviceName, // Thêm tên dịch vụ
+      );
+      
+      print('✅ [AppointmentDetail] Chat room created: ${chatRoom.id}');
+
+      // Determine other user info based on current role
+      final String otherUserId;
+      final String otherUserName;
+      final String otherUserAvatar;
+      
+      if (role == 'Staff') {
+        // Staff is chatting with customer
+        otherUserId = appointment.userId.toString();
+        otherUserName = appointment.userName;
+        otherUserAvatar = appointment.user?.avatarUrl ?? '';
+      } else {
+        // Customer is chatting with staff
+        otherUserId = appointment.staffId.toString();
+        otherUserName = appointment.staffName;
+        otherUserAvatar = appointment.staff?.avatarUrl ?? '';
+      }
+
+      // Navigate to chat detail page
+      if (!mounted) return;
+      
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatDetailPage(
+            chatRoomId: chatRoom.id,
+            currentUserId: userId,
+            currentUserName: username,
+            currentUserAvatar: role == 'Staff' 
+                ? (appointment.staff?.avatarUrl ?? '') 
+                : (appointment.user?.avatarUrl ?? ''),
+            otherUserId: otherUserId,
+            otherUserName: otherUserName,
+            otherUserAvatar: otherUserAvatar,
+          ),
+        ),
+      );
+    } catch (e) {
+      print('❌ Error opening chat room: $e');
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không thể mở chat. Vui lòng thử lại.')),
+      );
     }
   }
 
@@ -480,6 +570,35 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                     _buildInfoRow('Email', appointment.staff!.email),
                   if (appointment.staff?.phone != null)
                     _buildInfoRow('Điện thoại', appointment.staff!.phone!),
+                  
+                  // Thêm nút xem chi tiết nhân viên
+                  if (appointment.staffId != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => StaffDetailPage(staffId: appointment.staffId!),
+                              ),
+                            );
+                          },
+                          icon: const FaIcon(FontAwesomeIcons.circleInfo, size: 18),
+                          label: const Text('Xem chi tiết nhân viên'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
 
@@ -764,6 +883,14 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                 ],
               ),
           ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _openChatRoom,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        child: const Icon(
+          Icons.chat,
+          color: Colors.white,
         ),
       ),
     );

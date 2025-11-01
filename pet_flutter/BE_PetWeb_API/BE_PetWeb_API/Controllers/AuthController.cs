@@ -73,7 +73,8 @@ namespace BE_PetWeb_API.Controllers
                         fullName = result.FullName,
                         email = result.Email,
                         role = result.Role, // Quan trọng: trả về role
-                        isActive = true
+                        isActive = true,
+                        staffId = result.StaffId // Thêm staffId
                     }
                 });
             }

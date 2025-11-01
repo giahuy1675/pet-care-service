@@ -40,6 +40,7 @@ class _StaffDashboardPageState extends State<StaffDashboardPage> {
       final userJson = await _storage.readUser();
       if (userJson != null) {
         final user = json.decode(userJson);
+        if (!mounted) return;
         setState(() {
           _staffName = user['fullName'] ?? 'Nhân viên';
           _staffRole = user['role'] ?? 'Staff';
@@ -49,6 +50,7 @@ class _StaffDashboardPageState extends State<StaffDashboardPage> {
       // Sau đó lấy thông tin chi tiết từ API
       try {
         final staffInfo = await _staffService.getCurrentStaffInfo();
+        if (!mounted) return;
         setState(() {
           _staffName = staffInfo['fullName'] ?? _staffName;
           _staffId = staffInfo['staffId'];
@@ -64,11 +66,13 @@ class _StaffDashboardPageState extends State<StaffDashboardPage> {
 
   Future<void> _loadDashboardData() async {
     try {
+      if (!mounted) return;
       setState(() => _loading = true);
       
       // Sử dụng StaffService để lấy thống kê dashboard
       final stats = await _staffService.getStaffDashboardStats();
       
+      if (!mounted) return;
       setState(() {
         _todayAppointments = stats['todayAppointments'] ?? 0;
         _pendingAppointments = stats['pendingAppointments'] ?? 0;
@@ -78,6 +82,7 @@ class _StaffDashboardPageState extends State<StaffDashboardPage> {
       });
     } catch (e) {
       print('Error loading dashboard data: $e');
+      if (!mounted) return;
       setState(() => _loading = false);
     }
   }

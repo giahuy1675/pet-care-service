@@ -1671,7 +1671,7 @@ class ConfirmStep extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Ghi chú thêm',
+                    'Ghi chú thêm (không bắt buộc)',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -1680,7 +1680,7 @@ class ConfirmStep extends StatelessWidget {
                   TextField(
                     controller: _notesController,
                     decoration: InputDecoration(
-                      hintText: 'Nhập ghi chú cho lịch hẹn (bắt buộc)',
+                      hintText: 'Nhập ghi chú cho lịch hẹn (tùy chọn)',
                       prefixIcon: const Icon(Icons.note_add),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -2104,20 +2104,7 @@ class ConfirmStep extends StatelessWidget {
                 ),
                 child: ElevatedButton(
                   onPressed: isLoading ? null : () async {
-                    // Gọi API tạo appointment, truyền thêm notes
-                    if ((bookingData.notes ?? '').isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Vui lòng nhập ghi chú!'),
-                          backgroundColor: Colors.red.shade600,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      );
-                      return;
-                    }
+                    // Gọi API tạo appointment, truyền thêm notes (không bắt buộc)
                     // ...existing code tạo appointment, truyền bookingData.notes...
                   },
                   style: ElevatedButton.styleFrom(

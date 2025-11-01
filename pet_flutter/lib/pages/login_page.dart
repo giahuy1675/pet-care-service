@@ -79,7 +79,7 @@ class _LoginPageState extends State<LoginPage> {
       print('📄 Response: $res');
       
       final token = res['token'] as String?;
-      final user = res['user'];
+      final user = res['user']; // Get user object from response
       
       if (token != null) {
         print('💾 Saving token...');
@@ -91,15 +91,24 @@ class _LoginPageState extends State<LoginPage> {
       
       if (user != null) {
         print('💾 Saving user data...');
+        print('👤 User data: $user');
         await _storage.saveUser(jsonEncode(user));
         print('✅ User data saved');
         
         // 🔔 Set OneSignal External User ID
         try {
-          final userId = user['userId']?.toString(); // Changed from 'id' to 'userId'
-          if (userId != null) {
-            await OneSignalService().setExternalUserId(userId);
-            print('🔔 OneSignal External User ID set: $userId');
+          final role = user['role']?.toString();
+          
+          // Dùng staffId cho Staff, userId cho Customer
+          String? externalId;
+          if (role == 'Staff') {
+            externalId = user['staffId']?.toString();
+          }
+          externalId ??= user['userId']?.toString();
+          
+          if (externalId != null) {
+            await OneSignalService().setExternalUserId(externalId);
+            print('🔔 OneSignal External User ID set: $externalId (role: $role)');
           }
         } catch (e) {
           print('⚠️ Failed to set OneSignal External User ID: $e');

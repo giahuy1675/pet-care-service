@@ -3,6 +3,11 @@ import 'package:pet_flutter/pages/login_page.dart';
 import 'package:pet_flutter/pages/register_page.dart';
 import 'package:pet_flutter/pages/auth_wrapper.dart';
 import 'package:pet_flutter/services/onesignal_service.dart';
+import 'package:pet_flutter/services/firebase_messaging_service.dart';
+import 'package:pet_flutter/config/firebase_config.dart';
+
+// Global navigator key for OneSignal navigation
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class AppRoutes {
   static const String login = '/login';
@@ -12,8 +17,14 @@ class AppRoutes {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Initialize Firebase
+  await FirebaseConfig.initialize();
+  
   // Initialize OneSignal
   await OneSignalService().initialize();
+  
+  // Initialize Firebase Cloud Messaging
+  await FirebaseMessagingService().initialize();
   
   runApp(const MyApp());
 }
@@ -26,6 +37,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color primaryColor = const Color(0xFF304FFE);
     return MaterialApp(
+      navigatorKey: navigatorKey, // Add global navigator key
       title: 'Pet App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(

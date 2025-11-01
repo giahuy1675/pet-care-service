@@ -2875,6 +2875,37 @@
         }
       }
     },
+    "/api/Chat/SendNotification": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendChatNotificationRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendChatNotificationRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendChatNotificationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Comments/Post/{postId}": {
       "get": {
         "tags": [
@@ -6940,6 +6971,29 @@
         }
       }
     },
+    "/api/Staff/{id}/statistics": {
+      "get": {
+        "tags": [
+          "Staff"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Staff/User/{userId}": {
       "get": {
         "tags": [
@@ -7922,6 +7976,79 @@
         }
       }
     },
+    "/api/Users/{userId}/fcm-token": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFcmTokenDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFcmTokenDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFcmTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Users/send-notification": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendPushNotificationDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendPushNotificationDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendPushNotificationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Vaccinations": {
       "get": {
         "tags": [
@@ -8421,6 +8548,11 @@
           },
           "token": {
             "type": "string",
+            "nullable": true
+          },
+          "staffId": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           }
         },
@@ -9868,6 +10000,62 @@
         },
         "additionalProperties": false
       },
+      "SendChatNotificationRequest": {
+        "type": "object",
+        "properties": {
+          "recipientUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "senderName": {
+            "type": "string",
+            "nullable": true
+          },
+          "messageContent": {
+            "type": "string",
+            "nullable": true
+          },
+          "chatRoomId": {
+            "type": "string",
+            "nullable": true
+          },
+          "senderAvatar": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SendPushNotificationDto": {
+        "required": [
+          "body",
+          "targetUserId",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "targetUserId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "body": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "ServiceDto": {
         "type": "object",
         "properties": {
@@ -10319,6 +10507,19 @@
           "isApproved": {
             "type": "boolean",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateFcmTokenDto": {
+        "required": [
+          "fcmToken"
+        ],
+        "type": "object",
+        "properties": {
+          "fcmToken": {
+            "minLength": 1,
+            "type": "string"
           }
         },
         "additionalProperties": false

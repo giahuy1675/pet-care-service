@@ -41,6 +41,84 @@ namespace BE_PetWeb_API.Controllers
             return Ok(staff);
         }
 
+        // GET: api/Staff/5/statistics
+        [HttpGet("{id}/statistics")]
+        [AllowAnonymous]
+        public async Task<ActionResult> GetStaffStatistics(int id)
+        {
+            try
+            {
+                using (var scope = HttpContext.RequestServices.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<PetWebContext>();
+                    
+                    // Kiểm tra staff có tồn tại không
+                    var staff = await context.Staff
+                        .Include(s => s.User)
+                        .FirstOrDefaultAsync(s => s.StaffId == id);
+
+                    if (staff == null)
+                    {
+                        return NotFound(new { message = "Nhân viên không tồn tại" });
+                    }
+
+                    // Đếm số lịch hẹn đã hoàn thành
+                    var completedAppointments = await context.Appointments
+                        .Where(a => a.StaffId == id && a.Status == "Completed")
+                        .CountAsync();
+
+                    // Lấy đánh giá trung bình và tổng số reviews
+                    // Lọc reviews từ appointments của staff này
+                    var reviews = await context.Reviews
+                        .Include(r => r.Appointment)
+                        .Where(r => r.AppointmentId != null && 
+                                    r.Appointment.StaffId == id)
+                        .ToListAsync();
+
+                    var averageRating = reviews.Any() 
+                        ? Math.Round(reviews.Average(r => r.Rating), 1) 
+                        : 0.0;
+
+                    var totalReviews = reviews.Count;
+
+                    // Tính rating breakdown (số lượng mỗi loại sao)
+                    var ratingBreakdown = new
+                    {
+                        fiveStar = reviews.Count(r => r.Rating == 5),
+                        fourStar = reviews.Count(r => r.Rating == 4),
+                        threeStar = reviews.Count(r => r.Rating == 3),
+                        twoStar = reviews.Count(r => r.Rating == 2),
+                        oneStar = reviews.Count(r => r.Rating == 1)
+                    };
+
+                    // Lấy thông tin nhân viên
+                    var staffInfo = new
+                    {
+                        staffId = staff.StaffId,
+                        fullName = staff.User.FullName,
+                        email = staff.User.Email,
+                        phone = staff.User.Phone,
+                        specialization = staff.Specialization,
+                        avatarUrl = staff.User.Avatar,
+                        isActive = staff.IsActive,
+                        statistics = new
+                        {
+                            completedServices = completedAppointments,
+                            averageRating = averageRating,
+                            totalReviews = totalReviews,
+                            ratingBreakdown = ratingBreakdown
+                        }
+                    };
+
+                    return Ok(staffInfo);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi lấy thống kê nhân viên: " + ex.Message });
+            }
+        }
+
         // GET: api/Staff/User/5
         [HttpGet("User/{userId}")]
         public async Task<ActionResult<StaffDto>> GetStaffByUserId(int userId)
@@ -284,16 +362,20 @@ namespace BE_PetWeb_API.Controllers
                         var serviceDuration = appointment.Service?.Duration ?? 30;
                         var endTime = appointment.EndTime ?? startTime.AddMinutes(serviceDuration);
                         
-                        // Thêm buffer time
-                        endTime = endTime.AddMinutes(10);
-
-                        // Thêm tất cả các khung giờ 30 phút bị ảnh hưởng
+                        // KHÔNG thêm buffer time vì frontend đã tính
+                        // endTime từ frontend = startTime + 30 phút (không bao gồm buffer)
+                        // Slots frontend: 8:00-8:30, 8:40-9:10, 9:20-9:50 (interval 40 phút)
+                        
+                        // Thêm tất cả các khung giờ 40 phút bị ảnh hưởng (giống frontend)
+                        const int slotInterval = 40; // serviceDuration (30) + bufferTime (10)
+                        
                         for (DateTime time = new DateTime(date.Year, date.Month, date.Day, 8, 0, 0);
                              time <= new DateTime(date.Year, date.Month, date.Day, 21, 30, 0);
-                             time = time.AddMinutes(30))
+                             time = time.AddMinutes(slotInterval)) // Interval 40 phút giống frontend
                         {
-                            DateTime slotEnd = time.AddMinutes(30);
+                            DateTime slotEnd = time.AddMinutes(serviceDuration); // Slot end = start + 30 phút
                             
+                            // Check overlap: slot có giao nhau với appointment không?
                             if ((time >= startTime && time < endTime) ||
                                 (slotEnd > startTime && slotEnd <= endTime) ||
                                 (time <= startTime && slotEnd >= endTime))

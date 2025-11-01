@@ -462,4 +462,13 @@ C:\Users\giahu\Desktop\pet_mobile_30_9\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\o
 C:\Users\giahu\Desktop\pet_mobile_30_9\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\obj\Debug\net8.0\BE_PetWeb_API.pdb
 C:\Users\giahu\Desktop\pet_mobile_30_9\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\obj\Debug\net8.0\BE_PetWeb_API.genruntimeconfig.cache
 C:\Users\giahu\Desktop\pet_mobile_30_9\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\obj\Debug\net8.0\ref\BE_PetWeb_API.dll
+C:\Users\giahu\Desktop\pet_mobile_30_9\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\firebase-adminsdk.json
+C:\Users\giahu\Desktop\pet_mobile_30_9\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\FirebaseAdmin.dll
+C:\Users\giahu\Desktop\pet_mobile_30_9\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\Google.Api.Gax.dll
+C:\Users\giahu\Desktop\pet_mobile_30_9\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\Google.Api.Gax.Rest.dll
+C:\Users\giahu\Desktop\pet_mobile_30_9\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\Google.Apis.dll
+C:\Users\giahu\Desktop\pet_mobile_30_9\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\Google.Apis.Auth.dll
+C:\Users\giahu\Desktop\pet_mobile_30_9\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\Google.Apis.Core.dll
+C:\Users\giahu\Desktop\pet_mobile_30_9\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\System.Management.dll
+C:\Users\giahu\Desktop\pet_mobile_30_9\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Management.dll
 C:\Users\giahu\Desktop\pet_mobile_30_9\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

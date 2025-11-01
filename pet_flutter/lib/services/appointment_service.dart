@@ -276,18 +276,48 @@ class AppointmentService {
           final petBusySlots = await getPetBusyTimeSlots(petId, date);
           final staffBusySlots = await getStaffBusyTimeSlots(staffId, date);
           
+          print('🔍 [BUSY CHECK] Pet busy slots: $petBusySlots');
+          print('🔍 [BUSY CHECK] Staff busy slots: $staffBusySlots');
+          
           // Cập nhật trạng thái busy cho các time slots
           for (final slot in timeSlots) {
-            final timeStr = '${slot.startTime.hour.toString().padLeft(2, '0')}:${slot.startTime.minute.toString().padLeft(2, '0')}';
+            final slotStart = slot.startTime;
+            final slotEnd = slot.endTime;
             
-            if (petBusySlots.contains(timeStr)) {
-              slot.isPetBusy = true;
-              slot.isAvailable = false;
+            // ✅ Check overlap với pet busy slots (backend trả về slots 30 phút)
+            for (final busyTimeStr in petBusySlots) {
+              final busyParts = busyTimeStr.split(':');
+              final busyHour = int.parse(busyParts[0]);
+              final busyMinute = int.parse(busyParts[1]);
+              final busySlotStart = DateTime(date.year, date.month, date.day, busyHour, busyMinute);
+              final busySlotEnd = busySlotStart.add(const Duration(minutes: 30));
+              
+              // Check overlap: nếu busy slot nằm trong khoảng [slotStart, slotEnd)
+              if ((busySlotStart.isBefore(slotEnd) && busySlotEnd.isAfter(slotStart)) ||
+                  busySlotStart == slotStart) {
+                slot.isPetBusy = true;
+                slot.isAvailable = false;
+                print('🐕 [BUSY] Slot ${slotStart.hour}:${slotStart.minute.toString().padLeft(2, '0')} overlaps with pet busy slot $busyTimeStr');
+                break;
+              }
             }
             
-            if (staffBusySlots.contains(timeStr)) {
-              slot.isStaffBusy = true;
-              slot.isAvailable = false;
+            // ✅ Check overlap với staff busy slots (backend trả về slots 30 phút)
+            for (final busyTimeStr in staffBusySlots) {
+              final busyParts = busyTimeStr.split(':');
+              final busyHour = int.parse(busyParts[0]);
+              final busyMinute = int.parse(busyParts[1]);
+              final busySlotStart = DateTime(date.year, date.month, date.day, busyHour, busyMinute);
+              final busySlotEnd = busySlotStart.add(const Duration(minutes: 30));
+              
+              // Check overlap: nếu busy slot nằm trong khoảng [slotStart, slotEnd)
+              if ((busySlotStart.isBefore(slotEnd) && busySlotEnd.isAfter(slotStart)) ||
+                  busySlotStart == slotStart) {
+                slot.isStaffBusy = true;
+                slot.isAvailable = false;
+                print('👤 [BUSY] Slot ${slotStart.hour}:${slotStart.minute.toString().padLeft(2, '0')} overlaps with staff busy slot $busyTimeStr');
+                break;
+              }
             }
           }
         }
@@ -347,46 +377,44 @@ class AppointmentService {
   List<TimeSlot> _generateDefaultTimeSlots(DateTime date) {
     final slots = <TimeSlot>[];
     
-    // Giờ hoạt động: 8:00 - 21:30
-    const openingHour = 8;
-    const closingHour = 21;
-    const closingMinute = 30;
-    const slotDuration = 60; // 60 phút mỗi slot
+    // Giờ hoạt động: 8:00 - 21:30 (giống web)
+    const serviceDuration = 30; // 30 phút service
+    const bufferTime = 10; // 10 phút buffer
+    const slotInterval = serviceDuration + bufferTime; // 40 phút interval giống web
     
     final baseDate = DateTime(date.year, date.month, date.day);
+    final openingTime = baseDate.add(const Duration(hours: 8, minutes: 0)); // 08:00
+    final closingTime = baseDate.add(const Duration(hours: 21, minutes: 30)); // 21:30
     
-    for (int hour = openingHour; hour <= closingHour; hour++) {
-      // Xử lý đặc biệt cho giờ cuối (21:30)
-      final maxMinutes = (hour == closingHour) ? [0] : [0];
-      if (hour == closingHour && closingMinute == 30) {
-        maxMinutes.add(30);
+    DateTime currentTime = openingTime;
+    
+    // Tạo slots với interval 40 phút: 08:00, 08:40, 09:20, 10:00, 10:40...
+    while (currentTime.isBefore(closingTime) || currentTime == closingTime) {
+      final endTime = currentTime.add(const Duration(minutes: serviceDuration));
+      
+      // Kiểm tra không vượt quá giờ đóng cửa
+      if (endTime.isAfter(closingTime)) {
+        break;
       }
       
-      for (final minute in maxMinutes) {
-        final startTime = baseDate.add(Duration(hours: hour, minutes: minute));
-        final endTime = startTime.add(const Duration(minutes: slotDuration));
-        
-        // Kiểm tra không vượt quá giờ đóng cửa
-        if (endTime.hour > closingHour || 
-            (endTime.hour == closingHour && endTime.minute > closingMinute)) {
-          break;
-        }
-        
-        // Kiểm tra không phải là quá khứ (nếu là ngày hôm nay)
-        if (date.day == DateTime.now().day && 
-            date.month == DateTime.now().month && 
-            date.year == DateTime.now().year &&
-            startTime.isBefore(DateTime.now())) {
-          continue;
-        }
-        
-        slots.add(TimeSlot(
-          id: 'default_${startTime.millisecondsSinceEpoch}',
-          startTime: startTime,
-          endTime: endTime,
-          isAvailable: true,
-        ));
+      // Kiểm tra không phải là quá khứ (nếu là ngày hôm nay)
+      if (date.day == DateTime.now().day && 
+          date.month == DateTime.now().month && 
+          date.year == DateTime.now().year &&
+          currentTime.isBefore(DateTime.now())) {
+        currentTime = currentTime.add(const Duration(minutes: slotInterval));
+        continue;
       }
+      
+      slots.add(TimeSlot(
+        id: 'default_${currentTime.millisecondsSinceEpoch}',
+        startTime: currentTime,
+        endTime: endTime,
+        isAvailable: true,
+      ));
+      
+      // Chuyển đến slot tiếp theo (sau 40 phút: serviceDuration + bufferTime)
+      currentTime = currentTime.add(const Duration(minutes: slotInterval));
     }
     
     return slots;

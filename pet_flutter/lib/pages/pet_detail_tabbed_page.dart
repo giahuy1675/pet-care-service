@@ -152,7 +152,7 @@ class _PetDetailTabbedPageState extends State<PetDetailTabbedPage> with SingleTi
   @override
   Widget build(BuildContext context) {
     final name = (pet['name'] as String?) ?? 'Thú cưng';
-    final photo = pet['photo'] as String?;
+    final photo = (pet['photoUrl'] as String?) ?? (pet['photo'] as String?);
     final species = (pet['species'] as String?) ?? '';
     final breed = (pet['breed'] as String?) ?? '';
     final gender = (pet['gender'] as String?) ?? '';

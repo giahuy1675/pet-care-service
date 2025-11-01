@@ -66,6 +66,20 @@ class SecureStorageService {
     return 'Customer';
   }
 
+  Future<String?> readStaffId() async {
+    final userJson = await readUser();
+    if (userJson != null) {
+      try {
+        final user = json.decode(userJson);
+        // Ưu tiên staffId, nếu không có thì dùng userId
+        return user['staffId']?.toString() ?? user['userId']?.toString();
+      } catch (e) {
+        print('Error parsing user data for staffId: $e');
+      }
+    }
+    return null;
+  }
+
   Future<void> clear() async {
     await _storage.deleteAll();
   }

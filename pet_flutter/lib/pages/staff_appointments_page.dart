@@ -46,15 +46,13 @@ class _StaffAppointmentsPageState extends State<StaffAppointmentsPage> with Tick
 
       // Filter appointments by date and status
       final todayAppts = appointments.where((apt) => 
-        apt.appointmentDate != null &&
-        apt.appointmentDate!.year == today.year &&
-        apt.appointmentDate!.month == today.month &&
-        apt.appointmentDate!.day == today.day
+        apt.appointmentDate.year == today.year &&
+        apt.appointmentDate.month == today.month &&
+        apt.appointmentDate.day == today.day
       ).toList();
 
       final upcomingAppts = appointments.where((apt) => 
-        apt.appointmentDate != null &&
-        apt.appointmentDate!.isAfter(today) &&
+        apt.appointmentDate.isAfter(today) &&
         (apt.status == 'Pending' || apt.status == 'Confirmed')
       ).toList();
 
@@ -63,10 +61,11 @@ class _StaffAppointmentsPageState extends State<StaffAppointmentsPage> with Tick
       ).toList();
 
       // Sort by appointment time
-      todayAppts.sort((a, b) => a.appointmentDate!.compareTo(b.appointmentDate!));
-      upcomingAppts.sort((a, b) => a.appointmentDate!.compareTo(b.appointmentDate!));
-      completedAppts.sort((a, b) => b.appointmentDate!.compareTo(a.appointmentDate!));
+      todayAppts.sort((a, b) => a.appointmentDate.compareTo(b.appointmentDate));
+      upcomingAppts.sort((a, b) => a.appointmentDate.compareTo(b.appointmentDate));
+      completedAppts.sort((a, b) => b.appointmentDate.compareTo(a.appointmentDate));
 
+      if (!mounted) return;
       setState(() {
         _todayAppointments = todayAppts;
         _upcomingAppointments = upcomingAppts;
@@ -74,6 +73,7 @@ class _StaffAppointmentsPageState extends State<StaffAppointmentsPage> with Tick
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _loading = false;
@@ -109,145 +109,79 @@ class _StaffAppointmentsPageState extends State<StaffAppointmentsPage> with Tick
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverAppBar(
-            expandedHeight: 120,
             floating: false,
             pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withOpacity(0.8),
+            expandedHeight: 0,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            title: Row(
+              children: [
+                const FaIcon(
+                  FontAwesomeIcons.calendarCheck,
+                  size: 20,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Quản lý lịch hẹn',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Xem và cập nhật',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const FaIcon(
-                                FontAwesomeIcons.calendarCheck,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Quản lý lịch hẹn',
-                                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Xem và cập nhật lịch hẹn',
-                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: Colors.white.withOpacity(0.9),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: _loadAppointments,
-                              icon: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const FaIcon(
-                                  FontAwesomeIcons.arrowsRotate,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                IconButton(
+                  onPressed: _loadAppointments,
+                  icon: const FaIcon(
+                    FontAwesomeIcons.arrowsRotate,
+                    color: Colors.white,
+                    size: 18,
                   ),
+                  tooltip: 'Làm mới',
                 ),
-              ),
+              ],
             ),
             bottom: TabBar(
               controller: _tabController,
               indicatorColor: Colors.white,
+              indicatorWeight: 3,
               labelColor: Colors.white,
-              unselectedLabelColor: Colors.white70,
+              unselectedLabelColor: Colors.white60,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.normal,
+                fontSize: 14,
+              ),
               tabs: [
                 Tab(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min, // Thêm để tối ưu không gian
-                    children: [
-                      const FaIcon(FontAwesomeIcons.calendarDay, size: 14), // Giảm size icon
-                      const SizedBox(width: 6), // Giảm khoảng cách
-                      Flexible( // Thêm Flexible để tránh overflow
-                        child: Text(
-                          'Hôm nay (${_todayAppointments.length})',
-                          style: const TextStyle(fontSize: 12), // Giảm font size
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
+                  text: 'Hôm nay (${_todayAppointments.length})',
                 ),
                 Tab(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const FaIcon(FontAwesomeIcons.clock, size: 14),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          'Sắp tới (${_upcomingAppointments.length})',
-                          style: const TextStyle(fontSize: 12),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
+                  text: 'Sắp tới (${_upcomingAppointments.length})',
                 ),
                 Tab(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const FaIcon(FontAwesomeIcons.checkCircle, size: 14),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          'Hoàn thành (${_completedAppointments.length})',
-                          style: const TextStyle(fontSize: 12),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
+                  text: 'Hoàn thành (${_completedAppointments.length})',
                 ),
               ],
             ),
@@ -352,16 +286,11 @@ class _StaffAppointmentsPageState extends State<StaffAppointmentsPage> with Tick
   }
 
   Widget _buildAppointmentCard(Appointment appointment, String type) {
-    final timeStr = appointment.appointmentDate != null
-        ? FormatUtils.formatTime(appointment.appointmentDate!)
-        : 'N/A';
-    
-    final dateStr = appointment.appointmentDate != null
-        ? FormatUtils.formatDate(appointment.appointmentDate!)
-        : 'N/A';
+    final timeStr = FormatUtils.formatTime(appointment.appointmentDate);
+    final dateStr = FormatUtils.formatDate(appointment.appointmentDate);
 
     Color statusColor = Colors.grey;
-    String statusText = appointment.status ?? 'Unknown';
+    String statusText = appointment.status;
     
     switch (appointment.status) {
       case 'Pending':
@@ -412,7 +341,7 @@ class _StaffAppointmentsPageState extends State<StaffAppointmentsPage> with Tick
                   children: [
                     Expanded(
                       child: Text(
-                        appointment.service?.name ?? 'Dịch vụ không xác định',
+                        appointment.service?.name ?? appointment.serviceName,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -458,7 +387,7 @@ class _StaffAppointmentsPageState extends State<StaffAppointmentsPage> with Tick
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            appointment.user?.fullName ?? 'Khách hàng không xác định',
+                            appointment.user?.fullName ?? appointment.userName,
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -502,35 +431,35 @@ class _StaffAppointmentsPageState extends State<StaffAppointmentsPage> with Tick
                   ],
                 ),
                 
-                // Pet info if available
-                if (appointment.pet != null) ...[
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: FaIcon(
-                          FontAwesomeIcons.paw,
-                          color: Colors.orange.shade600,
-                          size: 16,
+                // Pet info
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: FaIcon(
+                        FontAwesomeIcons.paw,
+                        color: Colors.orange.shade600,
+                        size: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        appointment.pet != null 
+                            ? '${appointment.pet!.name} (${appointment.pet!.species})'
+                            : appointment.petName,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          '${appointment.pet!.name} (${appointment.pet!.species})',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
                 
                 // Action buttons for pending/confirmed appointments
                 if (type != 'completed' && (appointment.status == 'Pending' || appointment.status == 'Confirmed')) ...[
@@ -629,7 +558,7 @@ class _StaffAppointmentsPageState extends State<StaffAppointmentsPage> with Tick
                     _buildDetailRow(
                       FontAwesomeIcons.stethoscope,
                       'Dịch vụ',
-                      appointment.service?.name ?? 'Không xác định',
+                      appointment.service?.name ?? appointment.serviceName,
                       Colors.blue,
                     ),
                     
@@ -637,35 +566,32 @@ class _StaffAppointmentsPageState extends State<StaffAppointmentsPage> with Tick
                     _buildDetailRow(
                       FontAwesomeIcons.user,
                       'Khách hàng',
-                      appointment.user?.fullName ?? 'Không xác định',
+                      appointment.user?.fullName ?? appointment.userName,
                       Colors.green,
                     ),
                     
                     // Pet info
-                    if (appointment.pet != null)
-                      _buildDetailRow(
-                        FontAwesomeIcons.paw,
-                        'Thú cưng',
-                        '${appointment.pet!.name} (${appointment.pet!.species})',
-                        Colors.orange,
-                      ),
+                    _buildDetailRow(
+                      FontAwesomeIcons.paw,
+                      'Thú cưng',
+                      appointment.pet != null 
+                          ? '${appointment.pet!.name} (${appointment.pet!.species})'
+                          : appointment.petName,
+                      Colors.orange,
+                    ),
                     
                     // Date and time
                     _buildDetailRow(
                       FontAwesomeIcons.calendar,
                       'Ngày hẹn',
-                      appointment.appointmentDate != null 
-                          ? FormatUtils.formatDate(appointment.appointmentDate!)
-                          : 'Không xác định',
+                      FormatUtils.formatDate(appointment.appointmentDate),
                       Colors.purple,
                     ),
                     
                     _buildDetailRow(
                       FontAwesomeIcons.clock,
                       'Giờ hẹn',
-                      appointment.appointmentDate != null 
-                          ? FormatUtils.formatTime(appointment.appointmentDate!)
-                          : 'Không xác định',
+                      FormatUtils.formatTime(appointment.appointmentDate),
                       Colors.indigo,
                     ),
                     
@@ -673,7 +599,7 @@ class _StaffAppointmentsPageState extends State<StaffAppointmentsPage> with Tick
                     _buildDetailRow(
                       FontAwesomeIcons.info,
                       'Trạng thái',
-                      appointment.status ?? 'Không xác định',
+                      appointment.status,
                       Colors.grey,
                     ),
                     

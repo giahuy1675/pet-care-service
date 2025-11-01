@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/appointment.dart';
+import '../models/staff_statistics.dart';
 import '../network/http_client.dart';
 import '../services/secure_storage.dart';
 
@@ -234,6 +235,27 @@ class StaffService {
     } catch (e) {
       print('Error fetching staff busy slots: $e');
       return []; // Return empty list if API fails
+    }
+  }
+
+  // Lấy thống kê của nhân viên
+  Future<StaffStatistics?> getStaffStatistics(int staffId) async {
+    try {
+      final headers = await getAuthHeaders();
+      final response = await _client.get(
+        Uri.parse('$_baseUrl/api/Staff/$staffId/statistics'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return StaffStatistics.fromJson(data);
+      } else {
+        throw Exception('Failed to load staff statistics: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching staff statistics: $e');
+      return null;
     }
   }
 }

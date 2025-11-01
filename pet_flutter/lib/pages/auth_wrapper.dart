@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import '../services/secure_storage.dart';
 import '../services/onesignal_service.dart';
+import '../services/user_presence_service.dart';
+import '../services/firebase_messaging_service.dart';
 import 'root_nav.dart';
 import 'guest_navigation.dart';
 import 'staff_navigation.dart';
@@ -13,15 +15,48 @@ class AuthWrapper extends StatefulWidget {
   State<AuthWrapper> createState() => _AuthWrapperState();
 }
 
-class _AuthWrapperState extends State<AuthWrapper> {
+class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
   final SecureStorageService _storage = SecureStorageService();
+  final UserPresenceService _presenceService = UserPresenceService();
   bool _isLoading = true;
   bool _isAuthenticated = false;
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _checkAuthStatus();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    // Set offline when app closes
+    if (_currentUserId != null) {
+      _presenceService.setUserOffline(_currentUserId!);
+    }
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_currentUserId == null) return;
+    
+    switch (state) {
+      case AppLifecycleState.resumed:
+        // App is in foreground
+        _presenceService.setUserOnline(_currentUserId!);
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+        // App is in background or closed
+        _presenceService.setUserOffline(_currentUserId!);
+        break;
+      case AppLifecycleState.hidden:
+        break;
+    }
   }
 
   Future<void> _checkAuthStatus() async {
@@ -29,17 +64,40 @@ class _AuthWrapperState extends State<AuthWrapper> {
       final token = await _storage.readToken();
       final user = await _storage.readUser();
       
-      // 🔔 Set OneSignal External User ID if user is logged in
+      // 🔔 Set OneSignal External User ID and Presence if user is logged in
       if (user != null) {
         try {
           final userMap = jsonDecode(user);
-          final userId = userMap['userId']?.toString(); // Changed from 'id' to 'userId'
-          if (userId != null) {
-            await OneSignalService().setExternalUserId(userId);
-            print('🔔 [AuthWrapper] OneSignal External User ID set: $userId');
+          final role = userMap['role']?.toString();
+          
+          // Dùng staffId cho Staff, userId cho Customer
+          String? externalId;
+          if (role == 'Staff') {
+            externalId = userMap['staffId']?.toString();
+          }
+          externalId ??= userMap['userId']?.toString();
+          
+          if (externalId != null) {
+            _currentUserId = externalId;
+            
+            // Set OneSignal External User ID
+            await OneSignalService().setExternalUserId(externalId);
+            print('🔔 [AuthWrapper] OneSignal External User ID set: $externalId (role: $role)');
+            
+            // Send FCM token to server
+            try {
+              await FirebaseMessagingService().sendTokenToServer(externalId);
+              print('✅ [AuthWrapper] FCM token sent to server for user: $externalId');
+            } catch (e) {
+              print('⚠️ [AuthWrapper] Failed to send FCM token: $e');
+            }
+            
+            // Set user online in Firebase
+            await _presenceService.setUserOnline(externalId);
+            print('✅ [AuthWrapper] User presence set to online: $externalId');
           }
         } catch (e) {
-          print('⚠️ [AuthWrapper] Failed to set OneSignal External User ID: $e');
+          print('⚠️ [AuthWrapper] Failed to set user status: $e');
         }
       }
       

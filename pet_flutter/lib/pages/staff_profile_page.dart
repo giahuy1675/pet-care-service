@@ -33,12 +33,14 @@ class _StaffProfilePageState extends State<StaffProfilePage> {
 
   Future<void> _loadStaffInfo() async {
     try {
+      if (!mounted) return;
       setState(() => _loading = true);
       
       // Lấy thông tin từ storage trước
       final userJson = await _storage.readUser();
       if (userJson != null) {
         final user = json.decode(userJson);
+        if (!mounted) return;
         setState(() {
           _staffName = user['fullName'] ?? 'Nhân viên';
           _staffEmail = user['email'] ?? '';
@@ -51,6 +53,7 @@ class _StaffProfilePageState extends State<StaffProfilePage> {
       // Sau đó lấy thông tin chi tiết từ API
       try {
         final staffInfo = await _staffService.getCurrentStaffInfo();
+        if (!mounted) return;
         setState(() {
           _staffId = staffInfo['staffId'];
           _staffName = staffInfo['fullName'] ?? _staffName;
@@ -65,6 +68,7 @@ class _StaffProfilePageState extends State<StaffProfilePage> {
     } catch (e) {
       print('Error loading staff info: $e');
     } finally {
+      if (!mounted) return;
       setState(() => _loading = false);
     }
   }

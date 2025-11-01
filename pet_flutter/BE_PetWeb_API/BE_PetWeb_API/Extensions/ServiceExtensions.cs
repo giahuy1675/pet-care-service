@@ -1,4 +1,5 @@
-﻿using BE_PetWeb_API.Services.Implementations;
+﻿using BE_PetWeb_API.Services;
+using BE_PetWeb_API.Services.Implementations;
 using BE_PetWeb_API.Services.Interfaces;
 
 namespace BE_PetWeb_API.Extensions
@@ -28,6 +29,8 @@ namespace BE_PetWeb_API.Extensions
             services.AddScoped<ICartService, CartService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IStaffScheduleService, StaffScheduleService>();
+            services.AddScoped<IOneSignalChatService, OneSignalChatService>();
+            services.AddScoped<IFirebaseMessagingService, FirebaseMessagingService>();
             services.AddSingleton<IDateTimeService, DateTimeService>();
             services.AddMemoryCache();
             services.AddTransient<IPasswordResetService, PasswordResetService>();

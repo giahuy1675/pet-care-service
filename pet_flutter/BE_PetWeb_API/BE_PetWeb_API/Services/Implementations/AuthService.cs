@@ -58,6 +58,14 @@ namespace BE_PetWeb_API.Services.Implementations
 
             var token = await CreateToken(user);
 
+            // Get StaffId if user is a staff member (usually not for registration, but included for consistency)
+            int? staffId = null;
+            if (user.Role == "Staff")
+            {
+                var staff = await _context.Staff.FirstOrDefaultAsync(s => s.UserId == user.UserId);
+                staffId = staff?.StaffId;
+            }
+
             return new AuthResponseDto
             {
                 UserId = user.UserId,
@@ -65,7 +73,8 @@ namespace BE_PetWeb_API.Services.Implementations
                 Email = user.Email,
                 FullName = user.FullName,
                 Role = user.Role,
-                Token = token
+                Token = token,
+                StaffId = staffId
             };
         }
 
@@ -116,6 +125,14 @@ namespace BE_PetWeb_API.Services.Implementations
 
             var token = await CreateToken(user);
 
+            // Get StaffId if user is a staff member
+            int? staffId = null;
+            if (user.Role == "Staff")
+            {
+                var staff = await _context.Staff.FirstOrDefaultAsync(s => s.UserId == user.UserId);
+                staffId = staff?.StaffId;
+            }
+
             return new AuthResponseDto
             {
                 UserId = user.UserId,
@@ -123,7 +140,8 @@ namespace BE_PetWeb_API.Services.Implementations
                 Email = user.Email,
                 FullName = user.FullName,
                 Role = user.Role,
-                Token = token
+                Token = token,
+                StaffId = staffId
             };
         }
 
@@ -183,6 +201,14 @@ namespace BE_PetWeb_API.Services.Implementations
                 // Tạo JWT token
                 var token = await CreateToken(user);
 
+                // Get StaffId if user is a staff member
+                int? staffId = null;
+                if (user.Role == "Staff")
+                {
+                    var staff = await _context.Staff.FirstOrDefaultAsync(s => s.UserId == user.UserId);
+                    staffId = staff?.StaffId;
+                }
+
                 return new AuthResponseDto
                 {
                     UserId = user.UserId,
@@ -190,7 +216,8 @@ namespace BE_PetWeb_API.Services.Implementations
                     Email = user.Email,
                     FullName = user.FullName,
                     Role = user.Role,
-                    Token = token
+                    Token = token,
+                    StaffId = staffId
                 };
             }
 

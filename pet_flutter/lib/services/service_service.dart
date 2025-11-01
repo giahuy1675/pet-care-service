@@ -17,7 +17,19 @@ class ServiceService {
     final response = await _client.get(uri);
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final data = jsonDecode(response.body) as List<dynamic>;
-      return data.cast<Map<String, dynamic>>();
+      final servicesWithFullImageUrls = data.map<Map<String, dynamic>>((service) {
+        final serviceMap = service as Map<String, dynamic>;
+        if (serviceMap['photo'] != null && serviceMap['photo'] is String) {
+          final photo = serviceMap['photo'] as String;
+          // Thêm base URL nếu ảnh chưa có đầy đủ URL
+          if (!photo.startsWith('http') && !photo.startsWith('data:')) {
+            final photoPath = photo.startsWith('/') ? photo : '/$photo';
+            serviceMap['photo'] = '$_baseUrl$photoPath';
+          }
+        }
+        return serviceMap;
+      }).toList();
+      return servicesWithFullImageUrls;
     }
     throw Exception(_extractError(response.body));
   }
@@ -42,7 +54,19 @@ class ServiceService {
     final response = await _client.get(uri);
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final data = jsonDecode(response.body) as List<dynamic>;
-      return data.cast<Map<String, dynamic>>();
+      final servicesWithFullImageUrls = data.map<Map<String, dynamic>>((service) {
+        final serviceMap = service as Map<String, dynamic>;
+        if (serviceMap['photo'] != null && serviceMap['photo'] is String) {
+          final photo = serviceMap['photo'] as String;
+          // Thêm base URL nếu ảnh chưa có đầy đủ URL
+          if (!photo.startsWith('http') && !photo.startsWith('data:')) {
+            final photoPath = photo.startsWith('/') ? photo : '/$photo';
+            serviceMap['photo'] = '$_baseUrl$photoPath';
+          }
+        }
+        return serviceMap;
+      }).toList();
+      return servicesWithFullImageUrls;
     }
     throw Exception(_extractError(response.body));
   }

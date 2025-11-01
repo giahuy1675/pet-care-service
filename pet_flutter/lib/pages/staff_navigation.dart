@@ -5,6 +5,7 @@ import 'staff_dashboard_page.dart';
 import 'staff_appointments_page.dart';
 import 'staff_schedule_page.dart';
 import 'staff_profile_page.dart';
+import 'staff_chat_page.dart';
 
 class StaffNavigation extends StatefulWidget {
   const StaffNavigation({super.key});
@@ -22,6 +23,7 @@ class _StaffNavigationState extends State<StaffNavigation> {
       const StaffDashboardPage(),
       const StaffAppointmentsPage(),
       const StaffSchedulePage(),
+      const StaffChatPage(),
       const StaffProfilePage(),
     ];
 
@@ -44,9 +46,10 @@ class _StaffNavigationState extends State<StaffNavigation> {
           end: Alignment.bottomRight,
         ),
         items: [
-          TabItem(icon: FontAwesomeIcons.chartLine, title: 'Dashboard'),
+          TabItem(icon: FontAwesomeIcons.chartLine, title: 'Tổng quan'),
           TabItem(icon: FontAwesomeIcons.calendarCheck, title: 'Lịch hẹn'),
-          TabItem(icon: FontAwesomeIcons.calendar, title: 'Lịch làm việc'),
+          TabItem(icon: FontAwesomeIcons.calendar, title: 'Ca làm'),
+          TabItem(icon: FontAwesomeIcons.comments, title: 'Chat'),
           TabItem(icon: FontAwesomeIcons.user, title: 'Hồ sơ'),
         ],
         initialActiveIndex: _index,

@@ -1682,6 +1682,22 @@
     ]
   },
   {
+    "ContainingType": "BE_PetWeb_API.Controllers.ChatController",
+    "Method": "SendChatNotification",
+    "RelativePath": "api/Chat/SendNotification",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "BE_PetWeb_API.Controllers.SendChatNotificationRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "BE_PetWeb_API.Controllers.CommentsController",
     "Method": "CreateComment",
     "RelativePath": "api/Comments",
@@ -4030,6 +4046,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "BE_PetWeb_API.Controllers.StaffController",
+    "Method": "GetStaffStatistics",
+    "RelativePath": "api/Staff/{id}/statistics",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "BE_PetWeb_API.Controllers.StaffScheduleController",
     "Method": "CheckStaffAvailability",
     "RelativePath": "api/staff/{staffId}/availability",
@@ -4588,6 +4620,27 @@
   },
   {
     "ContainingType": "BE_PetWeb_API.Controllers.UsersController",
+    "Method": "UpdateFcmToken",
+    "RelativePath": "api/Users/{userId}/fcm-token",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "BE_PetWeb_API.DTOs.Notification.UpdateFcmTokenDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BE_PetWeb_API.Controllers.UsersController",
     "Method": "GetUsersPublic",
     "RelativePath": "api/Users/public",
     "HttpMethod": "GET",
@@ -4605,6 +4658,22 @@
         "StatusCode": 200
       }
     ]
+  },
+  {
+    "ContainingType": "BE_PetWeb_API.Controllers.UsersController",
+    "Method": "SendNotification",
+    "RelativePath": "api/Users/send-notification",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "BE_PetWeb_API.DTOs.Notification.SendPushNotificationDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   },
   {
     "ContainingType": "BE_PetWeb_API.Controllers.VaccinationsController",

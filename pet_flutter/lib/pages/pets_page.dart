@@ -680,7 +680,7 @@ class _PetsPageState extends State<PetsPage> {
                               itemBuilder: (context, index) {
                                 final p = _filteredItems[index];
                                 final name = (p['name'] as String?) ?? 'Thú cưng';
-                                final photo = p['photo'] as String?;
+                                final photo = (p['photoUrl'] as String?) ?? (p['photo'] as String?);
                                 final species = (p['species'] as String?) ?? '';
                                 final breed = (p['breed'] as String?) ?? '';
                                 final gender = (p['gender'] as String?) ?? '';

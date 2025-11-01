@@ -4,10 +4,14 @@ import 'package:intl/intl.dart';
 import '../models/appointment.dart';
 import '../services/appointment_service.dart';
 import '../services/review_service.dart';
+import '../services/firebase_chat_service.dart';
+import '../services/secure_storage.dart';
 import '../widgets/review_dialog.dart';
 import '../widgets/time_progress_bar.dart';
 import 'appointment_detail_page.dart';
 import 'appointment_booking_page.dart';
+import 'chat_detail_page.dart';
+import 'notifications_page.dart';
 
 class AppointmentListPage extends StatefulWidget {
   const AppointmentListPage({Key? key}) : super(key: key);
@@ -16,7 +20,7 @@ class AppointmentListPage extends StatefulWidget {
   State<AppointmentListPage> createState() => _AppointmentListPageState();
 }
 
-class _AppointmentListPageState extends State<AppointmentListPage> {
+class _AppointmentListPageState extends State<AppointmentListPage> with TickerProviderStateMixin {
   List<Appointment> appointments = [];
   List<Appointment> filteredAppointments = [];
   bool isLoading = true;
@@ -30,6 +34,13 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
   final ReviewService _reviewService = ReviewService();
   Map<int, bool> _hasReview = {}; // Track which appointments have reviews
   Map<int, bool> _isLoadingReview = {}; // Track loading state for each appointment
+  
+  // Chat related
+  final FirebaseChatService _chatService = FirebaseChatService();
+  Map<int, int> _unreadCounts = {}; // Track unread count for each appointment
+  late AnimationController _bellAnimationController;
+  late Animation<double> _bellAnimation;
+  int _previousTotalUnread = 0;
 
   final List<String> statusOptions = [
     'Tất cả',
@@ -50,7 +61,78 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
   @override
   void initState() {
     super.initState();
+    
+    // Initialize bell animation controller
+    _bellAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    
+    _bellAnimation = Tween<double>(begin: -0.1, end: 0.1).animate(
+      CurvedAnimation(
+        parent: _bellAnimationController,
+        curve: Curves.elasticIn,
+      ),
+    );
+    
     _fetchAppointments();
+    _loadUnreadCounts();
+  }
+  
+  // Trigger bell animation when unread count increases
+  void _triggerBellAnimation(int totalUnread) {
+    if (totalUnread > _previousTotalUnread) {
+      _bellAnimationController.forward(from: 0.0).then((_) {
+        _bellAnimationController.reverse();
+      });
+    }
+    _previousTotalUnread = totalUnread;
+  }
+  
+  Future<void> _loadUnreadCounts() async {
+    try {
+      final storage = SecureStorageService();
+      final userId = await storage.readUserId();
+      
+      if (userId == null) return;
+      
+      print('🔵 [AppointmentList] Loading unread counts for customer: $userId');
+      
+      // Get all chat rooms for this customer
+      final chatRoomsStream = _chatService.getCustomerChatRooms(int.parse(userId));
+      
+      chatRoomsStream.listen((chatRooms) {
+        final newUnreadCounts = <int, int>{};
+        
+        print('🔵 [AppointmentList] Got ${chatRooms.length} chat rooms');
+        
+        for (final room in chatRooms) {
+          // Use unreadCountCustomer for customer view
+          final unreadCount = room.unreadCountCustomer;
+          print('🔵 [AppointmentList] Room ${room.id}, appointment: ${room.appointmentId}, unreadCustomer: $unreadCount');
+          
+          if (room.appointmentId != null && unreadCount > 0) {
+            newUnreadCounts[room.appointmentId!] = unreadCount;
+            print('✅ [AppointmentList] Added badge for appointment ${room.appointmentId}: $unreadCount');
+          }
+        }
+        
+        // Calculate total unread count and trigger animation if increased
+        final totalUnread = newUnreadCounts.values.fold(0, (sum, count) => sum + count);
+        
+        if (mounted) {
+          setState(() {
+            _unreadCounts = newUnreadCounts;
+          });
+          print('✅ [AppointmentList] Updated _unreadCounts: $_unreadCounts, total: $totalUnread');
+          
+          // Trigger bell animation if count increased
+          _triggerBellAnimation(totalUnread);
+        }
+      });
+    } catch (e) {
+      print('❌ [AppointmentList] Error loading unread counts: $e');
+    }
   }
 
   Future<void> _checkReviewsForCompletedAppointments() async {
@@ -100,6 +182,7 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
 
   @override
   void dispose() {
+    _bellAnimationController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -246,10 +329,60 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const FaIcon(FontAwesomeIcons.bell),
-            onPressed: () {
-              // TODO: Navigate to notifications
+          // Animated notification bell with badge
+          AnimatedBuilder(
+            animation: _bellAnimation,
+            builder: (context, child) {
+              final totalUnread = _unreadCounts.values.fold(0, (sum, count) => sum + count);
+              
+              return Transform.rotate(
+                angle: _bellAnimation.value,
+                child: Stack(
+                  children: [
+                    IconButton(
+                      icon: const FaIcon(FontAwesomeIcons.bell),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotificationsPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    if (totalUnread > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 1.5,
+                            ),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          child: Center(
+                            child: Text(
+                              totalUnread > 99 ? '99+' : '$totalUnread',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
             },
           ),
           IconButton(
@@ -916,35 +1049,115 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
+                    // Chat button (show if staff is assigned)
+                    if (appointment.staffId != null && appointment.staffName.isNotEmpty) ...[
+                      Expanded(
+                        child: SizedBox(
+                          height: 44,
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: () => _openChat(appointment),
+                                  icon: const FaIcon(
+                                    FontAwesomeIcons.comments,
+                                    size: 16,
+                                  ),
+                                  label: const Text(
+                                    'Chat',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.green,
+                                    side: BorderSide(
+                                      color: Colors.green.withOpacity(0.5),
+                                      width: 1.5,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  ),
+                                ),
+                              ),
+                              // Badge for unread messages
+                              if (_unreadCounts[appointment.appointmentId] != null && 
+                                  _unreadCounts[appointment.appointmentId]! > 0)
+                                Positioned(
+                                  right: 4,
+                                  top: 4,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 18,
+                                      minHeight: 18,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 1.5,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.red.withOpacity(0.5),
+                                          blurRadius: 4,
+                                          spreadRadius: 1,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        _unreadCounts[appointment.appointmentId]! > 99
+                                            ? '99+'
+                                            : _unreadCounts[appointment.appointmentId].toString(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          height: 1.0,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    
                     // Review button (only for completed appointments)
                     if (appointment.status.toLowerCase() == 'completed') ...[
                       Expanded(
-                        child: Container(
-                          height: 40,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: _hasReview[appointment.appointmentId] == true 
-                                  ? Colors.grey.withOpacity(0.3)
-                                  : Colors.amber.withOpacity(0.3),
-                              width: 1,
-                            ),
-                          ),
+                        child: SizedBox(
+                          height: 44,
                           child: _isLoadingReview[appointment.appointmentId] == true
-                              ? Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade50,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const Center(
-                                    child: SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                              ? OutlinedButton(
+                                  onPressed: null,
+                                  style: OutlinedButton.styleFrom(
+                                    side: BorderSide(
+                                      color: Colors.grey.withOpacity(0.3),
+                                      width: 1.5,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
+                                  child: const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
                                 )
-                              : TextButton.icon(
+                              : OutlinedButton.icon(
                                   onPressed: _hasReview[appointment.appointmentId] == true 
                                       ? null 
                                       : () => _showReviewDialog(appointment),
@@ -952,61 +1165,65 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
                                     _hasReview[appointment.appointmentId] == true 
                                         ? FontAwesomeIcons.check 
                                         : FontAwesomeIcons.star,
-                                    size: 14,
+                                    size: 16,
                                   ),
                                   label: Text(
                                     _hasReview[appointment.appointmentId] == true 
                                         ? 'Đã đánh giá' 
                                         : 'Đánh giá',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.w600,
-                                      fontSize: 13,
-                                      color: _hasReview[appointment.appointmentId] == true 
-                                          ? Colors.grey 
-                                          : Colors.amber[700],
+                                      fontSize: 14,
                                     ),
                                   ),
-                                  style: TextButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: _hasReview[appointment.appointmentId] == true 
+                                        ? Colors.grey 
+                                        : Colors.amber[700],
+                                    side: BorderSide(
+                                      color: (_hasReview[appointment.appointmentId] == true 
+                                          ? Colors.grey 
+                                          : Colors.amber).withOpacity(0.5),
+                                      width: 1.5,
                                     ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
                                   ),
                                 ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 12),
                     ],
                     
                     // Details button
                     Expanded(
-                      child: Container(
-                        height: 40,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: TextButton.icon(
+                      child: SizedBox(
+                        height: 44,
+                        child: OutlinedButton.icon(
                           onPressed: () => _navigateToAppointmentDetail(appointment),
-                          icon: FaIcon(
+                          icon: const FaIcon(
                             FontAwesomeIcons.eye, 
-                            size: 14,
-                            color: Theme.of(context).colorScheme.primary,
+                            size: 16,
                           ),
-                          label: Text(
+                          label: const Text(
                             'Chi tiết',
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.w600,
-                              fontSize: 13,
+                              fontSize: 14,
                             ),
                           ),
-                          style: TextButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Color(0xFF6B4CE6),
+                            side: BorderSide(
+                              color: Color(0xFF6B4CE6).withOpacity(0.5),
+                              width: 1.5,
                             ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
                           ),
                         ),
                       ),
@@ -1028,6 +1245,89 @@ class _AppointmentListPageState extends State<AppointmentListPage> {
         builder: (context) => AppointmentDetailPage(appointment: appointment),
       ),
     );
+  }
+
+  Future<void> _openChat(Appointment appointment) async {
+    if (appointment.staffId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Chưa có nhân viên được phân công')),
+      );
+      return;
+    }
+
+    try {
+      // Lấy thông tin user hiện tại
+      final storage = SecureStorageService();
+      final userId = await storage.readUserId();
+      final userName = await storage.readUserName();
+      final role = await storage.readUserRole();
+
+      if (userId == null || userName == null || role == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Vui lòng đăng nhập lại')),
+        );
+        return;
+      }
+
+      // Tạo hoặc lấy chat room theo appointmentId (Grab style)
+      print('🔵 [AppointmentList] Creating chat for appointment ${appointment.appointmentId}');
+      final chatService = FirebaseChatService();
+      final chatRoom = await chatService.createChatRoomFromAppointment(
+        appointmentId: appointment.appointmentId,
+        customerId: appointment.userId,
+        customerName: appointment.userName,
+        customerAvatar: appointment.user?.avatarUrl ?? '',
+        staffId: appointment.staffId!,
+        staffName: appointment.staffName,
+        staffAvatar: appointment.staff?.avatarUrl ?? '',
+        appointmentStatus: appointment.status,
+        serviceName: appointment.serviceName, // Thêm tên dịch vụ
+      );
+      
+      print('✅ [AppointmentList] Chat room created: ${chatRoom.id}');
+
+      // Xác định thông tin người chat kia dựa trên vai trò
+      final String otherUserId;
+      final String otherUserName;
+      final String otherUserAvatar;
+      
+      if (role == 'Staff') {
+        // Staff chat với customer
+        otherUserId = appointment.userId.toString();
+        otherUserName = appointment.userName;
+        otherUserAvatar = appointment.user?.avatarUrl ?? '';
+      } else {
+        // Customer chat với staff
+        otherUserId = appointment.staffId.toString();
+        otherUserName = appointment.staffName;
+        otherUserAvatar = appointment.staff?.avatarUrl ?? '';
+      }
+
+      // Mở trang chat
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatDetailPage(
+            chatRoomId: chatRoom.id,
+            currentUserId: userId,
+            currentUserName: userName,
+            currentUserAvatar: role == 'Staff' 
+                ? (appointment.staff?.avatarUrl ?? '') 
+                : (appointment.user?.avatarUrl ?? ''),
+            otherUserId: otherUserId,
+            otherUserName: otherUserName,
+            otherUserAvatar: otherUserAvatar,
+          ),
+        ),
+      );
+    } catch (e) {
+      print('❌ [AppointmentList] Error opening chat: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không thể mở chat. Vui lòng thử lại.')),
+      );
+    }
   }
 
 }

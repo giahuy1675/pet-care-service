@@ -16,6 +16,6 @@ namespace BE_PetWeb_API.DTOs.Appointment
         [Required]
         public DateTime AppointmentDate { get; set; }
 
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
     }
 }

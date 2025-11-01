@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import '../main.dart'; // Import để dùng navigatorKey
+import '../pages/chat_detail_page.dart';
 
 class OneSignalService {
   static final OneSignalService _instance = OneSignalService._internal();
@@ -129,17 +132,42 @@ class OneSignalService {
     if (additionalData == null) return;
 
     final String? type = additionalData['type'];
-    final String? id = additionalData['id'];
 
     debugPrint("🔔 [OneSignal] Handling notification click:");
     debugPrint("   Type: $type");
-    debugPrint("   ID: $id");
+    debugPrint("   Data: $additionalData");
 
-    // TODO: Implement navigation based on notification type
-    // Example:
-    // if (type == 'pet_updated') {
-    //   navigatorKey.currentState?.pushNamed('/pet-details', arguments: id);
-    // }
+    // Handle chat notification
+    if (type == 'chat') {
+      final String? chatRoomId = additionalData['chatRoomId'];
+      final String? senderId = additionalData['senderId'];
+      final String? senderName = additionalData['senderName'];
+      final String? senderAvatar = additionalData['senderAvatar'];
+
+      if (chatRoomId != null && senderId != null && senderName != null) {
+        // Parse chat room ID to get customerId and staffId
+        final parts = chatRoomId.split('_');
+        if (parts.length == 3) {
+          final customerId = parts[1];
+          final staffId = parts[2];
+
+          // Navigate to ChatDetailPage
+          navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (context) => ChatDetailPage(
+                chatRoomId: chatRoomId,
+                currentUserId: staffId, // Người nhận là staff
+                currentUserName: 'Staff', // Sẽ được load lại từ storage
+                currentUserAvatar: '',
+                otherUserId: customerId,
+                otherUserName: senderName,
+                otherUserAvatar: senderAvatar ?? '',
+              ),
+            ),
+          );
+        }
+      }
+    }
   }
 
   /// Kiểm tra trạng thái permission

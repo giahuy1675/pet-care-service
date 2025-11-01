@@ -20,7 +20,8 @@ class PetService {
     final uri = Uri.parse('$_baseUrl/api/Pets');
     final res = await _client.get(uri);
     if (res.statusCode >= 200 && res.statusCode < 300) {
-      return (jsonDecode(res.body) as List).cast<Map<String, dynamic>>();
+      final data = (jsonDecode(res.body) as List).cast<Map<String, dynamic>>();
+      return _processedPetsWithFullImageUrls(data);
     }
     throw Exception(_extractError(res.body));
   }
@@ -29,7 +30,8 @@ class PetService {
     final uri = Uri.parse('$_baseUrl/api/Pets/User');
     final res = await _client.get(uri, headers: _authHeaders(token));
     if (res.statusCode >= 200 && res.statusCode < 300) {
-      return (jsonDecode(res.body) as List).cast<Map<String, dynamic>>();
+      final data = (jsonDecode(res.body) as List).cast<Map<String, dynamic>>();
+      return _processedPetsWithFullImageUrls(data);
     }
     throw Exception(_extractError(res.body));
   }
@@ -38,7 +40,8 @@ class PetService {
     final uri = Uri.parse('$_baseUrl/api/Pets/$id');
     final res = await _client.get(uri);
     if (res.statusCode >= 200 && res.statusCode < 300) {
-      return jsonDecode(res.body) as Map<String, dynamic>;
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      return _processPetWithFullImageUrl(data);
     }
     throw Exception(_extractError(res.body));
   }
@@ -73,7 +76,8 @@ class PetService {
     final streamed = await request.send();
     final res = await http.Response.fromStream(streamed);
     if (res.statusCode >= 200 && res.statusCode < 300) {
-      return jsonDecode(res.body) as Map<String, dynamic>;
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      return _processPetWithFullImageUrl(data);
     }
     throw Exception(_extractError(res.body));
   }
@@ -114,9 +118,29 @@ class PetService {
     final streamed = await request.send();
     final response = await http.Response.fromStream(streamed);
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return jsonDecode(response.body) as Map<String, dynamic>;
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return _processPetWithFullImageUrl(data);
     }
     throw Exception(_extractError(response.body));
+  }
+
+  // Helper method để xử lý URL ảnh thú cưng
+  Map<String, dynamic> _processPetWithFullImageUrl(Map<String, dynamic> pet) {
+    if (pet['photo'] != null && pet['photo'] is String) {
+      final photo = pet['photo'] as String;
+      // Thêm base URL nếu ảnh chưa có đầy đủ URL
+      if (!photo.startsWith('http') && !photo.startsWith('data:')) {
+        final photoPath = photo.startsWith('/') ? photo : '/$photo';
+        pet['photoUrl'] = '$_baseUrl$photoPath';
+        // Giữ nguyên trường photo gốc và thêm photoUrl
+      }
+    }
+    return pet;
+  }
+
+  // Helper method để xử lý danh sách thú cưng
+  List<Map<String, dynamic>> _processedPetsWithFullImageUrls(List<Map<String, dynamic>> pets) {
+    return pets.map((pet) => _processPetWithFullImageUrl(pet)).toList();
   }
 
   String _extractError(String body) {

@@ -45,6 +45,9 @@ builder.Services.AddAuthentication()
         options.CallbackPath = "/api/auth/google-callback";
     });
 
+// Add HttpClient for OneSignal and other services
+builder.Services.AddHttpClient();
+
 // Register all application services using the extension method
 builder.Services.RegisterServices();
 

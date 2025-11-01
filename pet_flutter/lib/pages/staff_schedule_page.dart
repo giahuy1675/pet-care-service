@@ -60,6 +60,7 @@ class _StaffSchedulePageState extends State<StaffSchedulePage> {
       final userJson = await _storage.readUser();
       if (userJson != null) {
         final user = json.decode(userJson);
+        if (!mounted) return;
         setState(() {
           _staffName = user['fullName'] ?? 'Nhân viên';
         });
@@ -68,6 +69,7 @@ class _StaffSchedulePageState extends State<StaffSchedulePage> {
       // Sau đó lấy thông tin chi tiết từ API
       try {
         final staffInfo = await _staffService.getCurrentStaffInfo();
+        if (!mounted) return;
         setState(() {
           _staffName = staffInfo['fullName'] ?? _staffName;
           _staffId = staffInfo['staffId'];

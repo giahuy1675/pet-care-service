@@ -1,6 +1,8 @@
 ﻿using BE_PetWeb_API.Models;
 using BE_PetWeb_API.DTOs.Users;
+using BE_PetWeb_API.DTOs.Notification;
 using BE_PetWeb_API.Services.Interfaces;
+using BE_PetWeb_API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -25,17 +27,20 @@ namespace BE_PetWeb_API.Controllers
         private readonly IWebHostEnvironment _environment;
         private readonly ILogger<UsersController> _logger;
         private readonly IDateTimeService _dateTimeService;
+        private readonly IFirebaseMessagingService _firebaseMessagingService;
 
         public UsersController(
             PetWebContext context,
             IWebHostEnvironment environment,
             ILogger<UsersController> logger,
-            IDateTimeService dateTimeService)
+            IDateTimeService dateTimeService,
+            IFirebaseMessagingService firebaseMessagingService)
         {
             _context = context;
             _environment = environment;
             _logger = logger;
             _dateTimeService = dateTimeService;
+            _firebaseMessagingService = firebaseMessagingService;
         }
 
         // GET: api/Users
@@ -583,6 +588,74 @@ namespace BE_PetWeb_API.Controllers
             }
 
             return true;
+        }
+
+        // POST: api/Users/{userId}/fcm-token
+        [HttpPost("{userId}/fcm-token")]
+        [Authorize]
+        public async Task<IActionResult> UpdateFcmToken(int userId, [FromBody] UpdateFcmTokenDto dto)
+        {
+            try
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                {
+                    return NotFound(new { message = "User not found" });
+                }
+
+                user.FcmToken = dto.FcmToken;
+                user.UpdatedAt = _dateTimeService.Now;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"FCM token updated for user {userId}");
+                return Ok(new { message = "FCM token updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating FCM token");
+                return StatusCode(500, new { message = "Error updating FCM token" });
+            }
+        }
+
+        // POST: api/Users/send-notification
+        [HttpPost("send-notification")]
+        [Authorize]
+        public async Task<IActionResult> SendNotification([FromBody] SendPushNotificationDto dto)
+        {
+            try
+            {
+                var targetUser = await _context.Users.FindAsync(dto.TargetUserId);
+                if (targetUser == null)
+                {
+                    return NotFound(new { message = "Target user not found" });
+                }
+
+                if (string.IsNullOrEmpty(targetUser.FcmToken))
+                {
+                    return BadRequest(new { message = "User does not have FCM token" });
+                }
+
+                var success = await _firebaseMessagingService.SendNotificationAsync(
+                    targetUser.FcmToken,
+                    dto.Title,
+                    dto.Body,
+                    dto.Data
+                );
+
+                if (success)
+                {
+                    return Ok(new { message = "Notification sent successfully" });
+                }
+                else
+                {
+                    return StatusCode(500, new { message = "Failed to send notification" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending notification");
+                return StatusCode(500, new { message = "Error sending notification" });
+            }
         }
     }
 }

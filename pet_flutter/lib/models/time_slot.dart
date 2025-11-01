@@ -262,7 +262,7 @@ class AppointmentBookingData {
       'serviceId': selectedService?.serviceId,
       'staffId': selectedStaff?.staffId,
       'appointmentDate': selectedTimeSlot?.startTime.toIso8601String(),
-      'notes': notes,
+      'notes': (notes != null && notes!.isNotEmpty) ? notes : '', // Gửi empty string thay vì null
       'totalAmount': totalAmount,
       'paymentMethod': paymentMethod,
       'status': 'Pending',
