@@ -9,8 +9,8 @@ class ApiConfig {
   static String get baseUrl {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
     if (kIsWeb) return 'https://localhost:7164';
-    // On Android emulator use HTTP port to avoid SSL handshake issues with dev cert
-    if (Platform.isAndroid) return 'http://10.0.2.2:5181';
+    // For real Android device: use computer IP address with HTTP (no SSL issues)
+    if (Platform.isAndroid) return 'http://192.168.1.163:5181';
     return 'https://localhost:7164';
   }
 }

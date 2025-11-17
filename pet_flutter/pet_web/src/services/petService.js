@@ -52,6 +52,19 @@ const petService = {
     }
   },
   
+  // Lấy thú cưng theo userId (dùng cho admin)
+  getPetsByUserId: async (userId) => {
+    try {
+      console.log(`🔍 Fetching pets for userId: ${userId}`);
+      const response = await axiosClient.get(`/Pets/User/${userId}`);
+      console.log(`✅ Pets fetched for user ${userId}:`, response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`❌ Error fetching pets for userId ${userId}:`, error);
+      throw handleApiError(error);
+    }
+  },
+  
   // Lấy thông tin chi tiết của một thú cưng
   getPetById: async (id) => {
     try {

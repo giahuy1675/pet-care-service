@@ -420,9 +420,6 @@ class _AddPetPageState extends State<AddPetPage> {
                 items: const [
                   DropdownMenuItem(value: 'Dog', child: Text('Chó')),
                   DropdownMenuItem(value: 'Cat', child: Text('Mèo')),
-                  DropdownMenuItem(value: 'Bird', child: Text('Chim')),
-                  DropdownMenuItem(value: 'Fish', child: Text('Cá')),
-                  DropdownMenuItem(value: 'Other', child: Text('Khác')),
                 ],
                 onChanged: (v) => setState(() => _species = v ?? 'Dog'),
               ),

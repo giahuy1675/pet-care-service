@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axiosClient from '../../utils/axiosClient';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
+import { notification } from 'antd';
 import appointmentSyncManager from '../../utils/appointmentSync'; // Add sync manager
 import { 
   CalendarOutlined, 
@@ -29,6 +30,7 @@ import {
   BellOutlined,
   ToolOutlined,
   SettingOutlined,
+  PlusOutlined,
   FileTextOutlined
 } from '@ant-design/icons';
 import dayjs from '../../utils/dayjs'; // Using configured dayjs with plugins
@@ -50,6 +52,9 @@ import { UnassignedBadge, AssignedBadge, StaffAssignButton } from './StyledCompo
 
 // Thêm import TimeSlotGrid component
 import TimeSlotGrid from '../appointment/TimeSlotGrid';
+
+// Thêm import AdminCreateAppointment wrapper
+import AdminCreateAppointment from './AdminCreateAppointment';
 
 // Thêm import isPetBusySlot helper
 import { isPetBusySlot } from '../appointment/isPetBusySlot';
@@ -76,7 +81,7 @@ const AppointmentContainer = styled.div`
     left: 0;
     width: 100%;
     height: 5px;
-    background: linear-gradient(90deg, #4318FF 0%, #8F6BFF 50%, #4318FF 100%);
+    background: linear-gradient(90deg, #304FFE 0%, #304FFE 50%, #304FFE 100%);
     background-size: 200% 100%;
     animation: shimmer 3s infinite linear;
   }
@@ -92,7 +97,7 @@ const AppointmentContainer = styled.div`
     
     .anticon {
       font-size: 30px;
-      background: linear-gradient(135deg, #4318FF, #8F6BFF);
+      background: linear-gradient(135deg, #304FFE, #304FFE);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -153,7 +158,7 @@ const StatCard = styled.div`
       font-weight: 700;
       color: #2B3674;
       margin: 0;
-      background: linear-gradient(135deg, #4318FF, #8F6BFF);
+      background: linear-gradient(135deg, #304FFE, #304FFE);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -195,7 +200,7 @@ const SearchBox = styled.div`
 
     &:focus {
       outline: none;
-      border-color: #4318FF;
+      border-color: #304FFE;
       box-shadow: 0 0 0 4px rgba(67, 24, 255, 0.15);
       background: white;
     }
@@ -210,13 +215,13 @@ const SearchBox = styled.div`
     left: 20px;
     top: 50%;
     transform: translateY(-50%);
-    color: #4318FF;
+    color: #304FFE;
     font-size: 20px;
     transition: all 0.3s ease;
   }
   
   &:focus-within .anticon {
-    color: #4318FF;
+    color: #304FFE;
   }
 `;
 
@@ -234,7 +239,7 @@ const DateFilter = styled.div`
     
     &:focus {
       outline: none;
-      border-color: #4318FF;
+      border-color: #304FFE;
       box-shadow: 0 0 0 4px rgba(67, 24, 255, 0.15);
       background: white;
     }
@@ -245,7 +250,7 @@ const DateFilter = styled.div`
     left: 20px;
     top: 50%;
     transform: translateY(-50%);
-    color: #4318FF;
+    color: #304FFE;
     font-size: 20px;
   }
 `;
@@ -267,7 +272,7 @@ const StatusFilter = styled.div`
     
     &:focus {
       outline: none;
-      border-color: #4318FF;
+      border-color: #304FFE;
       box-shadow: 0 0 0 4px rgba(67, 24, 255, 0.15);
       background: white;
     }
@@ -278,7 +283,7 @@ const StatusFilter = styled.div`
     left: 20px;
     top: 50%;
     transform: translateY(-50%);
-    color: #4318FF;
+    color: #304FFE;
     font-size: 20px;
     pointer-events: none;
   }
@@ -291,7 +296,7 @@ const StatusFilter = styled.div`
     transform: translateY(-50%);
     border-left: 6px solid transparent;
     border-right: 6px solid transparent;
-    border-top: 6px solid #4318FF;
+    border-top: 6px solid #304FFE;
     pointer-events: none;
   }
 `;
@@ -484,7 +489,7 @@ const EditForm = styled.div`
   padding: 30px;
   margin-bottom: 35px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  border-left: 5px solid #4318FF;
+  border-left: 5px solid #304FFE;
   
   h2 {
     font-size: 22px;
@@ -537,7 +542,7 @@ const FormGroup = styled.div`
     
     &:focus {
       outline: none;
-      border-color: #4318FF;
+      border-color: #304FFE;
       box-shadow: 0 0 0 4px rgba(67, 24, 255, 0.15);
       background: white;
     }
@@ -565,7 +570,7 @@ const FormActions = styled.div`
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     
     &.save {
-      background: linear-gradient(135deg, #4318FF, #8F6BFF);
+      background: linear-gradient(135deg, #304FFE, #304FFE);
       color: white;
       box-shadow: 0 8px 20px rgba(67, 24, 255, 0.25);
       
@@ -754,7 +759,7 @@ const LoadingState = styled.div`
     margin-bottom: 25px;
     animation: spin 1s linear infinite;
     font-size: 50px;
-    background: linear-gradient(135deg, #4318FF, #8F6BFF);
+    background: linear-gradient(135deg, #304FFE, #304FFE);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -789,16 +794,16 @@ const Pagination = styled.div`
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     
     &:hover:not(:disabled) {
-      border-color: #4318FF;
-      color: #4318FF;
+      border-color: #304FFE;
+      color: #304FFE;
       transform: translateY(-2px);
       box-shadow: 0 5px 15px rgba(67, 24, 255, 0.2);
     }
     
     &.active {
-      background: linear-gradient(135deg, #4318FF, #8F6BFF);
+      background: linear-gradient(135deg, #304FFE, #304FFE);
       color: white;
-      border-color: #4318FF;
+      border-color: #304FFE;
       box-shadow: 0 5px 15px rgba(67, 24, 255, 0.3);
     }
     
@@ -832,7 +837,7 @@ const Pagination = styled.div`
       
       &:focus {
         outline: none;
-        border-color: #4318FF;
+        border-color: #304FFE;
       }
     }
   }
@@ -920,7 +925,7 @@ const AppointmentStats = ({ appointments }) => {
   return (
     <StatsContainer>
       <StatCard>
-        <div className="icon" style={{ background: 'linear-gradient(135deg, #4318FF 0%, #8F6BFF 100%)' }}>
+        <div className="icon" style={{ background: 'linear-gradient(135deg, #304FFE 0%, #304FFE 100%)' }}>
           <PieChartOutlined />
         </div>
         <div className="content">
@@ -959,21 +964,30 @@ const AppointmentStats = ({ appointments }) => {
   );
 };
 
-// Thêm các hàm xử lý timezone (đồng bộ với AppointmentForm.js)
+// ✅ FIXED: Các hàm xử lý timezone - đơn giản hóa để tránh lỗi
 const formatDateTimeWithTimeZoneOffset = (date) => {
   if (!date) return null;
   
-  // Tạo một đối tượng date từ input
+  // Đơn giản: chỉ cần lấy ISO string và loại bỏ 'Z' để giữ nguyên local time
   const inputDate = typeof date === 'string' ? new Date(date) : date;
   
-  // Lấy timezone offset của người dùng (phút)
-  const timeZoneOffset = inputDate.getTimezoneOffset();
+  console.log('🕐 [formatDateTimeWithTimeZoneOffset] Input:', inputDate);
+  console.log('🕐 [formatDateTimeWithTimeZoneOffset] Local Hours:', inputDate.getHours());
   
-  // Tính toán thời gian đã điều chỉnh
-  const adjustedDate = new Date(inputDate.getTime() - (timeZoneOffset * 60000));
+  // Lấy các thành phần ngày giờ từ local time
+  const year = inputDate.getFullYear();
+  const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+  const day = String(inputDate.getDate()).padStart(2, '0');
+  const hours = String(inputDate.getHours()).padStart(2, '0');
+  const minutes = String(inputDate.getMinutes()).padStart(2, '0');
+  const seconds = String(inputDate.getSeconds()).padStart(2, '0');
   
-  // Trả về chuỗi ISO không có 'Z' ở cuối (UTC)
-  return adjustedDate.toISOString().slice(0, -1);
+  // Tạo chuỗi ISO local (không có 'Z')
+  const localISOString = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  
+  console.log('🕐 [formatDateTimeWithTimeZoneOffset] Output (local ISO):', localISOString);
+  
+  return localISOString;
 };
 
 const adjustTimeZoneFromServer = (dateString) => {
@@ -987,28 +1001,11 @@ const adjustTimeZoneFromServer = (dateString) => {
     return dateString;
   }
   
-  // Nếu chuỗi có 'Z' ở cuối, nghĩa là UTC time từ server
-  if (typeof dateString === 'string' && dateString.endsWith('Z')) {
-    console.log('🔧 adjustTimeZoneFromServer - UTC string detected, converting to local time');
-    
-    // Tạo Date object từ UTC string
-    const utcDate = new Date(dateString);
-    console.log('🔧 UTC Date object:', utcDate);
-    console.log('🔧 UTC hours:', utcDate.getHours());
-    
-    // Chuyển đổi về local timezone
-    const localOffset = utcDate.getTimezoneOffset(); // minutes
-    const localDate = new Date(utcDate.getTime() - (localOffset * 60000));
-    console.log('🔧 Local Date object:', localDate);
-    console.log('🔧 Local hours:', localDate.getHours());
-    console.log('🔧 Timezone offset (minutes):', localOffset);
-    
-    return localDate;
-  }
-  
-  // Nếu không có 'Z', giả sử đã là local time
+  // ✅ FIXED: Không cần chuyển đổi timezone - chỉ parse trực tiếp
+  // Server đã gửi đúng local time hoặc browser sẽ tự chuyển đổi
   const date = new Date(dateString);
-  console.log('🔧 adjustTimeZoneFromServer - local time:', date);
+  console.log('🔧 adjustTimeZoneFromServer - parsed date:', date);
+  console.log('🔧 adjustTimeZoneFromServer - hours:', date.getHours());
   
   return date;
 };
@@ -1099,6 +1096,25 @@ const AppointmentManagement = () => {
   // ===== THÊM STATE THIẾU CHO EDIT STAFF BUSY SLOTS =====
   const [editStaffBusyTimeSlots, setEditStaffBusyTimeSlots] = useState([]);
   const [currentAppointmentTime, setCurrentAppointmentTime] = useState(null);
+
+  // ===== STATE CHO TẠO LỊCH HẸN MỚI =====
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createFormData, setCreateFormData] = useState({
+    userId: '',
+    petId: '',
+    serviceId: '',
+    staffId: '',
+    appointmentDate: '',
+    appointmentTime: '',
+    notes: ''
+  });
+  const [createTimeSlots, setCreateTimeSlots] = useState([]);
+  const [selectedCreateTimeSlot, setSelectedCreateTimeSlot] = useState(null);
+  const [loadingCreateTimeSlots, setLoadingCreateTimeSlots] = useState(false);
+  const [availableStaffForCreate, setAvailableStaffForCreate] = useState([]);
+  const [userPets, setUserPets] = useState([]);
+  const [createPetBusySlots, setCreatePetBusySlots] = useState([]);
+  const [createPetAppointments, setCreatePetAppointments] = useState([]);
 
   // Chuyển đổi tiếng Anh -> tiếng Việt
   const statusEnToVi = {
@@ -1219,6 +1235,13 @@ const AppointmentManagement = () => {
     }
   }, [editTimeSlots, currentAppointmentTime, selectedEditTimeSlot]);
 
+  // Load time slots when creating new appointment
+  useEffect(() => {
+    if (createFormData.serviceId && createFormData.appointmentDate) {
+      loadCreateTimeSlots();
+    }
+  }, [createFormData.serviceId, createFormData.appointmentDate]);
+
   // Lấy danh sách lịch hẹn từ API
   const fetchAppointments = async () => {
     try {
@@ -1270,11 +1293,18 @@ const AppointmentManagement = () => {
           appointment.status = 'Scheduled';
         }
         
-        // Chuẩn hóa định dạng ngày giờ - TEMPORARILY COMMENT OUT adjustTimeZoneFromServer
+        // Chuẩn hóa định dạng ngày giờ
         if (appointment.appointmentDate) {
-          console.log('🕐 BEFORE adjustTimeZoneFromServer:', appointment.appointmentDate);
-          appointment.appointmentDate = adjustTimeZoneFromServer(appointment.appointmentDate);
-          console.log('🕐 AFTER adjustTimeZoneFromServer:', appointment.appointmentDate);
+          console.log('🕐 [FETCH] Raw appointment date from server:', appointment.appointmentDate);
+          
+          // ✅ FIXED: Không cần adjust timezone - browser sẽ tự parse đúng
+          // Nếu server gửi ISO string với 'Z', new Date() sẽ tự chuyển sang local time
+          // Nếu server gửi local time không có 'Z', new Date() sẽ giữ nguyên
+          const parsedDate = new Date(appointment.appointmentDate);
+          appointment.appointmentDate = parsedDate;
+          
+          console.log('🕐 [FETCH] Parsed date (local):', parsedDate);
+          console.log('🕐 [FETCH] Local hours:', parsedDate.getHours());
         }
         
         return appointment;
@@ -1736,6 +1766,132 @@ const AppointmentManagement = () => {
     }
   };
 
+  // Load time slots for creating new appointment
+  const loadCreateTimeSlots = async () => {
+    try {
+      setLoadingCreateTimeSlots(true);
+      
+      const selectedDate = createFormData.appointmentDate;
+      const serviceId = parseInt(createFormData.serviceId);
+      const petId = parseInt(createFormData.petId);
+      
+      console.log('📅 Loading time slots for create:', { selectedDate, serviceId, petId });
+      
+      // Load lịch bận của thú cưng song song với time slots
+      const [slotsResponse, petBusySlots, petAppts] = await Promise.all([
+        appointmentService.getAvailableTimeSlots(selectedDate, serviceId, null, petId),
+        appointmentService.getPetBusyTimeSlots(petId, selectedDate),
+        appointmentService.getPetAppointments(petId, selectedDate)
+      ]);
+      
+      console.log('✅ Loaded data:', {
+        slots: slotsResponse?.timeSlots?.length || 0,
+        petBusySlots: petBusySlots?.length || 0,
+        petAppointments: petAppts?.length || 0,
+        petBusySlotsData: petBusySlots,
+        petApptsData: petAppts
+      });
+      
+      // Set pet busy slots và appointments
+      console.log('🔴 Setting createPetBusySlots:', petBusySlots);
+      console.log('📋 Setting createPetAppointments:', petAppts);
+      setCreatePetBusySlots(petBusySlots || []);
+      setCreatePetAppointments(petAppts || []);
+      
+      if (slotsResponse && slotsResponse.timeSlots) {
+        console.log('📋 Time slots count:', slotsResponse.timeSlots.length);
+        setCreateTimeSlots(slotsResponse.timeSlots);
+      } else {
+        console.warn('⚠️ No time slots in response:', slotsResponse);
+        setCreateTimeSlots([]);
+      }
+    } catch (error) {
+      console.error('❌ Error loading create time slots:', error);
+      notification.error({
+        message: 'Lỗi',
+        description: error.message || 'Không thể tải khung giờ. Vui lòng thử lại.'
+      });
+      setCreateTimeSlots([]);
+      setCreatePetBusySlots([]);
+      setCreatePetAppointments([]);
+    } finally {
+      setLoadingCreateTimeSlots(false);
+    }
+  };
+
+  // Create new appointment
+  const handleCreateAppointment = async () => {
+    try {
+      if (!selectedCreateTimeSlot) {
+        notification.warning({
+          message: 'Thiếu thông tin',
+          description: 'Vui lòng chọn khung giờ'
+        });
+        return;
+      }
+
+      setLoading(true);
+
+      // Prepare appointment data
+      const localDate = dayjs(createFormData.appointmentDate);
+      const [hours, minutes] = createFormData.appointmentTime.split(':');
+      localDate.set('hour', parseInt(hours)).set('minute', parseInt(minutes));
+
+      // Calculate timezone offset
+      const timezoneOffsetMinutes = localDate.toDate().getTimezoneOffset();
+      
+      // Create UTC datetime from local time
+      const utcDateTime = new Date(localDate.toDate().getTime() - (timezoneOffsetMinutes * 60000));
+
+      const appointmentData = {
+        petId: parseInt(createFormData.petId),
+        serviceId: parseInt(createFormData.serviceId),
+        staffId: createFormData.staffId ? parseInt(createFormData.staffId) : null,
+        appointmentDate: utcDateTime.toISOString(),
+        notes: createFormData.notes || ''
+      };
+
+      console.log('Creating appointment:', appointmentData);
+
+      const result = await appointmentService.createAppointment(appointmentData);
+
+      if (result) {
+        notification.success({
+          message: 'Thành công',
+          description: 'Tạo lịch hẹn thành công!'
+        });
+
+        // Reset form and close modal
+        setShowCreateModal(false);
+        setCreateFormData({
+          userId: '',
+          petId: '',
+          serviceId: '',
+          staffId: '',
+          appointmentDate: '',
+          appointmentTime: '',
+          notes: ''
+        });
+        setSelectedCreateTimeSlot(null);
+        setCreateTimeSlots([]);
+        setCreatePetBusySlots([]);
+        setCreatePetAppointments([]);
+        setUserPets([]);
+
+        // Reload appointments
+        fetchAppointments();
+      }
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      notification.error({
+        message: 'Lỗi',
+        description: error.message || 'Không thể tạo lịch hẹn. Vui lòng thử lại.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Hủy bỏ chỉnh sửa
   const handleCancel = () => {
     setEditMode(false);
@@ -1788,12 +1944,30 @@ const AppointmentManagement = () => {
       // Staff ID to use
       const staffIdToUse = selectedEditTimeSlot?.staffId || formData.staffId;
       
-      // Create appointment datetime
-      const appointmentDateTime = new Date(`${formData.appointmentDate}T${timeToUse}`);
+      // ✅ FIX TIMEZONE ISSUE:
+      // Tạo datetime theo UTC để gửi lên server
+      // Ví dụ: user chọn 2h chiều (14:00) ở Việt Nam
+      // Ta cần gửi lên server là 14:00 theo giờ Việt Nam (chứ không phải 14:00 UTC)
+      const [hours, minutes] = timeToUse.split(':').map(Number);
+      const localDate = new Date(formData.appointmentDate);
+      localDate.setHours(hours, minutes, 0, 0);
       
-      // Validate business hours
-      const hour = appointmentDateTime.getHours();
-      const minute = appointmentDateTime.getMinutes();
+      // Lấy timezone offset (Việt Nam = -420 phút = -7 giờ so với UTC)
+      const timezoneOffsetMinutes = localDate.getTimezoneOffset();
+      
+      // Tạo UTC datetime bằng cách CỘNG offset (vì offset là âm)
+      const utcDateTime = new Date(localDate.getTime() - (timezoneOffsetMinutes * 60000));
+      
+      console.log('🕐 [TIMEZONE DEBUG] Selected date:', formData.appointmentDate);
+      console.log('🕐 [TIMEZONE DEBUG] Selected time:', timeToUse);
+      console.log('🕐 [TIMEZONE DEBUG] Local datetime:', localDate);
+      console.log('🕐 [TIMEZONE DEBUG] Timezone offset (minutes):', timezoneOffsetMinutes);
+      console.log('🕐 [TIMEZONE DEBUG] UTC datetime to send:', utcDateTime);
+      console.log('🕐 [TIMEZONE DEBUG] UTC ISO string:', utcDateTime.toISOString());
+      
+      // Validate business hours (kiểm tra theo giờ local, không phải UTC)
+      const hour = localDate.getHours();
+      const minute = localDate.getMinutes();
       const totalMinutes = hour * 60 + minute;
       
       const openingTime = 8 * 60; // 8:00
@@ -1823,8 +1997,9 @@ const AppointmentManagement = () => {
       }
       
       // Check for overlapping appointments (excluding current one)
+      // ✅ FIX: Sử dụng localDate để kiểm tra overlap
       const hasOverlap = checkForOverlappingAppointments(
-        formatDateTimeWithTimeZoneOffset(appointmentDateTime), 
+        localDate, 
         serviceDuration, 
         currentAppointment?.appointmentId
       );
@@ -1839,8 +2014,8 @@ const AppointmentManagement = () => {
         return;
       }
       
-      // Check pet busy slots
-      const timeStr = dayjs(appointmentDateTime).format('HH:mm');
+      // Check pet busy slots (dùng localDate, không phải UTC)
+      const timeStr = dayjs(localDate).format('HH:mm');
       const isPetBusy = checkAppointmentConflictForEdit(
         timeStr, 
         petBusyTimeSlots, 
@@ -1880,15 +2055,20 @@ const AppointmentManagement = () => {
       }
       
       // Prepare update data
+      // ✅ FIX TIMEZONE: utcDateTime đã được tạo đúng UTC từ local time
+      // Backend sẽ nhận UTC time và tự convert về local timezone để validate
       const updatedData = {
         userId: formData.userId,
         petId: formData.petId,
         serviceId: formData.serviceId,
         staffId: staffIdToUse || null,
-        appointmentDate: formatDateTimeWithTimeZoneOffset(appointmentDateTime),
+        appointmentDate: utcDateTime.toISOString(), // Gửi UTC datetime
         status: statusViToEn[formData.status] || formData.status,
         notes: formData.notes
       };
+      
+      console.log('🕐 [ADMIN SAVE] Local time selected:', `${hours}:${minutes}`);
+      console.log('🕐 [ADMIN SAVE] UTC sent to server:', updatedData.appointmentDate);
       
       console.log('Updating appointment with data:', updatedData);
       
@@ -1937,20 +2117,21 @@ const AppointmentManagement = () => {
         // ===== THÊM ĐỒNG BỘ KHUNG GIỜ GÁN NHÂN VIÊN =====
         try {
           const appointmentData = currentAppointment;
+          // ✅ FIX TIMEZONE: Sử dụng utcDateTime đã được convert đúng
           const newAppointmentData = {
             ...appointmentData,
             staffId: staffIdToUse,
-            appointmentDate: formatDateTimeWithTimeZoneOffset(appointmentDateTime), // Sử dụng formatDateTimeWithTimeZoneOffset thay vì toISOString()
+            appointmentDate: utcDateTime.toISOString(), // UTC datetime
             status: statusViToEn[formData.status] || formData.status
           };
           
-          // 1. Đồng bộ lịch bận của thú cưng
+          // 1. Đồng bộ lịch bận của thú cưng (dùng localDate)
           if (appointmentData.petId) {
             console.log(`🔄 Đồng bộ lịch bận thú cưng ${appointmentData.petId}`);
             window.dispatchEvent(new CustomEvent('pet-busy-slots-updated', {
               detail: {
                 petId: appointmentData.petId,
-                date: dayjs(appointmentDateTime).format('YYYY-MM-DD'),
+                date: dayjs(localDate).format('YYYY-MM-DD'),
                 action: 'update',
                 oldAppointment: appointmentData,
                 newAppointment: newAppointmentData
@@ -1964,7 +2145,7 @@ const AppointmentManagement = () => {
             window.dispatchEvent(new CustomEvent('staff-appointments-updated', {
               detail: {
                 staffId: appointmentData.staffId,
-                date: dayjs(appointmentDateTime).format('YYYY-MM-DD'),
+                date: dayjs(localDate).format('YYYY-MM-DD'),
                 action: 'remove',
                 appointmentId: appointmentData.appointmentId
               }
@@ -1977,7 +2158,7 @@ const AppointmentManagement = () => {
             window.dispatchEvent(new CustomEvent('staff-appointments-updated', {
               detail: {
                 staffId: staffIdToUse,
-                date: dayjs(appointmentDateTime).format('YYYY-MM-DD'),
+                date: dayjs(localDate).format('YYYY-MM-DD'),
                 action: 'add',
                 appointment: newAppointmentData
               }
@@ -1995,11 +2176,11 @@ const AppointmentManagement = () => {
             }
           }));
           
-          // 5. Làm mới cache lịch bận
+          // 5. Làm mới cache lịch bận (dùng localDate)
           const cacheKeys = [
-            `petBusySlots_${appointmentData.petId}_${dayjs(appointmentDateTime).format('YYYY-MM-DD')}`,
-            `staffBusySlots_${appointmentData.staffId}_${dayjs(appointmentDateTime).format('YYYY-MM-DD')}`,
-            `staffBusySlots_${staffIdToUse}_${dayjs(appointmentDateTime).format('YYYY-MM-DD')}`
+            `petBusySlots_${appointmentData.petId}_${dayjs(localDate).format('YYYY-MM-DD')}`,
+            `staffBusySlots_${appointmentData.staffId}_${dayjs(localDate).format('YYYY-MM-DD')}`,
+            `staffBusySlots_${staffIdToUse}_${dayjs(localDate).format('YYYY-MM-DD')}`
           ];
           
           cacheKeys.forEach(key => {
@@ -2652,7 +2833,7 @@ const AppointmentManagement = () => {
         staffId: null, // Không có staff cụ thể cho edit slots
         staffName: 'Nhân viên',
         selectedDate: dayjs(appointmentDate).format('YYYY-MM-DD'), // Use appointmentDate parameter
-        selectedDateTime: formatDateTimeWithTimeZoneOffset(currentTime.toDate()), // SỬA LỖI TIMEZONE
+        selectedDateTime: currentTime.toISOString(), // ✅ FIX: Dùng ISO string trực tiếp
         // Thêm thông tin debug
         debugInfo: {
           serviceEnd: slotEndTime.format('HH:mm'),
@@ -2660,7 +2841,7 @@ const AppointmentManagement = () => {
           actualServiceDuration,
           bufferTime: BUFFER_TIME_MINUTES,
           originalISOString: currentTime.toISOString(), // Giữ cho debug
-          formattedDateTime: formatDateTimeWithTimeZoneOffset(currentTime.toDate()) // Timezone đã fix
+          formattedDateTime: currentTime.toISOString() // ✅ FIX: Dùng ISO string trực tiếp
         }
       });
       
@@ -2907,11 +3088,21 @@ const AppointmentManagement = () => {
         const slotTime = timeSlot.startTimeString || timeSlot.startTime;
         const currentDate = dayjs(currentAppointment.appointmentDate).format('YYYY-MM-DD');
         
-        // Tạo datetime mới với thời gian từ timeSlot
-        const newAppointmentDate = `${currentDate}T${slotTime}:00`;
-        updateData.appointmentDate = newAppointmentDate;
+        // ✅ FIX TIMEZONE: Tạo UTC datetime đúng cách
+        const [hours, minutes] = slotTime.split(':').map(Number);
+        const localDate = new Date(currentDate);
+        localDate.setHours(hours, minutes, 0, 0);
         
-        console.log(`⏰ Changing appointment time from ${formatTime(currentAppointment.appointmentDate)} to ${slotTime}`);
+        // Lấy timezone offset và tạo UTC datetime
+        const timezoneOffsetMinutes = localDate.getTimezoneOffset();
+        const utcDateTime = new Date(localDate.getTime() - (timezoneOffsetMinutes * 60000));
+        
+        updateData.appointmentDate = utcDateTime.toISOString();
+        
+        console.log(`⏰ [ASSIGN STAFF] Changing appointment time:`);
+        console.log(`   - From: ${formatTime(currentAppointment.appointmentDate)}`);
+        console.log(`   - To (local): ${slotTime}`);
+        console.log(`   - To (UTC): ${utcDateTime.toISOString()}`);
       }
       
       // Sử dụng appointmentService.updateAppointment thay vì fetch
@@ -3019,7 +3210,37 @@ const AppointmentManagement = () => {
 
   return (
     <AppointmentContainer>
-      <h1><CalendarOutlined /> Quản lý lịch hẹn</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h1 style={{ margin: 0 }}><CalendarOutlined /> Quản lý lịch hẹn</h1>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          style={{
+            padding: '10px 20px',
+            background: 'linear-gradient(135deg, #304FFE 0%, #304FFE 100%)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
+          }}
+        >
+          <PlusOutlined /> Tạo lịch hẹn mới
+        </button>
+      </div>
       
       {error && (
         <div style={{ margin: '0 0 20px', padding: '15px', background: 'rgba(255, 82, 82, 0.1)', borderRadius: '16px', color: '#FF5252', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -3077,6 +3298,12 @@ const AppointmentManagement = () => {
                 name="userId"
                 value={formData.userId}
                 onChange={handleChangeWithTimeSlots}
+                disabled={true}
+                style={{ 
+                  backgroundColor: '#f5f5f5', 
+                  cursor: 'not-allowed',
+                  color: '#666'
+                }}
               >
                 <option value="">Chọn khách hàng</option>
                 {users.map(user => (
@@ -3095,11 +3322,13 @@ const AppointmentManagement = () => {
                 onChange={handleChangeWithTimeSlots}
               >
                 <option value="">Chọn thú cưng</option>
-                {pets.map(pet => (
-                  <option key={pet.petId} value={pet.petId}>
-                    {pet.name} ({getUserName(pet.userId)})
-                  </option>
-                ))}
+                {pets
+                  .filter(pet => pet.userId === formData.userId)
+                  .map(pet => (
+                    <option key={pet.petId} value={pet.petId}>
+                      {pet.name}
+                    </option>
+                  ))}
               </select>
             </FormGroup>
             
@@ -3176,133 +3405,13 @@ const AppointmentManagement = () => {
           {formData.serviceId && formData.appointmentDate && formData.petId && (
             <div style={{ marginTop: '30px' }}>
               <h3 style={{ marginBottom: '20px', color: '#2B3674' }}>
-                <ClockCircleOutlined style={{ marginRight: '8px', color: '#4318FF' }} />
+                <ClockCircleOutlined style={{ marginRight: '8px', color: '#304FFE' }} />
                 Chọn khung giờ hẹn
               </h3>
               
               {/* ===== THÔNG TIN LỊCH BẬN HIỆN TẠI ===== */}
               <div style={{ marginBottom: '25px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                {/* Lịch bận của thú cưng */}
-                <div style={{
-                  background: 'linear-gradient(135deg, #fff5f5, #ffe6e6)',
-                  padding: '16px 20px',
-                  borderRadius: '12px',
-                  border: '1px solid #ffccc7'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <span style={{ fontSize: '16px' }}>🐕</span>
-                    <strong style={{ color: '#cf1322' }}>Lịch bận của thú cưng</strong>
-                  </div>
-                  {petBusyTimeSlots && petBusyTimeSlots.length > 0 ? (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {petBusyTimeSlots.map((timeSlot, index) => (
-                        <span key={index} style={{
-                          background: '#ff4d4f',
-                          color: 'white',
-                          padding: '4px 8px',
-                          borderRadius: '6px',
-                          fontSize: '12px',
-                          fontWeight: '500'
-                        }}>
-                          {timeSlot}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <span style={{ color: '#52c41a', fontSize: '13px', fontStyle: 'italic' }}>
-                      ✓ Thú cưng không có lịch hẹn nào khác trong ngày này
-                    </span>
-                  )}
-                  {petAppointments && petAppointments.length > 0 && (
-                    <div style={{ marginTop: '8px', fontSize: '12px', color: '#a8071a' }}>
-                      <span style={{ fontWeight: '500' }}>Chi tiết:</span>
-                      {petAppointments.map((apt, index) => (
-                        <div key={index} style={{ marginTop: '4px' }}>
-                          • {dayjs(apt.appointmentDate).format('HH:mm')} - {getServiceName(apt.serviceId)} 
-                          <span style={{ color: '#666' }}> ({statusEnToVi[apt.status] || apt.status})</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {/* ===== THÊM DEBUG INFO CHO THÚ CƯNG ===== */}
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '8px', 
-                    background: 'rgba(255, 255, 255, 0.7)', 
-                    borderRadius: '6px',
-                    fontSize: '11px',
-                    color: '#666'
-                  }}>
-                    <strong>Debug:</strong> Pet ID: {formData.petId} | Date: {formData.appointmentDate} | 
-                    Busy slots: {petBusyTimeSlots?.length || 0} | 
-                    Appointments: {petAppointments?.length || 0}
-                  </div>
-                </div>
-                
-                {/* Lịch bận của nhân viên */}
-                <div style={{
-                  background: formData.staffId ? 'linear-gradient(135deg, #f0f7ff, #e6f1ff)' : 'linear-gradient(135deg, #f9f9f9, #e8e8e8)',
-                  padding: '16px 20px',
-                  borderRadius: '12px',
-                  border: formData.staffId ? '1px solid #91d5ff' : '1px solid #d9d9d9'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <span style={{ fontSize: '16px' }}>👤</span>
-                    <strong style={{ color: formData.staffId ? '#1890ff' : '#999' }}>
-                      Lịch bận của nhân viên
-                    </strong>
-                  </div>
-                  {!formData.staffId ? (
-                    <span style={{ color: '#666', fontSize: '13px', fontStyle: 'italic' }}>
-                      ⚠️ Chưa chọn nhân viên cụ thể
-                    </span>
-                  ) : staffBusyTimeSlots && staffBusyTimeSlots.length > 0 ? (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {staffBusyTimeSlots.map((timeSlot, index) => (
-                        <span key={index} style={{
-                          background: '#1890ff',
-                          color: 'white',
-                          padding: '4px 8px',
-                          borderRadius: '6px',
-                          fontSize: '12px',
-                          fontWeight: '500'
-                        }}>
-                          {timeSlot}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <span style={{ color: '#52c41a', fontSize: '13px', fontStyle: 'italic' }}>
-                      ✓ Nhân viên không có lịch hẹn nào khác trong ngày này
-                    </span>
-                  )}
-                  {editStaffAppointments && editStaffAppointments.length > 0 && (
-                    <div style={{ marginTop: '8px', fontSize: '12px', color: '#096dd9' }}>
-                      <span style={{ fontWeight: '500' }}>Chi tiết:</span>
-                      {editStaffAppointments.map((apt, index) => (
-                        <div key={index} style={{ marginTop: '4px' }}>
-                          • {apt.appointmentDate ? dayjs(apt.appointmentDate).format('HH:mm') : (apt.startTime || 'N/A')} - {apt.service?.name || getServiceName(apt.serviceId) || 'Dịch vụ không xác định'}
-                          <span style={{ color: '#666' }}> ({statusEnToVi[apt.status] || apt.status || 'Không rõ'})</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {/* ===== THÊM DEBUG INFO CHO NHÂN VIÊN ===== */}
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '8px', 
-                    background: 'rgba(255, 255, 255, 0.7)', 
-                    borderRadius: '6px',
-                    fontSize: '11px',
-                    color: '#666'
-                  }}>
-                    <strong>Debug:</strong> Staff ID: {formData.staffId || 'none'} | Date: {formData.appointmentDate} | 
-                    Busy slots: {staffBusyTimeSlots?.length || 0} | 
-                    Appointments: {editStaffAppointments?.length || 0}
-                  </div>
-                </div>
+
               </div>
               
               {/* Current selection info */}
@@ -3350,7 +3459,7 @@ const AppointmentManagement = () => {
               
               {loadingEditTimeSlots ? (
                 <div style={{ textAlign: 'center', padding: '50px' }}>
-                  <SyncOutlined spin style={{ fontSize: '32px', color: '#4318FF' }} />
+                  <SyncOutlined spin style={{ fontSize: '32px', color: '#304FFE' }} />
                   <p style={{ marginTop: '15px', color: '#666' }}>Đang tải khung giờ...</p>
                 </div>
               ) : (
@@ -3710,7 +3819,7 @@ const AppointmentManagement = () => {
                 alignItems: 'center',
                 gap: '12px'
               }}>
-                <TeamOutlined style={{ color: '#4318FF' }} />
+                <TeamOutlined style={{ color: '#304FFE' }} />
                 Gán nhân viên cho lịch hẹn #{selectedUnassignedAppointment.appointmentId}
               </h2>
               <button
@@ -3741,7 +3850,7 @@ const AppointmentManagement = () => {
               border: '1px solid #e6f1ff'
             }}>
               <h3 style={{ margin: '0 0 15px', color: '#2B3674', fontSize: '18px' }}>
-                <InfoCircleOutlined style={{ marginRight: '8px', color: '#4318FF' }} />
+                <InfoCircleOutlined style={{ marginRight: '8px', color: '#304FFE' }} />
                 Thông tin lịch hẹn
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', fontSize: '14px' }}>
@@ -3763,13 +3872,13 @@ const AppointmentManagement = () => {
             {/* Danh sách nhân viên */}
             <div>
               <h3 style={{ margin: '0 0 15px', color: '#2B3674', fontSize: '18px' }}>
-                <TeamOutlined style={{ marginRight: '8px', color: '#4318FF' }} />
+                <TeamOutlined style={{ marginRight: '8px', color: '#304FFE' }} />
                 Chọn nhân viên cho dịch vụ này
               </h3>
               
               {loading ? (
                 <div style={{ textAlign: 'center', padding: '40px' }}>
-                  <SyncOutlined spin style={{ fontSize: '24px', color: '#4318FF' }} />
+                  <SyncOutlined spin style={{ fontSize: '24px', color: '#304FFE' }} />
                   <p style={{ marginTop: '10px', color: '#666' }}>Đang tải danh sách nhân viên...</p>
                 </div>
               ) : availableStaffForService.length > 0 ? (
@@ -3780,7 +3889,7 @@ const AppointmentManagement = () => {
                       style={{
                         padding: '16px',
                         border: selectedStaffForAssignment?.staffId === staff.staffId 
-                          ? '2px solid #4318FF' 
+                          ? '2px solid #304FFE' 
                           : '2px solid #e6e9f0',
                         borderRadius: '12px',
                         cursor: 'pointer',
@@ -3795,7 +3904,7 @@ const AppointmentManagement = () => {
                       onClick={() => setSelectedStaffForAssignment(staff)}
                       onMouseEnter={(e) => {
                         if (selectedStaffForAssignment?.staffId !== staff.staffId) {
-                          e.target.style.borderColor = '#8F6BFF';
+                          e.target.style.borderColor = '#304FFE';
                           e.target.style.background = '#fafbff';
                         }
                       }}
@@ -3811,7 +3920,7 @@ const AppointmentManagement = () => {
                           width: '40px',
                           height: '40px',
                           borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #4318FF, #8F6BFF)',
+                          background: 'linear-gradient(135deg, #304FFE, #304FFE)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -3944,7 +4053,7 @@ const AppointmentManagement = () => {
                             }}
                             disabled={loading}
                             style={{
-                              background: 'linear-gradient(135deg, #4318FF, #8F6BFF)',
+                              background: 'linear-gradient(135deg, #304FFE, #304FFE)',
                               color: 'white',
                               border: 'none',
                               padding: '8px 12px',
@@ -4022,7 +4131,7 @@ const AppointmentManagement = () => {
                 alignItems: 'center',
                 gap: '12px'
               }}>
-                <ScheduleOutlined style={{ color: '#4318FF' }} />
+                <ScheduleOutlined style={{ color: '#304FFE' }} />
                 Lịch của {selectedStaffForAssignment.fullName}
               </h2>
               <button
@@ -4053,7 +4162,7 @@ const AppointmentManagement = () => {
               alignItems: 'center',
               gap: '12px'
             }}>
-              <CalendarOutlined style={{ color: '#4318FF', fontSize: '18px' }} />
+              <CalendarOutlined style={{ color: '#304FFE', fontSize: '18px' }} />
               <span style={{ fontWeight: '600', color: '#2B3674' }}>
                 Ngày: {formatDate(selectedUnassignedAppointment.appointmentDate)}
               </span>
@@ -4114,7 +4223,7 @@ const AppointmentManagement = () => {
             {/* Danh sách lịch hẹn của nhân viên */}
             <div>
               <h3 style={{ margin: '0 0 15px', color: '#2B3674', fontSize: '18px' }}>
-                <ClockCircleOutlined style={{ marginRight: '8px', color: '#4318FF' }} />
+                <ClockCircleOutlined style={{ marginRight: '8px', color: '#304FFE' }} />
                 Lịch hẹn trong ngày ({staffScheduleData.appointments?.length || 0} lịch hẹn)
               </h3>
               
@@ -4212,7 +4321,7 @@ const AppointmentManagement = () => {
                     padding: '10px 20px',
                     border: 'none',
                     borderRadius: '8px',
-                    background: 'linear-gradient(135deg, #4318FF, #8F6BFF)',
+                    background: 'linear-gradient(135deg, #304FFE, #304FFE)',
                     color: 'white',
                     cursor: 'pointer',
                     fontSize: '14px',
@@ -4291,7 +4400,7 @@ const AppointmentManagement = () => {
                 alignItems: 'center',
                 gap: '12px'
               }}>
-                <ScheduleOutlined style={{ color: '#4318FF' }} />
+                <ScheduleOutlined style={{ color: '#304FFE' }} />
                 Chọn khung giờ cho {selectedStaffForAssignment.fullName}
               </h2>
               <button
@@ -4445,7 +4554,7 @@ const AppointmentManagement = () => {
             <div style={{ marginBottom: '20px' }}>
               {loadingTimeSlots ? (
                 <div style={{ textAlign: 'center', padding: '50px' }}>
-                  <SyncOutlined spin style={{ fontSize: '32px', color: '#4318FF' }} />
+                  <SyncOutlined spin style={{ fontSize: '32px', color: '#304FFE' }} />
                   <p style={{ marginTop: '15px', color: '#666' }}>Đang tải khung giờ...</p>
                 </div>
               ) : (
@@ -4554,7 +4663,7 @@ const AppointmentManagement = () => {
                       borderRadius: '8px',
                       background: selectedTimeSlot.isCurrentAppointmentSlot 
                         ? 'linear-gradient(135deg, #52c41a, #73d13d)' 
-                        : 'linear-gradient(135deg, #4318FF, #8F6BFF)',
+                        : 'linear-gradient(135deg, #304FFE, #304FFE)',
                       color: 'white',
                       cursor: 'pointer',
                       fontSize: '14px',
@@ -4617,7 +4726,7 @@ const AppointmentManagement = () => {
                 alignItems: 'center',
                 gap: '12px'
               }}>
-                <ScheduleOutlined style={{ color: '#4318FF' }} />
+                <ScheduleOutlined style={{ color: '#304FFE' }} />
                 Lịch của {selectedStaffForAssignment.fullName}
               </h2>
               <button
@@ -4648,7 +4757,7 @@ const AppointmentManagement = () => {
               alignItems: 'center',
               gap: '12px'
             }}>
-              <CalendarOutlined style={{ color: '#4318FF', fontSize: '18px' }} />
+              <CalendarOutlined style={{ color: '#304FFE', fontSize: '18px' }} />
               <span style={{ fontWeight: '600', color: '#2B3674' }}>
                 Ngày: {formatDate(selectedUnassignedAppointment.appointmentDate)}
               </span>
@@ -4709,7 +4818,7 @@ const AppointmentManagement = () => {
             {/* Danh sách lịch hẹn của nhân viên */}
             <div>
               <h3 style={{ margin: '0 0 15px', color: '#2B3674', fontSize: '18px' }}>
-                <ClockCircleOutlined style={{ marginRight: '8px', color: '#4318FF' }} />
+                <ClockCircleOutlined style={{ marginRight: '8px', color: '#304FFE' }} />
                 Lịch hẹn trong ngày ({staffScheduleData.appointments?.length || 0} lịch hẹn)
               </h3>
               
@@ -4807,7 +4916,7 @@ const AppointmentManagement = () => {
                     padding: '10px 20px',
                     border: 'none',
                     borderRadius: '8px',
-                    background: 'linear-gradient(135deg, #4318FF, #8F6BFF)',
+                    background: 'linear-gradient(135deg, #304FFE, #304FFE)',
                     color: 'white',
                     cursor: 'pointer',
                     fontSize: '14px',
@@ -4825,8 +4934,230 @@ const AppointmentManagement = () => {
           </div>
         </div>
       )}
+
+      {/* ===== MODAL TẠO LỊCH HẸN MỚI (SỬ DỤNG APPOINTMENTFORM) ===== */}
+      {showCreateModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '1000px',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
+            position: 'relative'
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '24px',
+              borderBottom: '1px solid #f0f0f0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              position: 'sticky',
+              top: 0,
+              background: 'white',
+              zIndex: 1
+            }}>
+              <h2 style={{ margin: 0, color: '#304FFE' }}>
+                <PlusOutlined /> Tạo lịch hẹn cho khách hàng
+              </h2>
+              <button
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setCreateFormData({
+                    userId: '',
+                    petId: '',
+                    serviceId: '',
+                    staffId: '',
+                    appointmentDate: '',
+                    appointmentTime: '',
+                    notes: ''
+                  });
+                  setSelectedCreateTimeSlot(null);
+                  setCreateTimeSlots([]);
+                  setCreatePetBusySlots([]);
+                  setCreatePetAppointments([]);
+                  setUserPets([]);
+                  setAvailableStaffForCreate([]);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#999',
+                  lineHeight: 1
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '24px' }}>
+              {!createFormData.userId ? (
+                // Bước 1: Chọn khách hàng
+                <div>
+                  <h3 style={{ marginBottom: '16px', color: '#333' }}>Bước 1: Chọn khách hàng</h3>
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                      Khách hàng: <span style={{ color: 'red' }}>*</span>
+                    </label>
+                    <select
+                      value={createFormData.userId}
+                      onChange={(e) => {
+                        const userId = parseInt(e.target.value);
+                        console.log('👤 Selected userId:', userId);
+                        console.log('🐾 All pets:', pets);
+                        console.log('🐾 Pets length:', pets.length);
+                        
+                        setCreateFormData({
+                          ...createFormData,
+                          userId: e.target.value,
+                          petId: '',
+                          serviceId: '',
+                          staffId: '',
+                          appointmentDate: '',
+                          appointmentTime: ''
+                        });
+                        
+                        // Lọc thú cưng của khách hàng này
+                        const filteredPets = pets.filter(p => {
+                          console.log(`🔍 Checking pet ${p.petId}: userId=${p.userId}, name=${p.name}`);
+                          return p.userId === userId;
+                        });
+                        
+                        console.log('✅ Filtered pets for user:', filteredPets);
+                        setUserPets(filteredPets);
+                        setSelectedCreateTimeSlot(null);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: '2px solid #d9d9d9',
+                        fontSize: '14px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="">-- Chọn khách hàng --</option>
+                      {users.map(user => (
+                        <option key={user.userId} value={user.userId}>
+                          {user.fullName} ({user.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div style={{ 
+                    padding: '16px', 
+                    background: '#f0f7ff', 
+                    borderRadius: '8px',
+                    border: '1px solid #91d5ff'
+                  }}>
+                    <p style={{ margin: 0, color: '#1890ff', fontSize: '14px' }}>
+                      💡 <strong>Hướng dẫn:</strong> Chọn khách hàng để tiếp tục đặt lịch hẹn cho họ
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                // Bước 2: Dùng AdminCreateAppointment component
+                <div>
+                  <div style={{ 
+                    marginBottom: '16px', 
+                    padding: '12px', 
+                    background: '#f6ffed', 
+                    borderRadius: '8px',
+                    border: '1px solid #b7eb8f',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <div>
+                      <strong style={{ color: '#52c41a' }}>
+                        ✓ Đang đặt lịch cho: {users.find(u => u.userId === parseInt(createFormData.userId))?.fullName}
+                      </strong>
+                      <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                        Email: {users.find(u => u.userId === parseInt(createFormData.userId))?.email}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setCreateFormData({
+                          userId: '',
+                          petId: '',
+                          serviceId: '',
+                          staffId: '',
+                          appointmentDate: '',
+                          appointmentTime: '',
+                          notes: ''
+                        });
+                        setUserPets([]);
+                        setSelectedCreateTimeSlot(null);
+                        setCreateTimeSlots([]);
+                      }}
+                      style={{
+                        padding: '6px 12px',
+                        background: 'white',
+                        border: '1px solid #d9d9d9',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Đổi khách hàng
+                    </button>
+                  </div>
+
+                  {/* Sử dụng AdminCreateAppointment component */}
+                  <AdminCreateAppointment 
+                    userId={parseInt(createFormData.userId)}
+                    onSuccess={(response) => {
+                      console.log('✅ Tạo lịch hẹn thành công:', response);
+                      // Đóng modal
+                      setShowCreateModal(false);
+                      // Reset form
+                      setCreateFormData({
+                        userId: '',
+                        petId: '',
+                        serviceId: '',
+                        staffId: '',
+                        appointmentDate: '',
+                        appointmentTime: '',
+                        notes: ''
+                      });
+                      // Refresh danh sách appointments
+                      fetchAppointments();
+                      notification.success({
+                        message: 'Thành công',
+                        description: 'Đã tạo lịch hẹn cho khách hàng!',
+                        placement: 'topRight'
+                      });
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </AppointmentContainer>
   );
 };
 
 export default AppointmentManagement;
+

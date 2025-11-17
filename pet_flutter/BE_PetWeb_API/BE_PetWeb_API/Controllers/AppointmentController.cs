@@ -795,7 +795,8 @@
             try
             {
                 var userId = GetCurrentUserId();
-                var createdAppointment = await _appointmentService.CreateAppointmentAsync(userId, createAppointmentDto);
+                var isAdminOrStaff = User.IsInRole("Admin") || User.IsInRole("Staff");
+                var createdAppointment = await _appointmentService.CreateAppointmentAsync(userId, createAppointmentDto, isAdminOrStaff);
                 return CreatedAtAction(nameof(GetAppointment), new { id = createdAppointment.AppointmentId }, createdAppointment);
             }
             catch (Exception ex)

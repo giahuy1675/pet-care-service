@@ -21,7 +21,7 @@ namespace BE_PetWeb_API.Services.Interfaces
 
         Task<IEnumerable<AppointmentDto>> GetAppointmentsByStatusAsync(string status);
 
-        Task<AppointmentDto> CreateAppointmentAsync(int userId, CreateAppointmentDto createAppointmentDto);
+        Task<AppointmentDto> CreateAppointmentAsync(int userId, CreateAppointmentDto createAppointmentDto, bool isAdminOrStaff = false);
 
         Task<AppointmentDto> UpdateAppointmentAsync(int id, int userId, UpdateAppointmentDto updateAppointmentDto);
 

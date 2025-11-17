@@ -710,14 +710,25 @@ const processTimeSlot = (slot) => {
   }
 };
 
-const AppointmentForm = ({ isEditing = false }) => {
+const AppointmentForm = ({ 
+  isEditing = false, 
+  userId: propsUserId = null, // Admin có thể truyền userId từ ngoài
+  isAdminMode = false, // Chế độ admin
+  onSuccess = null // Callback khi tạo thành công
+}) => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
+  
+  // Nếu admin mode, dùng propsUserId, không thì dùng authUser
+  const user = isAdminMode && propsUserId ? { userId: propsUserId } : authUser;
+  
   const theme = useToken();
   
   console.log("AppointmentForm rendering...");
   console.log("isEditing:", isEditing);
+  console.log("isAdminMode:", isAdminMode);
+  console.log("propsUserId:", propsUserId);
   console.log("id:", id);
   console.log("user:", user);
   
@@ -1267,8 +1278,14 @@ const AppointmentForm = ({ isEditing = false }) => {
             }));
           }, 500);
           
-          console.log('🔄 Chuyển hướng về danh sách lịch hẹn');
-          navigate('/appointments');
+          // Nếu có callback (dùng trong admin mode), gọi callback
+          if (isAdminMode && onSuccess) {
+            console.log('🔄 [ADMIN MODE] Gọi callback onSuccess');
+            onSuccess(response);
+          } else {
+            console.log('🔄 Chuyển hướng về danh sách lịch hẹn');
+            navigate('/appointments');
+          }
         } else {
           console.warn('⚠️ Server trả về response không mong đợi:', response);
           message.error('Có lỗi xảy ra khi đặt lịch hẹn.');
@@ -2005,11 +2022,22 @@ const AppointmentForm = ({ isEditing = false }) => {
         setInitialLoading(true);
         
         // Fetch pets for the current user
-        const petsData = await petService.getUserPets();
+        let petsData;
+        if (isAdminMode && propsUserId) {
+          // Admin mode: load pets của userId được chỉ định
+          console.log('🔧 [ADMIN MODE] Loading pets for userId:', propsUserId);
+          petsData = await petService.getPetsByUserId(propsUserId);
+        } else {
+          // User mode: load pets của user đang login
+          console.log('👤 [USER MODE] Loading pets for current user');
+          petsData = await petService.getUserPets();
+        }
+        
         if (Array.isArray(petsData)) {
+          console.log('🐾 Loaded pets:', petsData);
           setPets(petsData);
           // If there's at least one pet, select the first one by default
-          if (petsData.length > 0) {
+          if (petsData.length > 0 && !isEditing) {
             setFormData(prev => ({ ...prev, petId: petsData[0].petId }));
             setSelectedPet(petsData[0]);
           }
@@ -2112,7 +2140,7 @@ const AppointmentForm = ({ isEditing = false }) => {
     };
     
     loadInitialData();
-  }, [id, isEditing]);
+  }, [id, isEditing, isAdminMode, propsUserId]); // Thêm dependencies để reload khi admin chọn user khác
 
   // Add this useEffect after the existing useEffect for formData.serviceId
   useEffect(() => {

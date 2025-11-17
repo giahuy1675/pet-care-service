@@ -162,6 +162,9 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// Configure Kestrel to listen on all network interfaces
+builder.WebHost.UseUrls("https://0.0.0.0:7164", "http://0.0.0.0:5181");
+
 var app = builder.Build();
 
 try

@@ -65,16 +65,16 @@ const AdminContent = styled.div`
 
 const Sidebar = styled(motion.div)`
   width: 260px;
-  background: linear-gradient(180deg, #4318FF 0%, #868CFF 100%);
+  background: linear-gradient(180deg, #304FFE 0%, #304FFE 100%);
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   z-index: 10;
   position: fixed;
-  left: 0;
+  left: ${props => props.isVisible ? '0' : '-260px'};
   top: 0;
   bottom: 0;
-  display: ${props => (props.isVisible ? 'block' : 'none')};
   overflow-y: auto;
   color: white;
+  transition: left 0.3s ease;
   
   &::-webkit-scrollbar {
     width: 5px;
@@ -87,6 +87,7 @@ const Sidebar = styled(motion.div)`
   
   @media (max-width: 768px) {
     width: 240px;
+    left: ${props => props.isVisible ? '0' : '-240px'};
   }
 `;
 
@@ -215,7 +216,7 @@ const Greeting = styled.div`
 const Avatar = styled(motion.div)`
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #868CFF, #4318FF);
+  background: linear-gradient(135deg, #304FFE, #304FFE);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -397,7 +398,7 @@ const Toast = ({ show, message, type, onClose }) => {
         right: '20px',
         padding: '15px 20px',
         borderRadius: '10px',
-        backgroundColor: type === 'success' ? '#1EC276' : type === 'error' ? '#FF5252' : '#4318FF',
+        backgroundColor: type === 'success' ? '#1EC276' : type === 'error' ? '#FF5252' : '#304FFE',
         color: 'white',
         boxShadow: '0 5px 15px rgba(0,0,0,0.1)',
         zIndex: 1000,
@@ -447,7 +448,7 @@ const ToggleButton = styled(motion.button)`
   
   .anticon {
     font-size: 18px;
-    color: #4318FF;
+    color: #304FFE;
   }
 `;
 
@@ -975,16 +976,15 @@ const AdminDashboard = () => {
           </ContentWrapper>
         </MainContent>
         
-        {/* Nút hiện/ẩn sidebar trên mobile */}
-        {isMobile && (
-          <ToggleButton 
-            onClick={() => setShowSidebar(!showSidebar)}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            {showSidebar ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
-          </ToggleButton>
-        )}
+        {/* Nút hiện/ẩn sidebar - luôn hiển thị */}
+        <ToggleButton 
+          sidebarVisible={showSidebar}
+          onClick={() => setShowSidebar(!showSidebar)}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          {showSidebar ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
+        </ToggleButton>
         
         {/* Toast Notification */}
         <AnimatePresence>
@@ -1003,4 +1003,5 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
 

@@ -283,7 +283,7 @@ const ServiceCategorySection = styled.div`
     gap: 12px;
     
     .anticon {
-      color: #4318FF;
+      color: #304FFE;
       font-size: 18px;
     }
   }
@@ -404,7 +404,7 @@ const ServiceInfo = styled.div`
       left: 0;
       width: 40px;
       height: 2px;
-      background: linear-gradient(90deg, #4318FF, transparent);
+      background: linear-gradient(90deg, #304FFE, transparent);
       transition: width 0.3s ease;
     }
   }
@@ -526,7 +526,7 @@ const CardActions = styled.div`
     }
     
     &.button-edit:hover {
-      color: #4318FF;
+      color: #304FFE;
     }
     
     &.button-delete:hover {
@@ -550,7 +550,7 @@ const FilterBar = styled.div`
 const FilterButton = styled.button`
   padding: 10px 16px;
   border-radius: 12px;
-  background: ${props => props.active ? 'linear-gradient(135deg, #4318FF 0%, #868CFF 100%)' : '#F4F7FE'};
+  background: ${props => props.active ? 'linear-gradient(135deg, #304FFE 0%, #304FFE 100%)' : '#F4F7FE'};
   color: ${props => props.active ? 'white' : '#707EAE'};
   border: none;
   font-size: 14px;
@@ -589,7 +589,7 @@ const StatCard = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    background: ${props => props.bgColor || 'linear-gradient(135deg, #4318FF 0%, #868CFF 100%)'};
+    background: ${props => props.bgColor || 'linear-gradient(135deg, #304FFE 0%, #304FFE 100%)'};
     color: white;
     font-size: 20px;
   }
@@ -645,7 +645,7 @@ const Modal = styled(motion.div)`
     left: 0;
     right: 0;
     height: 5px;
-    background: linear-gradient(90deg, #4318FF, #868CFF);
+    background: linear-gradient(90deg, #304FFE, #304FFE);
     z-index: 1;
   }
 `;
@@ -682,7 +682,7 @@ const CloseButton = styled.button`
   
   &:hover {
     background: #F4F7FE;
-    color: #4318FF;
+    color: #304FFE;
   }
 `;
 
@@ -715,7 +715,7 @@ const FormGroup = styled.div`
     
     &:focus {
       outline: none;
-      border-color: #4318FF;
+      border-color: #304FFE;
       box-shadow: 0 0 0 4px rgba(67, 24, 255, 0.15);
       background: white;
     }
@@ -783,9 +783,9 @@ const FormActions = styled.div`
 const ToggleButton = styled.button`
   flex: 1;
   padding: 12px;
-  border: 2px solid ${props => props.active ? '#4318FF' : '#e6e9f0'};
+  border: 2px solid ${props => props.active ? '#304FFE' : '#e6e9f0'};
   background: ${props => props.active ? 'rgba(67, 24, 255, 0.1)' : '#F9FAFC'};
-  color: ${props => props.active ? '#4318FF' : '#707EAE'};
+  color: ${props => props.active ? '#304FFE' : '#707EAE'};
   border-radius: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -820,7 +820,7 @@ const ImageUpload = styled.div`
     position: relative;
     
     &:hover {
-      border-color: #4318FF;
+      border-color: #304FFE;
       background: rgba(67, 24, 255, 0.05);
     }
     
@@ -1371,7 +1371,7 @@ const ServiceManagement = () => {
       {/* Stats Cards */}
       <StatsContainer>
         <StatCard>
-          <div className="icon" style={{ background: 'linear-gradient(135deg, #4318FF 0%, #868CFF 100%)' }}>
+          <div className="icon" style={{ background: 'linear-gradient(135deg, #304FFE 0%, #304FFE 100%)' }}>
             <CustomerServiceOutlined />
           </div>
           <div className="content">

@@ -98,7 +98,7 @@ export const StaffAssignButton = styled.button`
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
   background: linear-gradient(135deg, rgba(67, 24, 255, 0.1), rgba(143, 107, 255, 0.15));
-  color: #4318FF;
+  color: #304FFE;
   border: 2px solid rgba(67, 24, 255, 0.2);
   
   &:hover:not(:disabled) {

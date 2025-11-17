@@ -9,8 +9,8 @@ class HttpClientFactory {
     if (kIsWeb) return http.Client();
     final HttpClient ioHttpClient = HttpClient()
       ..badCertificateCallback = (cert, host, port) {
-        // Allow dev self-signed cert for localhost/10.0.2.2 only
-        return host == 'localhost' || host == '10.0.2.2';
+        // Allow dev self-signed cert for localhost/10.0.2.2/192.168.1.163
+        return host == 'localhost' || host == '10.0.2.2' || host == '192.168.1.163';
       };
     return IOClient(ioHttpClient);
   }

@@ -35,6 +35,15 @@ namespace BE_PetWeb_API.Controllers
             return Ok(pets);
         }
 
+        // GET: api/Pets/User/{userId}
+        [HttpGet("User/{userId}")]
+        [Authorize(Roles = "Admin,Staff")] // Chỉ admin/staff mới có thể xem pets của user khác
+        public async Task<ActionResult<IEnumerable<PetDto>>> GetPetsByUserId(int userId)
+        {
+            var pets = await _petService.GetUserPetsAsync(userId);
+            return Ok(pets);
+        }
+
         // GET: api/Pets/5
         [HttpGet("{id}")]
         public async Task<ActionResult<PetDto>> GetPet(int id)

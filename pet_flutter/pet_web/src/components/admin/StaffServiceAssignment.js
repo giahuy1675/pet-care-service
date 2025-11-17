@@ -174,7 +174,7 @@ const StaffServiceAssignment = () => {
         }
 
         .assignment-header {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: linear-gradient(135deg, #304FFE 0%, #304FFE 100%);
           color: white;
           padding: 30px;
           border-radius: 15px;
@@ -215,7 +215,7 @@ const StaffServiceAssignment = () => {
 
         .form-control:focus {
           outline: none;
-          border-color: #667eea;
+          border-color: #304FFE;
           box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
@@ -224,7 +224,7 @@ const StaffServiceAssignment = () => {
           padding: 20px;
           border-radius: 12px;
           margin-bottom: 30px;
-          border-left: 4px solid #667eea;
+          border-left: 4px solid #304FFE;
         }
 
         .staff-info h3 {
@@ -252,7 +252,7 @@ const StaffServiceAssignment = () => {
         }
 
         .service-tag {
-          background: #667eea;
+          background: #304FFE;
           color: white;
           padding: 5px 12px;
           border-radius: 20px;
@@ -273,7 +273,7 @@ const StaffServiceAssignment = () => {
         }
 
         .category-header {
-          background: #667eea;
+          background: #304FFE;
           color: white;
           padding: 15px 20px;
           font-weight: 600;
@@ -302,7 +302,7 @@ const StaffServiceAssignment = () => {
         }
 
         .service-item:hover {
-          border-color: #667eea;
+          border-color: #304FFE;
           box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
         }
 
@@ -332,7 +332,7 @@ const StaffServiceAssignment = () => {
 
         .service-price {
           font-weight: 600;
-          color: #667eea;
+          color: #304FFE;
           font-size: 16px;
         }
 

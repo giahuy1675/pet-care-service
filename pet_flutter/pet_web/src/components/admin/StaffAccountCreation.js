@@ -77,7 +77,7 @@ const Container = styled.div`
     left: 0;
     width: 100%;
     height: 4px;
-    background: linear-gradient(90deg, #4318FF, #868CFF);
+    background: linear-gradient(90deg, #304FFE, #304FFE);
   }
 `;
 
@@ -102,8 +102,8 @@ const Header = styled.div`
 
     .anticon {
       font-size: 24px;
-      color: #4318FF;
-      background: linear-gradient(135deg, #4318FF, #868CFF);
+      color: #304FFE;
+      background: linear-gradient(135deg, #304FFE, #304FFE);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: ${pulse} 2s infinite ease-in-out;
@@ -138,7 +138,7 @@ const Step = styled.div`
   transition: all 0.3s ease;
   
   ${props => props.active && `
-    background: linear-gradient(135deg, #4318FF, #868CFF);
+    background: linear-gradient(135deg, #304FFE, #304FFE);
     color: white;
     box-shadow: 0 4px 15px rgba(67, 24, 255, 0.3);
   `}
@@ -183,7 +183,7 @@ const FormGroup = styled.div`
     gap: 8px;
 
     .anticon {
-      color: #4318FF;
+      color: #304FFE;
       font-size: 16px;
     }
     
@@ -204,7 +204,7 @@ const FormGroup = styled.div`
 
     &:focus {
       outline: none;
-      border-color: #4318FF;
+      border-color: #304FFE;
       box-shadow: 0 0 0 4px rgba(67, 24, 255, 0.15);
     }
 
@@ -238,7 +238,7 @@ const PasswordInputWrapper = styled.div`
     font-size: 16px;
     
     &:hover {
-      color: #4318FF;
+      color: #304FFE;
     }
   }
 `;
@@ -256,7 +256,7 @@ const AvatarUpload = styled.div`
   cursor: pointer;
 
   &:hover {
-    border-color: #4318FF;
+    border-color: #304FFE;
     background: #f1f9ff;
   }
 
@@ -265,7 +265,7 @@ const AvatarUpload = styled.div`
     height: 80px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #4318FF;
+    border: 3px solid #304FFE;
   }
 
   .upload-placeholder {
@@ -311,14 +311,14 @@ const ServiceSelection = styled.div`
 
 const ServiceCard = styled.div`
   padding: 15px;
-  border: 2px solid ${props => props.selected ? '#4318FF' : '#e6e9f0'};
+  border: 2px solid ${props => props.selected ? '#304FFE' : '#e6e9f0'};
   border-radius: 12px;
   background: ${props => props.selected ? '#f1f9ff' : 'white'};
   cursor: pointer;
   transition: all 0.3s ease;
   
   &:hover {
-    border-color: #4318FF;
+    border-color: #304FFE;
     background: #f1f9ff;
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(67, 24, 255, 0.15);
@@ -371,7 +371,7 @@ const Button = styled.button`
   }
 
   &.primary {
-    background: linear-gradient(135deg, #4318FF, #868CFF);
+    background: linear-gradient(135deg, #304FFE, #304FFE);
     color: white;
     box-shadow: 0 6px 15px rgba(67, 24, 255, 0.3);
 
@@ -415,7 +415,7 @@ const Toast = styled(motion.div)`
   }
 
   &.info {
-    background: linear-gradient(135deg, #4318FF, #868CFF);
+    background: linear-gradient(135deg, #304FFE, #304FFE);
   }
 `;
 
@@ -442,7 +442,7 @@ const LoadingCard = styled.div`
   
   .spinner {
     font-size: 32px;
-    color: #4318FF;
+    color: #304FFE;
     animation: ${rotate} 1s linear infinite;
     margin-bottom: 20px;
   }
@@ -876,7 +876,7 @@ const StaffAccountCreation = () => {
               borderRadius: '12px',
               border: '1px solid #e6e9f0'
             }}>
-              <InfoCircleOutlined style={{ fontSize: '32px', color: '#4318FF', marginBottom: '15px' }} />
+              <InfoCircleOutlined style={{ fontSize: '32px', color: '#304FFE', marginBottom: '15px' }} />
               <h3 style={{ color: '#2B3674', marginBottom: '10px' }}>Gán dịch vụ sau khi tạo tài khoản</h3>
               <p style={{ color: '#707EAE', margin: '0', fontSize: '15px' }}>
                 Tài khoản nhân viên sẽ được tạo trước. Bạn có thể gán dịch vụ cho nhân viên sau đó thông qua trang "Quản lý người dùng".

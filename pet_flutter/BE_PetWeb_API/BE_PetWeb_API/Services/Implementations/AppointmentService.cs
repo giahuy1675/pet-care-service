@@ -273,7 +273,7 @@ namespace BE_PetWeb_API.Services.Implementations
             return appointments;
         }
 
-        public async Task<AppointmentDto> CreateAppointmentAsync(int userId, CreateAppointmentDto createAppointmentDto)
+        public async Task<AppointmentDto> CreateAppointmentAsync(int userId, CreateAppointmentDto createAppointmentDto, bool isAdminOrStaff = false)
         {
             using (var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable))
             {
@@ -283,7 +283,8 @@ namespace BE_PetWeb_API.Services.Implementations
                     if (pet == null || pet.IsActive != true)
                         throw new Exception("Pet not found or has been deactivated");
 
-                    if (pet.UserId != userId)
+                    // Admin/Staff có thể tạo appointment cho bất kỳ pet nào
+                    if (!isAdminOrStaff && pet.UserId != userId)
                         throw new Exception("You are not authorized to create appointments for this pet");
 
                     var service = await _context.Services.FindAsync(createAppointmentDto.ServiceId);
@@ -716,10 +717,17 @@ namespace BE_PetWeb_API.Services.Implementations
                 throw new Exception("Only staff or admin can mark appointments as completed");
 
             appointment.Status = updateStatusDto.Status;
+            
+            // Set Notes - if cancelling and no notes provided, use default message
             if (!string.IsNullOrEmpty(updateStatusDto.Notes))
             {
                 appointment.Notes = updateStatusDto.Notes;
             }
+            else if (updateStatusDto.Status == "Cancelled")
+            {
+                appointment.Notes = "Cancelled by user";
+            }
+            
             appointment.UpdatedAt = _dateTimeService.Now;
 
             await _context.SaveChangesAsync();
