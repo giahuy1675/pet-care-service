@@ -8,57 +8,19 @@
     using Microsoft.EntityFrameworkCore;
     using System.Security.Claims;
 
-    /// <summary>
-    /// Defines the <see cref="AppointmentsController" />
-    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
-    [AllowAnonymous] // Tạm thời cho phép truy cập không cần xác thực để debug CORS
+    [Authorize]
     public class AppointmentsController : ControllerBase
     {
-        /// <summary>
-        /// Defines the _appointmentService
-        /// </summary>
         private readonly IAppointmentService _appointmentService;
-
-        /// <summary>
-        /// Defines the _staffService
-        /// </summary>
         private readonly IStaffService _staffService;
-
-        /// <summary>
-        /// Defines the _context
-        /// </summary>
         private readonly PetWebContext _context;
-
-        /// <summary>
-        /// Defines the _logger
-        /// </summary>
         private readonly ILogger<AppointmentsController> _logger;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AppointmentsController"/> class.
-        /// </summary>
-        /// <param name="appointmentService">The appointmentService<see cref="IAppointmentService"/></param>
-        /// <param name="staffService">The staffService<see cref="IStaffService"/></param>
-        /// <param name="context">The context<see cref="PetWebContext"/></param>
-        /// <param name="logger">The logger<see cref="ILogger{AppointmentsController}"/></param>        /// <summary>
-        /// Buffer time in minutes to add between appointments
-        /// </summary>
         private const int BUFFER_TIME_MINUTES = 10;
-          /// <summary>
-        /// Default slot interval in minutes for display purposes (e.g., UI grid)
-        /// This is different from actual appointment duration
-        /// </summary>
         private const int DEFAULT_SLOT_INTERVAL_MINUTES = 30;
-          /// <summary>
-        /// Default service duration in minutes when not available from service data
-        /// </summary>
         private const int DEFAULT_SERVICE_DURATION_MINUTES = 30;
-        
-        /// <summary>
-        /// Booking buffer time in minutes - minimum time before appointment can be booked
-        /// </summary>
         private const int BOOKING_BUFFER_MINUTES = 30;
 
         public AppointmentsController(
@@ -73,22 +35,12 @@
             _logger = logger;
         }
 
-        // GET: api/Appointments/Pet/{id}/busy-slots
-
-        /// <summary>
-        /// The GetPetBusyTimeSlots
-        /// </summary>
-        /// <param name="id">The id<see cref="int"/></param>
-        /// <param name="date">The date<see cref="DateTime"/></param>
-        /// <returns>The <see cref="Task{ActionResult{IEnumerable{string}}}"/></returns>
         [HttpGet("Pet/{id}/busy-slots")]
-        [AllowAnonymous] // Cho phép truy cập để debug CORS
+        [Authorize]
         public async Task<ActionResult<IEnumerable<string>>> GetPetBusyTimeSlots(int id, [FromQuery] DateTime date)
         {
             try
             {
-                _logger.LogInformation($"GetPetBusyTimeSlots called for pet {id} on date {date}");
-
                 var busyTimeSlots = await GetPetBusyTimeSlotsInternal(id, date);
 
                 // Trả về kết quả như mảng chuỗi giờ:phút
@@ -101,17 +53,8 @@
             }
         }
 
-        // Phương thức nội bộ để lấy danh sách khung giờ bận của thú cưng
-
-        /// <summary>
-        /// The GetPetBusyTimeSlotsInternal
-        /// </summary>
-        /// <param name="petId">The petId<see cref="int"/></param>
-        /// <param name="date">The date<see cref="DateTime"/></param>
-        /// <returns>The <see cref="Task{List{string}}"/></returns>
         private async Task<List<string>> GetPetBusyTimeSlotsInternal(int petId, DateTime date)
         {
-            _logger.LogInformation($"Getting busy time slots for pet {petId} on date {date}");
             var busyTimeSlots = new List<string>();
 
             try
@@ -124,7 +67,7 @@
                     .OrderBy(a => a.AppointmentDate)
                     .ToListAsync();
 
-                _logger.LogInformation($"Found {appointments.Count} appointments for pet {petId} on date {date}");                foreach (var appointment in appointments)
+                foreach (var appointment in appointments)
                 {
                     var startTime = appointment.AppointmentDate;                    // Ưu tiên dùng EndTime nếu có, nếu không thì tính từ thời lượng dịch vụ
                     var serviceDuration = appointment.Service?.Duration ?? DEFAULT_SERVICE_DURATION_MINUTES;
@@ -132,8 +75,6 @@
 
                     // Thêm buffer time sau mỗi cuộc hẹn
                     endTime = endTime.AddMinutes(BUFFER_TIME_MINUTES);
-
-                    _logger.LogInformation($"Appointment: {startTime:HH:mm} - {endTime:HH:mm}, Duration: {serviceDuration} minutes");
 
                     // Thêm tất cả các khung giờ display (30 phút) bị ảnh hưởng trong khoảng thời gian appointment + buffer
                     // Note: Sử dụng DEFAULT_SLOT_INTERVAL_MINUTES cho việc hiển thị UI, không phải cho appointment logic
@@ -163,20 +104,8 @@
             }
         }
 
-        // GET: api/Appointments/available-slots
-
-        /// <summary>
-        /// The GetAvailableSlots
-        /// </summary>
-        /// <param name="date">The date<see cref="DateTime"/></param>
-        /// <param name="serviceId">The serviceId<see cref="int"/></param>
-        /// <param name="staffIdParam">The staffIdParam<see cref="int?"/></param>
-        /// <param name="petId">The petId<see cref="int?"/></param>
-        /// <param name="includeUnavailable">The includeUnavailable<see cref="bool"/></param>
-        /// <param name="debug">The debug<see cref="bool"/></param>
-        /// <returns>The <see cref="Task{ActionResult{IEnumerable{DTOs.Appointment.TimeSlotDto}}}"/></returns>
         [HttpGet("available-slots")]
-        [AllowAnonymous] // Cho phép truy cập để debug CORS
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<DTOs.Appointment.TimeSlotDto>>> GetAvailableSlots(
             [FromQuery] DateTime date,
             [FromQuery] int serviceId,
@@ -187,8 +116,6 @@
         {
             try
             {
-                _logger.LogInformation($"GetAvailableSlots - Date: {date}, ServiceId: {serviceId}, StaffId: {staffIdParam}, PetId: {petId}");
-
                 // Kiểm tra service tồn tại và thời lượng hợp lệ
                 var service = await _context.Services.FindAsync(serviceId);
                 if (service == null)
@@ -211,7 +138,6 @@
                     // Nếu có lịch và không làm việc, trả về danh sách trống
                     if (staffSchedule != null && !staffSchedule.IsWorking)
                     {
-                        _logger.LogInformation($"Staff {staffIdParam} is not working on {date.Date}");
                         return Ok(new
                         {
                             slots = new List<DTOs.Appointment.TimeSlotDto>(),
@@ -246,7 +172,6 @@
                 if (petId.HasValue)
                 {
                     var petBusySlots = await GetPetBusyTimeSlotsInternal(petId.Value, date);
-                    _logger.LogInformation($"Pet {petId} busy slots: {string.Join(", ", petBusySlots)}");
 
                     // Đánh dấu các slot bận của thú cưng
                     foreach (var slot in slots)
@@ -308,7 +233,6 @@
                 {
                     // Tạo các slot mặc định cho ngày đã chọn
                     var defaultSlots = GenerateDefaultSlots(date, service.Duration);
-                    _logger.LogInformation($"Generated {defaultSlots.Count} default slots");
 
                     // Nếu có thú cưng, đánh dấu các slot bận
                     if (petId.HasValue)
@@ -427,126 +351,12 @@
             }
         }
 
-        // Thêm endpoint mới để lấy slots mặc định khi không có staff
-
-        /// <summary>
-        /// The GetDefaultSlots
-        /// </summary>
-        /// <param name="date">The date<see cref="DateTime"/></param>
-        /// <param name="serviceId">The serviceId<see cref="int"/></param>
-        /// <param name="petId">The petId<see cref="int?"/></param>
-        /// <returns>The <see cref="Task{ActionResult{IEnumerable{DTOs.Appointment.TimeSlotDto}}}"/></returns>
-        [HttpGet("default-slots")]
-        [AllowAnonymous] // Cho phép truy cập để debug CORS
-        public async Task<ActionResult<IEnumerable<DTOs.Appointment.TimeSlotDto>>> GetDefaultSlots(
-            [FromQuery] DateTime date,
-            [FromQuery] int serviceId,
-            [FromQuery] int? petId = null)
-        {
-            try
-            {
-                _logger.LogInformation($"GetDefaultSlots - Date: {date}, ServiceId: {serviceId}, PetId: {petId}");
-
-                // Kiểm tra service tồn tại và thời lượng hợp lệ
-                var service = await _context.Services.FindAsync(serviceId);
-                if (service == null)
-                    return BadRequest("Service not found");
-                
-                if (service.Duration <= 0)
-                    return BadRequest("Không thể tạo khung giờ: Thời lượng dịch vụ không hợp lệ hoặc không tìm thấy thông tin dịch vụ.");
-
-                // Tạo các slot mặc định cho ngày đã chọn
-                var defaultSlots = GenerateDefaultSlots(date, service.Duration);
-
-                // Thêm thuộc tính SelectedDate cho mỗi slot
-                foreach (var slot in defaultSlots)
-                {
-                    slot.SelectedDate = date.ToString("yyyy-MM-dd");
-                }
-
-                // Nếu có thú cưng, đánh dấu các slot bận
-                if (petId.HasValue)
-                {
-                    var petBusySlots = await GetPetBusyTimeSlotsInternal(petId.Value, date);
-                    foreach (var slot in defaultSlots
-                    )
-                    {
-                        var slotTime = slot.StartTime.ToString("HH:mm");
-                        if (petBusySlots.Contains(slotTime))
-                        {
-                            slot.Available = false;
-                            slot.IsAvailable = false;
-                            slot.IsPetBusy = true;
-                            slot.UnavailableReason = "Thú cưng đã có lịch hẹn vào khung giờ này";
-                        }
-                    }
-                }                // Đánh dấu các khung giờ trong quá khứ
-                // Cập nhật: Thêm buffer để tránh đặt lịch quá gần
-                var now = DateTime.Now;
-                var bufferForBooking = TimeSpan.FromMinutes(BOOKING_BUFFER_MINUTES); // Buffer cho việc đặt lịch
-                var cutoffTime = now.Add(bufferForBooking);
-
-                foreach (var slot in defaultSlots)
-                {
-                    // Sửa lại: Chỉ áp dụng kiểm tra khung giờ đã qua cho ngày hiện tại, không áp dụng cho các ngày trong tương lai
-                    var slotDate = DateTime.Parse(slot.SelectedDate);
-
-                    // Chỉ áp dụng kiểm tra với ngày hiện tại
-                    if (slotDate.Date == now.Date && slot.StartTime <= cutoffTime)
-                    {
-                        slot.Available = false;
-                        slot.IsAvailable = false;
-                        slot.IsPast = true;
-                        slot.IsPastTime = true;
-                        if (string.IsNullOrEmpty(slot.UnavailableReason))
-                        {
-                            slot.UnavailableReason = "Khung giờ đã qua hoặc quá gần để đặt lịch";
-                        }
-                    }
-                }
-
-                // Thêm metadata vào response
-                var metadata = new
-                {
-                    Date = date.ToString("yyyy-MM-dd"),
-                    ServiceId = serviceId,
-                    ServiceName = service.Name,
-                    ServiceDuration = service.Duration,
-                    PetId = petId,
-                    HasDefaultSlots = true,
-                    TotalSlots = defaultSlots.Count,
-                    AvailableSlots = defaultSlots.Count(s => s.Available),
-                    PetBusySlots = petId.HasValue ? defaultSlots.Count(s => s.IsPetBusy) : 0,
-                    BusinessHours = new
-                    {
-                        Open = "08:00",
-                        Close = "21:30"
-                    }
-                };
-
-                return Ok(new { slots = defaultSlots, metadata });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetDefaultSlots");
-                return StatusCode(500, new { message = ex.Message, stackTrace = ex.StackTrace });
-            }
-        }
-
-        /// <summary>
-        /// The GetPetAppointments
-        /// </summary>
-        /// <param name="id">The id<see cref="int"/></param>
-        /// <param name="date">The date<see cref="DateTime?"/></param>
-        /// <returns>The <see cref="Task{ActionResult{IEnumerable{AppointmentDto}}}"/></returns>
         [HttpGet("Pet/{id}")]
-        [AllowAnonymous] // Cho phép truy cập để debug CORS
+        [Authorize]
         public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetPetAppointments(int id, [FromQuery] DateTime? date)
         {
             try
             {
-                _logger.LogInformation($"GetPetAppointments called for pet {id}, date: {date}");
-
                 var query = _context.Appointments
                     .Include(a => a.User)
                     .Include(a => a.Pet)
@@ -582,8 +392,6 @@
                     })
                     .ToListAsync();
 
-                _logger.LogInformation($"Found {appointments.Count} appointments for pet {id}");
-
                 return Ok(appointments);
             }
             catch (Exception ex)
@@ -593,13 +401,8 @@
             }
         }
 
-        /// <summary>
-        /// The CompleteAppointment
-        /// </summary>
-        /// <param name="id">The id<see cref="int"/></param>
-        /// <param name="completeDto">The completeDto<see cref="CompleteAppointmentDto"/></param>
-        /// <returns>The <see cref="Task{ActionResult{AppointmentDto}}"/></returns>
         [HttpPatch("{id}/complete")]
+        [Authorize]
         public async Task<ActionResult<AppointmentDto>> CompleteAppointment(int id, [FromBody] CompleteAppointmentDto completeDto)
         {
             try
@@ -621,13 +424,8 @@
             }
         }
 
-        // GET: api/Appointments
-
-        /// <summary>
-        /// The GetAllAppointments
-        /// </summary>
-        /// <returns>The <see cref="Task{ActionResult{IEnumerable{AppointmentDto}}}"/></returns>
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetAllAppointments()
         {
             try
@@ -642,13 +440,8 @@
             }
         }
 
-        // GET: api/Appointments/User
-
-        /// <summary>
-        /// The GetUserAppointments
-        /// </summary>
-        /// <returns>The <see cref="Task{ActionResult{IEnumerable{AppointmentDto}}}"/></returns>
         [HttpGet("User")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetUserAppointments()
         {
             try
@@ -664,13 +457,8 @@
             }
         }
 
-        // GET: api/Appointments/Staff
-
-        /// <summary>
-        /// The GetStaffAppointments
-        /// </summary>
-        /// <returns>The <see cref="Task{ActionResult{IEnumerable{AppointmentDto}}}"/></returns>
         [HttpGet("Staff")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetStaffAppointments()
         {
             try
@@ -692,14 +480,8 @@
             }
         }
 
-        // GET: api/Appointments/5
-
-        /// <summary>
-        /// The GetAppointment
-        /// </summary>
-        /// <param name="id">The id<see cref="int"/></param>
-        /// <returns>The <see cref="Task{ActionResult{AppointmentDto}}"/></returns>
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<ActionResult<AppointmentDto>> GetAppointment(int id)
         {
             try
@@ -738,58 +520,8 @@
             }
         }
 
-        // GET: api/Appointments/Date/2024-04-01
-
-        /// <summary>
-        /// The GetAppointmentsByDate
-        /// </summary>
-        /// <param name="date">The date<see cref="DateTime"/></param>
-        /// <returns>The <see cref="Task{ActionResult{IEnumerable{AppointmentDto}}}"/></returns>
-        [HttpGet("Date/{date}")]
-        public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetAppointmentsByDate(DateTime date)
-        {
-            try
-            {
-                var appointments = await _appointmentService.GetAppointmentsByDateAsync(date);
-                return Ok(appointments);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error getting appointments by date {date}");
-                return StatusCode(500, new { message = ex.Message });
-            }
-        }
-
-        // GET: api/Appointments/Status/Scheduled
-
-        /// <summary>
-        /// The GetAppointmentsByStatus
-        /// </summary>
-        /// <param name="status">The status<see cref="string"/></param>
-        /// <returns>The <see cref="Task{ActionResult{IEnumerable{AppointmentDto}}}"/></returns>
-        [HttpGet("Status/{status}")]
-        public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetAppointmentsByStatus(string status)
-        {
-            try
-            {
-                var appointments = await _appointmentService.GetAppointmentsByStatusAsync(status);
-                return Ok(appointments);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error getting appointments by status {status}");
-                return StatusCode(500, new { message = ex.Message });
-            }
-        }
-
-        // POST: api/Appointments
-
-        /// <summary>
-        /// The CreateAppointment
-        /// </summary>
-        /// <param name="createAppointmentDto">The createAppointmentDto<see cref="CreateAppointmentDto"/></param>
-        /// <returns>The <see cref="Task{ActionResult{AppointmentDto}}"/></returns>
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<AppointmentDto>> CreateAppointment(CreateAppointmentDto createAppointmentDto)
         {
             try
@@ -806,15 +538,8 @@
             }
         }
 
-        // PUT: api/Appointments/5
-
-        /// <summary>
-        /// The UpdateAppointment
-        /// </summary>
-        /// <param name="id">The id<see cref="int"/></param>
-        /// <param name="updateAppointmentDto">The updateAppointmentDto<see cref="UpdateAppointmentDto"/></param>
-        /// <returns>The <see cref="Task{IActionResult}"/></returns>
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdateAppointment(int id, UpdateAppointmentDto updateAppointmentDto)
         {
             try
@@ -850,15 +575,8 @@
             }
         }
 
-        // PATCH: api/Appointments/5/Status
-
-        /// <summary>
-        /// The UpdateAppointmentStatus
-        /// </summary>
-        /// <param name="id">The id<see cref="int"/></param>
-        /// <param name="updateStatusDto">The updateStatusDto<see cref="UpdateAppointmentStatusDto"/></param>
-        /// <returns>The <see cref="Task{IActionResult}"/></returns>
         [HttpPatch("{id}/Status")]
+        [Authorize]
         public async Task<IActionResult> UpdateAppointmentStatus(int id, UpdateAppointmentStatusDto updateStatusDto)
         {
             try
@@ -880,14 +598,8 @@
             }
         }
 
-        // DELETE: api/Appointments/5
-
-        /// <summary>
-        /// The CancelAppointment
-        /// </summary>
-        /// <param name="id">The id<see cref="int"/></param>
-        /// <returns>The <see cref="Task{IActionResult}"/></returns>
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> CancelAppointment(int id)
         {
             try
@@ -909,13 +621,8 @@
             }
         }
 
-        /// <summary>
-        /// The CancelAppointmentWithReason
-        /// </summary>
-        /// <param name="id">The id<see cref="int"/></param>
-        /// <param name="cancelReasonDto">The cancelReasonDto<see cref="CancelReasonDto"/></param>
-        /// <returns>The <see cref="Task{IActionResult}"/></returns>
         [HttpDelete("{id}/reason")]
+        [Authorize]
         public async Task<IActionResult> CancelAppointmentWithReason(int id, [FromBody] CancelReasonDto cancelReasonDto)
         {
             try
@@ -937,24 +644,38 @@
             }
         }
 
-        // API để lấy thông tin của tất cả nhân viên khả dụng trong ngày
+        [HttpGet("cancel-count")]
+        [Authorize]
+        public async Task<IActionResult> GetCancelCountThisMonth()
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var oneMonthAgo = DateTime.Now.AddMonths(-1);
+                
+                var cancelCount = await _context.Appointments
+                    .Where(a => a.UserId == userId)
+                    .Where(a => a.Status == "Cancelled")
+                    .Where(a => a.CancelledAt.HasValue && a.CancelledAt.Value >= oneMonthAgo)
+                    .CountAsync();
 
-        /// <summary>
-        /// The GetAvailableStaff
-        /// </summary>
-        /// <param name="date">The date<see cref="DateTime"/></param>
-        /// <param name="serviceId">The serviceId<see cref="int"/></param>
-        /// <returns>The <see cref="Task{ActionResult{IEnumerable{DTOs.Appointment.StaffAvailabilityDto}}}"/></returns>
+                return Ok(new { count = cancelCount });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting cancel count");
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpGet("available-staff")]
-        [AllowAnonymous] // Cho phép truy cập để debug CORS
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<DTOs.Appointment.StaffAvailabilityDto>>> GetAvailableStaff(
             [FromQuery] DateTime date,
             [FromQuery] int serviceId)
         {
             try
             {
-                _logger.LogInformation($"GetAvailableStaff called for date {date}, serviceId {serviceId}");
-
                 // Lấy danh sách nhân viên có thể cung cấp dịch vụ này
                 var staffWithService = await _context.StaffServices
                     .Where(ss => ss.ServiceId == serviceId)
@@ -965,7 +686,6 @@
 
                 if (staffWithService.Count == 0)
                 {
-                    _logger.LogInformation($"No staff available for service {serviceId}");
                     return Ok(new List<DTOs.Appointment.StaffAvailabilityDto>());
                 }
 
@@ -981,7 +701,6 @@
 
                     if (!isWorking)
                     {
-                        _logger.LogInformation($"Staff {staff.StaffId} is not working on {date.Date}");
                         continue; // Bỏ qua nhân viên không làm việc trong ngày
                     }
 
@@ -1001,8 +720,6 @@
                     });
                 }
 
-                _logger.LogInformation($"Found {result.Count} available staff for service {serviceId} on date {date}");
-
                 return Ok(result);
             }
             catch (Exception ex)
@@ -1012,20 +729,12 @@
             }
         }
 
-        /// <summary>
-        /// The CheckStaffAvailabilityForDate
-        /// </summary>
-        /// <param name="staffId">The staffId<see cref="int"/></param>
-        /// <param name="date">The date<see cref="DateTime"/></param>
-        /// <returns>The <see cref="Task{ActionResult}"/></returns>
         [HttpGet("staff-availability")]
-        [AllowAnonymous] // Cho phép truy cập để debug CORS
+        [AllowAnonymous]
         public async Task<ActionResult> CheckStaffAvailabilityForDate([FromQuery] int staffId, [FromQuery] DateTime date)
         {
             try
             {
-                _logger.LogInformation($"CheckStaffAvailabilityForDate called for staff {staffId} on date {date}");
-
                 var staff = await _context.Staff
                     .Include(s => s.User)
                     .FirstOrDefaultAsync(s => s.StaffId == staffId);
@@ -1056,8 +765,6 @@
                     })
                     .ToListAsync();
 
-                _logger.LogInformation($"Staff {staffId} isWorking: {isWorking}, appointmentCount: {appointmentCount}");
-
                 return Ok(new
                 {
                     staffId,
@@ -1076,20 +783,12 @@
             }
         }
 
-        /// <summary>
-        /// The CheckStaffSchedule
-        /// </summary>
-        /// <param name="staffId">The staffId<see cref="int"/></param>
-        /// <param name="date">The date<see cref="DateTime"/></param>
-        /// <returns>The <see cref="Task{ActionResult}"/></returns>
         [HttpGet("staff-schedule")]
-        [AllowAnonymous] // Cho phép truy cập để debug CORS
+        [AllowAnonymous]
         public async Task<ActionResult> CheckStaffSchedule([FromQuery] int staffId, [FromQuery] DateTime date)
         {
             try
             {
-                _logger.LogInformation($"CheckStaffSchedule called with staffId={staffId}, date={date}");
-
                 var staff = await _context.Staff
                     .Include(s => s.User)
                     .FirstOrDefaultAsync(s => s.StaffId == staffId);
@@ -1157,63 +856,8 @@
             }
         }
 
-        /// <summary>
-        /// The DebugTimeSlotAvailability
-        /// </summary>
-        /// <param name="date">The date<see cref="DateTime"/></param>
-        /// <param name="serviceId">The serviceId<see cref="int"/></param>
-        /// <param name="staffId">The staffId<see cref="int?"/></param>
-        /// <param name="petId">The petId<see cref="int?"/></param>
-        /// <returns>The <see cref="Task{ActionResult}"/></returns>
-        [HttpGet("debug-availability")]
-        [AllowAnonymous] // Cho phép truy cập để debug CORS
-        public async Task<ActionResult> DebugTimeSlotAvailability(
-            [FromQuery] DateTime date,
-            [FromQuery] int serviceId,
-            [FromQuery] int? staffId,
-            [FromQuery] int? petId = null)
-        {
-            try
-            {
-                _logger.LogInformation($"DebugTimeSlotAvailability called for date {date}, serviceId {serviceId}, staffId {staffId}, petId {petId}");
-
-                // Lấy debug info từ appointment service
-                var result = await _appointmentService.DebugTimeSlotAvailability(date, serviceId, staffId);
-
-                // Thêm thông tin về thú cưng nếu có
-                if (petId.HasValue)
-                {
-                    var petBusySlots = await GetPetBusyTimeSlotsInternal(petId.Value, date);
-                    result["petId"] = petId.Value;
-                    result["petBusySlots"] = petBusySlots;
-
-                    // Kiểm tra xem slot có trùng với pet busy slots không
-                    if (result.ContainsKey("requestedStartTime") && result["requestedStartTime"] is DateTime requestedStartTime)
-                    {
-                        var requestedTime = requestedStartTime.ToString("HH:mm");
-                        result["isPetBusy"] = petBusySlots.Contains(requestedTime);
-                    }
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in DebugTimeSlotAvailability");
-                return StatusCode(500, new { message = ex.Message, stackTrace = ex.StackTrace });
-            }
-        }
-
-        /// <summary>
-        /// The CheckTimeSlotAvailability
-        /// </summary>
-        /// <param name="dateStr">The dateStr<see cref="string"/></param>
-        /// <param name="serviceId">The serviceId<see cref="int"/></param>
-        /// <param name="staffId">The staffId<see cref="int?"/></param>
-        /// <param name="petIdStr">The petIdStr<see cref="string"/></param>
-        /// <returns>The <see cref="Task{ActionResult}"/></returns>
         [HttpGet("check-availability")]
-        [AllowAnonymous] // Cho phép truy cập để debug CORS
+        [AllowAnonymous]
         public async Task<ActionResult> CheckTimeSlotAvailability(
      [FromQuery] string dateStr,
      [FromQuery] int serviceId,
@@ -1233,8 +877,6 @@
                 {
                     petId = parsedPetId;
                 }
-
-                _logger.LogInformation($"CheckTimeSlotAvailability: Date={date}, ServiceId={serviceId}, StaffId={staffId}, PetId={petId}");
 
                 // Kiểm tra thời gian trong giờ làm việc
                 var service = await _context.Services.FindAsync(serviceId);
@@ -1354,22 +996,13 @@
             }
         }
 
-        /// <summary>
-        /// The GetPetBusyTimeSlotsRange
-        /// </summary>
-        /// <param name="id">The id<see cref="int"/></param>
-        /// <param name="startDate">The startDate<see cref="DateTime"/></param>
-        /// <param name="endDate">The endDate<see cref="DateTime?"/></param>
-        /// <returns>The <see cref="Task{ActionResult{IEnumerable{BusyDateDto}}}"/></returns>
         [HttpGet("Pet/{id}/busy-slots/range")]
-        [AllowAnonymous] // Cho phép truy cập để debug CORS
+        [Authorize]
         public async Task<ActionResult<IEnumerable<BusyDateDto>>> GetPetBusyTimeSlotsRange(
             int id, [FromQuery] DateTime startDate, [FromQuery] DateTime? endDate = null)
         {
             try
             {
-                _logger.LogInformation($"GetPetBusyTimeSlotsRange called for pet {id}, startDate: {startDate}, endDate: {endDate}");
-
                 var actualEndDate = endDate ?? startDate.AddDays(6);
                 var result = new List<BusyDateDto>();
 
@@ -1400,76 +1033,13 @@
             }
         }
 
-        /// <summary>
-        /// The GetPetAppointmentsByDateRange
-        /// </summary>
-        /// <param name="id">The id<see cref="int"/></param>
-        /// <param name="startDate">The startDate<see cref="DateTime"/></param>
-        /// <param name="endDate">The endDate<see cref="DateTime?"/></param>
-        /// <returns>The <see cref="Task{ActionResult{IEnumerable{AppointmentDto}}}"/></returns>
-        [HttpGet("Pet/{id}/range")]
-        [AllowAnonymous] // Cho phép truy cập để debug CORS
-        public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetPetAppointmentsByDateRange(
-            int id, [FromQuery] DateTime startDate, [FromQuery] DateTime? endDate = null)
-        {
-            try
-            {
-                _logger.LogInformation($"GetPetAppointmentsByDateRange for pet {id}, startDate: {startDate}, endDate: {endDate}");
-
-                var actualEndDate = endDate ?? startDate.AddDays(6);
-
-                var query = _context.Appointments
-                    .Include(a => a.User)
-                    .Include(a => a.Pet)
-                    .Include(a => a.Service)
-                    .Include(a => a.Staff)
-                    .Where(a => a.PetId == id)
-                    .Where(a => a.AppointmentDate >= startDate.Date && a.AppointmentDate < actualEndDate.Date.AddDays(1))
-                    .OrderBy(a => a.AppointmentDate);
-
-                var appointments = await query
-                    .Select(a => new AppointmentDto
-                    {
-                        AppointmentId = a.AppointmentId,
-                        UserId = a.UserId,
-                        UserName = a.User.FullName,
-                        PetId = a.PetId,
-                        PetName = a.Pet.Name,
-                        ServiceId = a.ServiceId,
-                        ServiceName = a.Service.Name,
-                        ServicePrice = a.Service.Price,
-                        StaffId = a.StaffId,
-                        StaffName = a.Staff != null ? a.Staff.User.FullName : null,
-                        AppointmentDate = a.AppointmentDate,
-                        EndTime = a.EndTime,
-                        Status = a.Status,
-                        Notes = a.Notes
-                    })
-                    .ToListAsync();
-
-                return Ok(appointments);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error getting appointments range for pet {id}");
-                return StatusCode(500, new { message = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// The CheckAppointmentConflicts
-        /// </summary>
-        /// <param name="checkDto">The checkDto<see cref="CheckConflictDto"/></param>
-        /// <returns>The <see cref="Task{ActionResult}"/></returns>
         [HttpPost("check-conflicts")]
-        [AllowAnonymous] // Cho phép truy cập để debug CORS
+        [Authorize]
         public async Task<ActionResult> CheckAppointmentConflicts(
             [FromBody] CheckConflictDto checkDto)
         {
             try
             {
-                _logger.LogInformation($"CheckAppointmentConflicts: Date={checkDto.Date}, Duration={checkDto.Duration}, StaffId={checkDto.StaffId}, PetId={checkDto.PetId}");
-
                 var conflicts = new List<object>();
 
                 // Kiểm tra xung đột với lịch của nhân viên
@@ -1501,186 +1071,6 @@
             }
         }
 
-        /// <summary>
-        /// The GetPetBusyTimeSlotsV2
-        /// </summary>
-        /// <param name="petId">The petId<see cref="int"/></param>
-        /// <param name="date">The date<see cref="DateTime"/></param>
-        /// <returns>The <see cref="Task{ActionResult{IEnumerable{string}}}"/></returns>
-        [HttpGet("Pet/{petId}/busy-slots/v2")]
-        [AllowAnonymous] // Cho phép truy cập để debug CORS
-        public async Task<ActionResult<IEnumerable<string>>> GetPetBusyTimeSlotsV2(
-            int petId,
-            [FromQuery] DateTime date)
-        {
-            try
-            {
-                _logger.LogInformation($"GetPetBusyTimeSlotsV2 called for pet {petId} on date {date}");
-
-                // Kiểm tra quyền truy cập thú cưng
-                var pet = await _context.Pets.FindAsync(petId);
-                if (pet == null)
-                    return NotFound("Thú cưng không tồn tại");
-
-                // Tạm thời bỏ qua kiểm tra quyền vì đang debug CORS
-                /*
-                var userId = GetCurrentUserId();
-                if (pet.UserId != userId && !User.IsInRole("Admin") && !User.IsInRole("Staff"))
-                    return Forbid("Bạn không có quyền xem lịch của thú cưng này");
-                */
-
-                // Lấy danh sách các cuộc hẹn của thú cưng trong ngày
-                var startDate = date.Date;
-                var endDate = startDate.AddDays(1).AddTicks(-1);
-
-                var appointments = await _context.Appointments
-                    .Include(a => a.Service)
-                    .Where(a => a.PetId == petId)
-                    .Where(a => a.AppointmentDate >= startDate && a.AppointmentDate <= endDate)
-                    .Where(a => a.Status != "Cancelled" && a.Status != "No-Show" && a.Status != "Completed")
-                    .ToListAsync();
-
-                // Tạo danh sách các khung giờ bận
-                var busyTimeSlots = new List<string>();                foreach (var appointment in appointments)
-                {
-                    // Tính toán các khung giờ display bị ảnh hưởng bởi appointment + buffer
-                    var startTime = appointment.AppointmentDate;
-                    var endTime = appointment.EndTime ??
-                        startTime.AddMinutes(appointment.Service?.Duration ?? 60);
-                    
-                    // Thêm buffer time vào endTime để tính đúng các slot bị ảnh hưởng
-                    endTime = endTime.AddMinutes(BUFFER_TIME_MINUTES);
-
-                    // Tạo các khung giờ display (DEFAULT_SLOT_INTERVAL_MINUTES) từ 8:00 đến 21:30
-                    for (int minute = 8 * 60; minute <= 21 * 60; minute += DEFAULT_SLOT_INTERVAL_MINUTES)
-                    {
-                        var slotStart = startDate.AddMinutes(minute);
-                        var slotEnd = slotStart.AddMinutes(DEFAULT_SLOT_INTERVAL_MINUTES);
-
-                        // Kiểm tra xem slot display có bị chồng lấp với cuộc hẹn + buffer không
-                        if ((slotStart >= startTime && slotStart < endTime) ||
-                            (slotEnd > startTime && slotEnd <= endTime) ||
-                            (slotStart <= startTime && slotEnd >= endTime))
-                        {
-                            var timeString = slotStart.ToString("HH:mm");
-                            if (!busyTimeSlots.Contains(timeString))
-                            {
-                                busyTimeSlots.Add(timeString);
-                            }
-                        }
-                    }
-                }
-
-                return Ok(busyTimeSlots);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error in GetPetBusyTimeSlotsV2 for pet {petId}");
-                return StatusCode(500, new { message = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// The GetPetBusyDates
-        /// </summary>
-        /// <param name="petId">The petId<see cref="int"/></param>
-        /// <param name="startDate">The startDate<see cref="DateTime"/></param>
-        /// <param name="endDate">The endDate<see cref="DateTime"/></param>
-        /// <returns>The <see cref="Task{ActionResult{IEnumerable{BusyDateDto}}}"/></returns>
-        [HttpGet("pet/{petId}/busy-dates")]
-        [AllowAnonymous] // Cho phép truy cập để debug CORS
-        public async Task<ActionResult<IEnumerable<BusyDateDto>>> GetPetBusyDates(
-            int petId,
-            [FromQuery] DateTime startDate,
-            [FromQuery] DateTime endDate)
-        {
-            try
-            {
-                _logger.LogInformation($"GetPetBusyDates for pet {petId}, startDate: {startDate}, endDate: {endDate}");
-
-                // Kiểm tra quyền truy cập thú cưng
-                var pet = await _context.Pets.FindAsync(petId);
-                if (pet == null)
-                    return NotFound("Thú cưng không tồn tại");
-
-                // Tạm thời bỏ qua kiểm tra quyền vì đang debug CORS
-                /*
-                var userId = GetCurrentUserId();
-                if (pet.UserId != userId && !User.IsInRole("Admin") && !User.IsInRole("Staff"))
-                    return Forbid("Bạn không có quyền xem lịch của thú cưng này");
-                */
-
-                // Lấy danh sách các cuộc hẹn của thú cưng trong khoảng thời gian
-                var appointments = await _context.Appointments
-                    .Include(a => a.Service)
-                    .Where(a => a.PetId == petId)
-                    .Where(a => a.AppointmentDate.Date >= startDate.Date && a.AppointmentDate.Date <= endDate.Date)
-                    .Where(a => a.Status != "Cancelled" && a.Status != "No-Show" && a.Status != "Completed")
-                    .ToListAsync();
-
-                // Nhóm các cuộc hẹn theo ngày
-                var busyDates = appointments
-                    .GroupBy(a => a.AppointmentDate.Date)
-                    .Select(g => new BusyDateDto
-                    {
-                        Date = g.Key,
-                        BusyTimeSlots = g.Select(a => new BusyTimeSlotDto
-                        {
-                            StartTime = a.AppointmentDate.ToString("HH:mm"),
-                            EndTime = (a.EndTime ?? a.AppointmentDate.AddMinutes(a.Service?.Duration ?? 60)).ToString("HH:mm"),
-                            AppointmentId = a.AppointmentId
-                        }).ToList()
-                    })
-                    .ToList();
-
-                return Ok(busyDates);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error in GetPetBusyDates for pet {petId}");
-                return StatusCode(500, new { message = ex.Message });
-            }
-        }
-
-        // API để lấy lịch hẹn trong tuần
-
-        /// <summary>
-        /// The GetWeeklyAppointments
-        /// </summary>
-        /// <param name="startDate">The startDate<see cref="DateTime"/></param>
-        /// <param name="endDate">The endDate<see cref="DateTime?"/></param>
-        /// <returns>The <see cref="Task{ActionResult{IEnumerable{AppointmentDto}}}"/></returns>
-        [HttpGet("weekly")]
-        [AllowAnonymous] // Cho phép truy cập để debug CORS
-        public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetWeeklyAppointments(
-            [FromQuery] DateTime startDate,
-            [FromQuery] DateTime? endDate = null)
-        {
-            try
-            {
-                _logger.LogInformation($"GetWeeklyAppointments, startDate: {startDate}, endDate: {endDate}");
-
-                // Nếu không có endDate, mặc định lấy 7 ngày từ startDate
-                var actualEndDate = endDate ?? startDate.AddDays(6);
-
-                var appointments = await _appointmentService.GetAppointmentsByDateRangeAsync(startDate, actualEndDate);
-                return Ok(appointments);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetWeeklyAppointments");
-                return StatusCode(500, new { message = ex.Message });
-            }
-        }
-
-        // Helper method để tạo các slot mặc định
-
-        /// <summary>
-        /// The GenerateDefaultSlots
-        /// </summary>
-        /// <param name="date">The date<see cref="DateTime"/></param>
-        /// <param name="serviceDuration">The serviceDuration<see cref="int"/></param>
-        /// <returns>The <see cref="IList{DTOs.Appointment.TimeSlotDto}"/></returns>
         private IList<DTOs.Appointment.TimeSlotDto> GenerateDefaultSlots(DateTime date, int serviceDuration)
         {
             var defaultSlots = new List<DTOs.Appointment.TimeSlotDto>();        // Tạo các slot dựa trên thời lượng dịch vụ thực tế + buffer thay vì slot cố định 30 phút
@@ -1748,16 +1138,11 @@
             }
 
             return defaultSlots;
-        }        /// <summary>
-        /// The GetCurrentUserId
-        /// </summary>
-        /// <returns>The <see cref="int"/></returns>
-        private int GetCurrentUserId()
+        }        private int GetCurrentUserId()
         {
             if (!User.Identity.IsAuthenticated)
             {
-                // Tạm thời cho phép không xác thực trong quá trình debug
-                return 8; // User ID 8 is admin - allows all operations for testing
+                throw new UnauthorizedAccessException("User must be authenticated to perform this action");
             }
 
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -1767,172 +1152,6 @@
             }
 
             return int.Parse(userIdClaim.Value);
-        }
-
-        // GET: api/Appointments/debug-staff-busy
-        [HttpGet("debug/staff/{staffId}/busy-slots")]
-        [AllowAnonymous] // Cho phép truy cập để debug
-        public async Task<ActionResult<object>> GetStaffBusySlotsDebug(int staffId, [FromQuery] DateTime date)
-        {
-            try
-            {
-                _logger.LogInformation($"DEBUG: Getting staff busy slots for staff {staffId} on date {date}");
-
-                // Lấy busy slots từ AppointmentService
-                var busySlots = await _appointmentService.GetStaffBusyTimeSlotsAsync(staffId, date);
-                
-                // Lấy tất cả appointments của staff để debug
-                var allAppointments = await _context.Appointments
-                    .Include(a => a.Service)
-                    .Include(a => a.Pet)
-                    .Include(a => a.User)
-                    .Where(a => a.StaffId == staffId && a.AppointmentDate.Date == date.Date)
-                    .OrderBy(a => a.AppointmentDate)
-                    .Select(a => new {
-                        AppointmentId = a.AppointmentId,
-                        AppointmentDate = a.AppointmentDate,
-                        EndTime = a.EndTime,
-                        Status = a.Status,
-                        ServiceName = a.Service.Name,
-                        ServiceDuration = a.Service.Duration,
-                        PetName = a.Pet.Name,
-                        UserName = a.User.FullName
-                    })
-                    .ToListAsync();
-
-                // Kiểm tra staff có tồn tại và đang hoạt động không
-                var staff = await _context.Staff
-                    .Include(s => s.User)
-                    .FirstOrDefaultAsync(s => s.StaffId == staffId);
-
-                var response = new
-                {
-                    Date = date.ToString("yyyy-MM-dd"),
-                    StaffId = staffId,
-                    StaffExists = staff != null,
-                    StaffName = staff?.User?.FullName ?? "Unknown",
-                    StaffActive = staff?.IsActive ?? false,
-                    BusySlots = busySlots,
-                    BusySlotsCount = busySlots.Count,
-                    AllAppointments = allAppointments,
-                    AllAppointmentsCount = allAppointments.Count,
-                    ActiveAppointments = allAppointments.Where(a => a.Status != "Cancelled" && a.Status != "No-Show" && a.Status != "Completed").ToList()
-                };
-
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error getting debug staff busy slots for staff {staffId} on date {date}");
-                return StatusCode(500, new { message = ex.Message, stackTrace = ex.StackTrace });
-            }
-        }
-
-        // GET: api/Appointments/debug/available-slots
-        [HttpGet("debug/available-slots")]
-        [AllowAnonymous] // Cho phép truy cập để debug
-        public async Task<ActionResult<object>> GetAvailableSlotsDebug(
-            [FromQuery] DateTime date,
-            [FromQuery] int serviceId,
-            [FromQuery] int? staffId = null,
-            [FromQuery] int? petId = null)
-        {
-            try
-            {
-                _logger.LogInformation($"DEBUG: GetAvailableSlots - Date: {date}, ServiceId: {serviceId}, StaffId: {staffId}, PetId: {petId}");
-
-                // Lấy service info
-                var service = await _context.Services.FindAsync(serviceId);
-                if (service == null)
-                    return BadRequest("Service not found");
-
-                // Lấy staff info nếu có
-                object staffInfo = null;
-                if (staffId.HasValue)
-                {
-                    var staff = await _context.Staff
-                        .Include(s => s.User)
-                        .FirstOrDefaultAsync(s => s.StaffId == staffId);
-                    
-                    if (staff != null)
-                    {
-                        staffInfo = new
-                        {
-                            StaffId = staff.StaffId,
-                            StaffName = staff.User?.FullName,
-                            IsActive = staff.IsActive
-                        };
-                    }
-                }
-
-                // Lấy slots từ service
-                var slots = await _appointmentService.GetAvailableTimeSlotsAsync(date, serviceId, staffId, true, petId);
-
-                // Lấy pet busy slots nếu có
-                List<string> petBusySlots = new List<string>();
-                if (petId.HasValue)
-                {
-                    petBusySlots = await GetPetBusyTimeSlotsInternal(petId.Value, date);
-                }
-
-                // Lấy staff busy slots nếu có
-                List<string> staffBusySlots = new List<string>();
-                if (staffId.HasValue)
-                {
-                    staffBusySlots = await _appointmentService.GetStaffBusyTimeSlotsAsync(staffId.Value, date);
-                }
-
-                var debugResponse = new
-                {
-                    RequestParams = new
-                    {
-                        Date = date.ToString("yyyy-MM-dd"),
-                        ServiceId = serviceId,
-                        StaffId = staffId,
-                        PetId = petId
-                    },
-                    ServiceInfo = new
-                    {
-                        ServiceId = service.ServiceId,
-                        ServiceName = service.Name,
-                        Duration = service.Duration,
-                        Price = service.Price
-                    },
-                    StaffInfo = staffInfo,
-                    BusySlots = new
-                    {
-                        PetBusySlots = petBusySlots,
-                        PetBusySlotsCount = petBusySlots.Count,
-                        StaffBusySlots = staffBusySlots,
-                        StaffBusySlotsCount = staffBusySlots.Count
-                    },
-                    GeneratedSlots = new
-                    {
-                        TotalSlots = slots.Count,
-                        AvailableSlots = slots.Count(s => s.Available),
-                        UnavailableSlots = slots.Count(s => !s.Available),
-                        PetBusySlots = slots.Count(s => s.IsPetBusy),
-                        StaffBusySlots = slots.Count(s => s.IsStaffBusy),
-                        Slots = slots.Take(20).Select(s => new {
-                            Id = s.Id,
-                            StartTime = s.StartTime.ToString("HH:mm"),
-                            EndTime = s.EndTime.ToString("HH:mm"),
-                            Available = s.Available,
-                            IsPetBusy = s.IsPetBusy,
-                            IsStaffBusy = s.IsStaffBusy,
-                            UnavailableReason = s.UnavailableReason,
-                            StaffName = s.StaffName
-                        }).ToList()
-                    }
-                };
-
-                return Ok(debugResponse);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetAvailableSlotsDebug");
-                return StatusCode(500, new { message = ex.Message, stackTrace = ex.StackTrace });
-            }
         }
     }
 }

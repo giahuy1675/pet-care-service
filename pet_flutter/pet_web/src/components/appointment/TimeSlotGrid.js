@@ -85,9 +85,43 @@ const OtherUserIndicator = styled.div`
   height: 20px;
   font-size: 10px;
   display: flex;
-  align-items: center;
+  align-items: 'center';
   justify-content: center;
   z-index: 1;
+`;
+
+// 🔥 Countdown indicator component - giống mobile
+const CountdownIndicator = styled.div`
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  background: ${props => props.isMySelection ? '#1890ff' : '#722ed1'};
+  color: white;
+  border-radius: 12px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  animation: ${props => props.remaining <= 10 ? 'pulse 1s infinite' : 'none'};
+  
+  @keyframes pulse {
+    0% { 
+      transform: scale(1);
+      box-shadow: 0 2px 8px rgba(255, 77, 79, 0.4);
+    }
+    50% { 
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(255, 77, 79, 0.6);
+    }
+    100% { 
+      transform: scale(1);
+      box-shadow: 0 2px 8px rgba(255, 77, 79, 0.4);
+    }
+  }
 `;
 
 const TimeSlotGrid = ({
@@ -111,10 +145,15 @@ const TimeSlotGrid = ({
   const [otherUsersSelections, setOtherUsersSelections] = useState({});
   const [signalRStatus, setSignalRStatus] = useState('disconnected');
   
+  // 🔥 COUNTDOWN TIMER STATE - Giống mobile
+  const [mySelectionTimestamp, setMySelectionTimestamp] = useState(null);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+  
   // Refs for cleanup
   const timeoutRefs = useRef({});
   const roomKeyRef = useRef(null);
   const previousSelectedSlotRef = useRef(null);
+  const countdownTimerRef = useRef(null);
   
   // Debug mode - only log critical issues in production
   const DEBUG_MODE = process.env.NODE_ENV === 'development';
@@ -123,7 +162,7 @@ const TimeSlotGrid = ({
     if (DEBUG_MODE) {
       console.log(message, data);
     }
-  }, []);
+  }, [DEBUG_MODE]);
 
   // 🔍 DEBUG: Log props for debugging the 19:40 slot issue
   React.useEffect(() => {
@@ -224,20 +263,44 @@ const TimeSlotGrid = ({
 
       debugLog('SignalR: Other user selected slot:', data);
 
+      // 🔥 SỬ DỤNG SERVER TIME để đồng bộ chính xác
+      const selectionTimestamp = data.timestamp ? new Date(data.timestamp) : new Date();
+      const serverTime = data.serverTime ? new Date(data.serverTime) : new Date();
+      const localTime = Date.now();
+      
+      // Tính offset giữa local và server time
+      const timeOffset = localTime - serverTime.getTime();
+      
+      // Adjust selection timestamp về local time của client
+      const adjustedTimestamp = new Date(selectionTimestamp.getTime() + timeOffset);
+      
+      console.log('📡 [SYNC] Time synchronization:', {
+        timeSlot: data.timeSlot,
+        userName: data.userName,
+        selectionTimestamp: selectionTimestamp.toISOString(),
+        serverTime: serverTime.toISOString(),
+        localTime: new Date(localTime).toISOString(),
+        timeOffset: `${timeOffset}ms`,
+        adjustedTimestamp: adjustedTimestamp.toISOString(),
+        elapsedSeconds: data.elapsedSeconds,
+        remainingSeconds: data.remainingSeconds
+      });
+
       setOtherUsersSelections(prev => ({
         ...prev,
         [data.timeSlot]: {
           userId: data.userId,
           userName: data.userName || 'Unknown User',
-          timestamp: new Date()
+          timestamp: adjustedTimestamp // Dùng timestamp đã adjust theo local time
         }
       }));
 
-      // Auto-clear after 15 seconds with proper cleanup
+      // 🔥 Auto-clear based on remaining time from backend
       if (timeoutRefs.current[data.timeSlot]) {
         clearTimeout(timeoutRefs.current[data.timeSlot]);
       }
       
+      const remainingMs = (data.remainingSeconds || 60) * 1000;
       timeoutRefs.current[data.timeSlot] = setTimeout(() => {
         setOtherUsersSelections(prev => {
           const newState = { ...prev };
@@ -245,7 +308,7 @@ const TimeSlotGrid = ({
           return newState;
         });
         delete timeoutRefs.current[data.timeSlot];
-      }, 15000);
+      }, remainingMs);
     };
 
     const handleTimeSlotCleared = (data) => {
@@ -329,6 +392,9 @@ const TimeSlotGrid = ({
         : previousSlot.startTime || previousSlot.startTimeString;
 
       if (timeSlot) {
+        // 🔥 Clear my selection timestamp when slot is deselected
+        setMySelectionTimestamp(null);
+        
         signalRConnection.invoke('NotifyTimeSlotCleared', {
           roomKey,
           timeSlot,
@@ -372,10 +438,57 @@ const TimeSlotGrid = ({
     };
   }, [signalRConnection]);
 
+  // 🔥 COUNTDOWN TIMER - Giống mobile (60s countdown)
+  useEffect(() => {
+    // Start timer to update countdown every second
+    countdownTimerRef.current = setInterval(() => {
+      setCurrentTime(Date.now());
+      
+      // Remove expired selections from other users
+      setOtherUsersSelections(prev => {
+        const now = Date.now();
+        const filtered = {};
+        let hasChanges = false;
+        
+        Object.keys(prev).forEach(key => {
+          const selection = prev[key];
+          const elapsed = (now - selection.timestamp.getTime()) / 1000;
+          
+          if (elapsed < 60) {
+            filtered[key] = selection;
+          } else {
+            hasChanges = true;
+            console.log(`⏱️ [EXPIRED] Selection expired for slot ${key} after ${Math.floor(elapsed)}s`);
+          }
+        });
+        
+        return hasChanges ? filtered : prev;
+      });
+      
+      // Clear my selection if expired (60 seconds)
+      if (mySelectionTimestamp) {
+        const elapsed = (Date.now() - mySelectionTimestamp) / 1000;
+        if (elapsed >= 60) {
+          console.log(`⏱️ [EXPIRED] My selection expired after ${Math.floor(elapsed)}s`);
+          setMySelectionTimestamp(null);
+        }
+      }
+    }, 1000); // Update every second
+    
+    return () => {
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+      }
+    };
+  }, [mySelectionTimestamp]);
+  
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       cleanupTimeouts();
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+      }
     };
   }, [cleanupTimeouts]);
 
@@ -670,6 +783,9 @@ const TimeSlotGrid = ({
       return;
     }
     
+    // 🔥 SET TIMESTAMP KHI USER CHỌN SLOT - Bắt đầu countdown 60s
+    setMySelectionTimestamp(Date.now());
+    
     const selectedDateStr = selectedDate ? dayjs(selectedDate).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD');
     
     const slotData = {
@@ -684,14 +800,26 @@ const TimeSlotGrid = ({
     onSelectTimeSlot?.(slotData);
   }, [isPastSlot, isPetBusy, isStaffBusy, isBeingSelectedByOthers, selectedDate, onSelectTimeSlot, debugLog]);
 
-  // Badge info
+  // Badge info with countdown timer
   const getBadgeInfo = useCallback((timeStr, slot) => {
+    // 🔥 HIỂN thị countdown cho slot mình đang chọn
+    if (isSelected(timeStr) && mySelectionTimestamp) {
+      const elapsed = Math.floor((currentTime - mySelectionTimestamp) / 1000);
+      const remaining = Math.max(0, 60 - elapsed);
+      return { status: 'success', text: `Bạn đang chọn (${remaining}s)` };
+    }
+    
     if (isSelected(timeStr)) return { status: 'success', text: 'Đã chọn' };
     if (slot?.isCurrentAppointment) return { status: 'processing', text: 'Lịch hiện tại' };
+    
+    // 🔥 HIỂN thị countdown cho người khác đang chọn
     if (isBeingSelectedByOthers(timeStr)) {
       const otherUser = getOtherUserInfo(timeStr);
-      return { status: 'warning', text: `${otherUser?.userName || 'Ai đó'} đang chọn` };
+      const elapsed = Math.floor((currentTime - otherUser.timestamp.getTime()) / 1000);
+      const remaining = Math.max(0, 60 - elapsed);
+      return { status: 'warning', text: `${otherUser?.userName || 'Ai đó'} (${remaining}s)` };
     }
+    
     if (isPastSlot(timeStr)) return { status: 'default', text: 'Đã qua' };
     if (isPetBusy(timeStr, slot)) {
       const reason = slot?.unavailableReason || 'Thú cưng đã có lịch';
@@ -703,7 +831,7 @@ const TimeSlotGrid = ({
     }
     
     return { status: 'success', text: '✅ Khả dụng' };
-  }, [isSelected, isBeingSelectedByOthers, getOtherUserInfo, isPastSlot, isPetBusy, isStaffBusy]);
+  }, [isSelected, isBeingSelectedByOthers, getOtherUserInfo, isPastSlot, isPetBusy, isStaffBusy, mySelectionTimestamp, currentTime]);
 
   // SignalR status display
   const getSignalRStatusDisplay = useCallback(() => {
@@ -783,6 +911,20 @@ const TimeSlotGrid = ({
           const disabled = slot.isCurrentAppointment ? beingSelectedByOthers : (isPast || petBusy || staffBusy || beingSelectedByOthers);
           const badgeInfo = getBadgeInfo(timeStr, slot);
           
+          // 🔥 Calculate countdown for display
+          let countdownRemaining = null;
+          let isMySelection = false;
+          
+          if (selected && mySelectionTimestamp) {
+            const elapsed = Math.floor((currentTime - mySelectionTimestamp) / 1000);
+            countdownRemaining = Math.max(0, 60 - elapsed);
+            isMySelection = true;
+          } else if (beingSelectedByOthers && otherUserInfo) {
+            const elapsed = Math.floor((currentTime - otherUserInfo.timestamp.getTime()) / 1000);
+            countdownRemaining = Math.max(0, 60 - elapsed);
+            isMySelection = false;
+          }
+          
           return (
             <TimeSlot
               key={`${timeStr}-${index}`}
@@ -805,8 +947,18 @@ const TimeSlotGrid = ({
                         : 'Nhấp để chọn khung giờ này'
               }
             >
+              {/* 🔥 Countdown timer indicator - hiển thị rõ ràng */}
+              {countdownRemaining !== null && countdownRemaining > 0 && (
+                <CountdownIndicator 
+                  isMySelection={isMySelection}
+                  remaining={countdownRemaining}
+                >
+                  {countdownRemaining}s
+                </CountdownIndicator>
+              )}
+              
               {/* Other user indicator */}
-              {beingSelectedByOthers && (
+              {beingSelectedByOthers && !countdownRemaining && (
                 <OtherUserIndicator>
                   {otherUserInfo?.userName?.charAt(0).toUpperCase() || '?'}
                 </OtherUserIndicator>

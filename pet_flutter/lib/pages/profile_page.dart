@@ -1576,7 +1576,6 @@ class _ProfilePageState extends State<ProfilePage> {
         final signalRService = SignalRService();
         await signalRService.disconnect();
       } catch (e) {
-        print('Error disconnecting SignalR: $e');
       }
 
       // Close loading dialog

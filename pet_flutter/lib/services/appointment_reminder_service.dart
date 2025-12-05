@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:pet_flutter/utils/onesignal_notification_helper.dart';
 import 'package:pet_flutter/models/reminder_status.dart';
 
@@ -53,8 +52,6 @@ class AppointmentReminderService {
 
     _reminderStatuses[appointmentId] = updatedStatus;
     _statusController.add(updatedStatus);
-
-    debugPrint('📊 [Reminder] Status updated for $appointmentId: ${updatedStatus.getSentCount()}/4 sent');
   }
 
   /// Thiết lập nhắc nhở cho một lịch hẹn
@@ -82,13 +79,9 @@ class AppointmentReminderService {
     // Tính thời gian còn lại
     final timeUntilAppointment = appointmentTime.difference(now);
 
-    debugPrint('📅 [Reminder] Scheduling reminders for appointment: $appointmentId');
-    debugPrint('   Time until appointment: ${timeUntilAppointment.inMinutes} minutes');
-
     // Reminder 1: 1 tiếng trước
     final oneHourBefore = timeUntilAppointment - const Duration(hours: 1);
     if (oneHourBefore.isNegative == false && oneHourBefore.inSeconds > 0) {
-      debugPrint('⏰ [Reminder] Scheduling 1-hour reminder in ${oneHourBefore.inMinutes} minutes');
       timers.add(Timer(oneHourBefore, () {
         _sendReminder(
           appointmentId: appointmentId,
@@ -100,14 +93,12 @@ class AppointmentReminderService {
         _updateReminderStatus(appointmentId, 60);
       }));
     } else {
-      debugPrint('⚠️ [Reminder] 1-hour reminder skipped');
       _updateReminderStatus(appointmentId, 60, skipped: true);
     }
 
     // Reminder 2: 30 phút trước
     final thirtyMinutesBefore = timeUntilAppointment - const Duration(minutes: 30);
     if (thirtyMinutesBefore.isNegative == false && thirtyMinutesBefore.inSeconds > 0) {
-      debugPrint('⏰ [Reminder] Scheduling 30-minute reminder in ${thirtyMinutesBefore.inMinutes} minutes');
       timers.add(Timer(thirtyMinutesBefore, () {
         _sendReminder(
           appointmentId: appointmentId,
@@ -119,14 +110,12 @@ class AppointmentReminderService {
         _updateReminderStatus(appointmentId, 30);
       }));
     } else {
-      debugPrint('⚠️ [Reminder] 30-minute reminder skipped');
       _updateReminderStatus(appointmentId, 30, skipped: true);
     }
 
     // Reminder 3: 10 phút trước
     final tenMinutesBefore = timeUntilAppointment - const Duration(minutes: 10);
     if (tenMinutesBefore.isNegative == false && tenMinutesBefore.inSeconds > 0) {
-      debugPrint('⏰ [Reminder] Scheduling 10-minute reminder in ${tenMinutesBefore.inMinutes} minutes');
       timers.add(Timer(tenMinutesBefore, () {
         _sendReminder(
           appointmentId: appointmentId,
@@ -138,14 +127,12 @@ class AppointmentReminderService {
         _updateReminderStatus(appointmentId, 10);
       }));
     } else {
-      debugPrint('⚠️ [Reminder] 10-minute reminder skipped');
       _updateReminderStatus(appointmentId, 10, skipped: true);
     }
 
     // Reminder 4: On-time (at appointment start)
     final atAppointment = timeUntilAppointment;
     if (atAppointment.isNegative == false && atAppointment.inSeconds > 0) {
-      debugPrint('⏰ [Reminder] Scheduling on-time reminder in ${atAppointment.inMinutes} minutes');
       timers.add(Timer(atAppointment, () {
         _sendReminder(
           appointmentId: appointmentId,
@@ -157,14 +144,12 @@ class AppointmentReminderService {
         _updateReminderStatus(appointmentId, 0);
       }));
     } else {
-      debugPrint('⚠️ [Reminder] On-time reminder skipped');
       _updateReminderStatus(appointmentId, 0, skipped: true);
     }
 
     // Lưu timers
     if (timers.isNotEmpty) {
       _activeTimers[appointmentId] = timers;
-      debugPrint('✅ [Reminder] Scheduled ${timers.length} reminders');
     }
   }
 
@@ -176,8 +161,6 @@ class AppointmentReminderService {
     required int minutesUntil,
     String? userId,
   }) async {
-    debugPrint('🔔 [Reminder] Sending reminder: $minutesUntil minutes');
-
     String title;
     String message;
 
@@ -219,9 +202,8 @@ class AppointmentReminderService {
           },
         );
       }
-      debugPrint('✅ [Reminder] Notification sent');
     } catch (e) {
-      debugPrint('❌ [Reminder] Failed: $e');
+      // Silent fail
     }
   }
 

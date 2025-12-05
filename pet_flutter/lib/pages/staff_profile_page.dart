@@ -62,11 +62,11 @@ class _StaffProfilePageState extends State<StaffProfilePage> {
           _specialization = staffInfo['specialization'] ?? _specialization;
         });
       } catch (e) {
-        print('Could not load staff info from API: $e');
+
         // Tiếp tục với thông tin từ storage
       }
     } catch (e) {
-      print('Error loading staff info: $e');
+
     } finally {
       if (!mounted) return;
       setState(() => _loading = false);
@@ -91,7 +91,7 @@ class _StaffProfilePageState extends State<StaffProfilePage> {
         final signalRService = SignalRService();
         await signalRService.disconnect();
       } catch (e) {
-        print('Error disconnecting SignalR: $e');
+
       }
 
       // Close loading dialog

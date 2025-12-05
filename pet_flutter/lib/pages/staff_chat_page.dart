@@ -117,20 +117,17 @@ class _StaffChatPageState extends State<StaffChatPage> with TickerProviderStateM
           _staffId = int.parse(staffId);
           _isLoading = false;
         });
-        print('🔵 [StaffChat] Staff ID loaded: $_staffId');
       } else {
         if (!mounted) return;
         setState(() {
           _isLoading = false;
         });
-        print('⚠️ [StaffChat] No staff ID found');
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
-      print('Error loading staff info: $e');
     }
   }
 
@@ -576,10 +573,6 @@ class _StaffChatPageState extends State<StaffChatPage> with TickerProviderStateM
                       child: StreamBuilder<List<ChatRoom>>(
                         stream: _chatService.getStaffChatRooms(_staffId!),
                         builder: (context, snapshot) {
-                          print('🔵 [StaffChat] StreamBuilder state: ${snapshot.connectionState}');
-                          print('🔵 [StaffChat] Has data: ${snapshot.hasData}');
-                          print('🔵 [StaffChat] Data: ${snapshot.data}');
-                          print('🔵 [StaffChat] Error: ${snapshot.error}');
                           
                           if (snapshot.connectionState == ConnectionState.waiting) {
                             return const Center(child: CircularProgressIndicator());
@@ -604,7 +597,6 @@ class _StaffChatPageState extends State<StaffChatPage> with TickerProviderStateM
 
                     final allChatRooms = snapshot.data ?? [];
                     final chatRooms = _filterChatRooms(allChatRooms);
-                    print('🔵 [StaffChat] Chat rooms count: ${chatRooms.length}');
 
                     if (allChatRooms.isEmpty) {
                       return Center(

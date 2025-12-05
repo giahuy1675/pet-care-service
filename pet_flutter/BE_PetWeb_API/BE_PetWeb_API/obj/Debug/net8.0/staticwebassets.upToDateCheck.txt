@@ -54,3 +54,5 @@ wwwroot\uploads\services\9f5f77e2-d07d-4c1e-8b36-14b0d87c4d02.png
 wwwroot\uploads\services\a5c4a7cd-24b1-4bbc-a754-c32f1a1e9b17.jpg
 wwwroot\uploads\services\c9a81bd2-5a71-4e2f-8a90-704af7b336c6.jpg
 wwwroot\uploads\services\cattia.jpg
+wwwroot\uploads\services\16a7691b-2c5d-4689-b330-065d6861e80f.png
+wwwroot\uploads\pets\813397b0-669d-4033-a7eb-a50d1b642854.png

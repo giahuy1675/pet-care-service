@@ -50,13 +50,21 @@ namespace BE_PetWeb_API.Hubs
                 {
                     foreach (var selection in roomSelections)
                     {
+                        // Tính thời gian đã trôi qua
+                        var currentServerTime = DateTime.UtcNow;
+                        var elapsedSeconds = (int)(currentServerTime - selection.Timestamp).TotalSeconds;
+                        var remainingSeconds = Math.Max(0, 60 - elapsedSeconds);
+                        
                         await Clients.Caller.SendAsync("TimeSlotSelected", new
                         {
                             timeSlot = selection.TimeSlot,
                             userId = selection.UserId,
                             userName = selection.UserName,
                             roomKey = selection.RoomKey,
-                            timestamp = selection.Timestamp
+                            timestamp = selection.Timestamp,
+                            serverTime = currentServerTime, // Thêm server time hiện tại
+                            elapsedSeconds = elapsedSeconds,
+                            remainingSeconds = remainingSeconds
                         });
                     }
                 }
@@ -159,20 +167,24 @@ namespace BE_PetWeb_API.Hubs
 
                 _logger.LogInformation($"User {userId} selected time slot {request.TimeSlot} in room {request.RoomKey}");
 
-                // Broadcast to others in the same room (excluding sender) - without username for privacy
+                // Broadcast to others in the same room (excluding sender) - with userName for better UX
                 await Clients.OthersInGroup(request.RoomKey).SendAsync("TimeSlotSelected", new
                 {
                     timeSlot = request.TimeSlot,
                     userId = userId,
+                    userName = userName, // Thêm userName để hiển thị "User X đang chọn (Xs)"
                     roomKey = request.RoomKey,
                     serviceId = request.ServiceId,
                     staffId = request.StaffId,
                     date = request.Date,
-                    timestamp = selection.Timestamp
+                    timestamp = selection.Timestamp,
+                    serverTime = DateTime.UtcNow, // Server time hiện tại khi broadcast
+                    elapsedSeconds = 0,
+                    remainingSeconds = 60
                 });
 
-                // Auto-clear after 30 seconds to prevent stuck selections
-                _ = Task.Delay(TimeSpan.FromSeconds(30)).ContinueWith(async _ =>
+                // Auto-clear after 60 seconds to prevent stuck selections
+                _ = Task.Delay(TimeSpan.FromSeconds(60)).ContinueWith(async _ =>
                 {
                     if (_activeSelections.TryRemove(key, out var removedSelection))
                     {

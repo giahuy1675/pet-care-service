@@ -55,7 +55,6 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
         });
       } catch (e) {
         // Handle error silently for now
-        print('Error loading reviews: $e');
         setState(() {
           _hasReview = false;
         });
@@ -160,7 +159,6 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
       }
 
       // Create or get chat room for this appointment
-      print('🔵 [AppointmentDetail] Creating chat for appointment ${appointment.appointmentId}');
       final chatService = FirebaseChatService();
       final chatRoom = await chatService.createChatRoomFromAppointment(
         appointmentId: appointment.appointmentId,
@@ -174,7 +172,6 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
         serviceName: appointment.serviceName, // Thêm tên dịch vụ
       );
       
-      print('✅ [AppointmentDetail] Chat room created: ${chatRoom.id}');
 
       // Determine other user info based on current role
       final String otherUserId;
@@ -213,7 +210,6 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
         ),
       );
     } catch (e) {
-      print('❌ Error opening chat room: $e');
       if (!mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -222,15 +218,67 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     }
   }
 
+  // Kiểm tra khả năng hủy lịch hẹn
+  bool _canCancelAppointment() {
+    // Kiểm tra trạng thái
+    if (appointment.status.toLowerCase() == 'cancelled' || 
+        appointment.status.toLowerCase() == 'completed') {
+      return false;
+    }
+    
+    // Kiểm tra thời gian (không thể hủy lịch đã qua)
+    if (!appointment.appointmentDate.isAfter(DateTime.now())) {
+      return false;
+    }
+    
+    // Kiểm tra thời gian (không thể hủy lịch trong vòng 2 giờ)
+    final hoursLeft = appointment.appointmentDate.difference(DateTime.now()).inHours;
+    if (hoursLeft <= 2) {
+      return false;
+    }
+    
+    return true;
+  }
+
   Future<void> _cancelAppointment() async {
-    final reason = await _showCancelDialog();
+    // Kiểm tra khả năng hủy
+    if (!_canCancelAppointment()) {
+      final hoursLeft = appointment.appointmentDate.difference(DateTime.now()).inHours;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            hoursLeft <= 2 
+              ? 'Không thể hủy lịch hẹn trong vòng 2 giờ trước giờ hẹn'
+              : 'Không thể hủy lịch hẹn này'
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
+    // Kiểm tra giới hạn 3 lần/tháng
+    final service = AppointmentService();
+    final cancelledCount = await service.getCancelledCountThisMonth();
+    
+    if (cancelledCount >= 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bạn đã hủy 3 lần trong tháng này. Không thể hủy thêm.'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+    
+    final reason = await _showCancelDialog(cancelledCount);
     if (reason != null && reason.isNotEmpty) {
       setState(() {
         isLoading = true;
       });
 
       try {
-        final service = AppointmentService();
         final success = await service.cancelAppointment(appointment.appointmentId, reason);
         
         if (success) {
@@ -270,40 +318,87 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     }
   }
 
-  Future<String?> _showCancelDialog() async {
+  Future<String?> _showCancelDialog(int cancelledCount) async {
     final TextEditingController reasonController = TextEditingController();
     
     return showDialog<String>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Hủy lịch hẹn'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Bạn có chắc chắn muốn hủy lịch hẹn này?'),
-              const SizedBox(height: 16),
-              TextField(
-                controller: reasonController,
-                decoration: const InputDecoration(
-                  labelText: 'Lý do hủy',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Hủy lịch hẹn'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Bạn có chắc chắn muốn hủy lịch hẹn này?'),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.warning_amber, color: Colors.orange, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Đã hủy $cancelledCount/3 lần trong tháng này',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          '• Chỉ được hủy tối đa 3 lần/tháng\n• Phải hủy trước 2 giờ\n• Bắt buộc nhập lý do',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: reasonController,
+                    decoration: const InputDecoration(
+                      labelText: 'Lý do hủy *',
+                      hintText: 'Vui lòng nhập lý do hủy lịch',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
               ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Hủy bỏ'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(reasonController.text),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Xác nhận hủy', style: TextStyle(color: Colors.white)),
-            ),
-          ],
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Hủy bỏ'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final reason = reasonController.text.trim();
+                    if (reason.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Vui lòng nhập lý do hủy lịch'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    Navigator.of(context).pop(reason);
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  child: const Text('Xác nhận hủy', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -726,8 +821,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
             const SizedBox(height: 32),
 
             // Action Buttons
-            if (appointment.status.toLowerCase() != 'cancelled' && 
-                appointment.status.toLowerCase() != 'completed')
+            if (_canCancelAppointment())
               Column(
                 children: [
                   SizedBox(

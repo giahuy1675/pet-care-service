@@ -82,22 +82,17 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
             
             // Set OneSignal External User ID
             await OneSignalService().setExternalUserId(externalId);
-            print('🔔 [AuthWrapper] OneSignal External User ID set: $externalId (role: $role)');
             
             // Send FCM token to server
             try {
               await FirebaseMessagingService().sendTokenToServer(externalId);
-              print('✅ [AuthWrapper] FCM token sent to server for user: $externalId');
             } catch (e) {
-              print('⚠️ [AuthWrapper] Failed to send FCM token: $e');
             }
             
             // Set user online in Firebase
             await _presenceService.setUserOnline(externalId);
-            print('✅ [AuthWrapper] User presence set to online: $externalId');
           }
         } catch (e) {
-          print('⚠️ [AuthWrapper] Failed to set user status: $e');
         }
       }
       
@@ -106,7 +101,6 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error checking auth status: $e');
       setState(() {
         _isAuthenticated = false;
         _isLoading = false;
@@ -119,7 +113,6 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
       final role = await _storage.readUserRole();
       return role == 'Staff' || role == 'Admin';
     } catch (e) {
-      print('Error checking user role: $e');
       return false;
     }
   }

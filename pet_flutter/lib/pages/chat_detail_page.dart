@@ -65,7 +65,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   Future<void> _sendMessage() async {
     if (_messageController.text.trim().isEmpty || _isSendingNotifier.value) return;
 
-    print('📤 [ChatDetail] Sending message...');
     _isSendingNotifier.value = true;
 
     try {
@@ -78,20 +77,17 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         recipientId: widget.otherUserId, // Gửi notification đến người nhận
       );
 
-      print('✅ [ChatDetail] Message sent successfully');
       if (mounted) {
         _messageController.clear();
         _scrollToBottom();
       }
     } catch (e) {
-      print('❌ [ChatDetail] Error sending message: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Lỗi gửi tin nhắn: $e')),
         );
       }
     } finally {
-      print('🔄 [ChatDetail] Resetting _isSending to false');
       if (mounted) {
         _isSendingNotifier.value = false;
       }

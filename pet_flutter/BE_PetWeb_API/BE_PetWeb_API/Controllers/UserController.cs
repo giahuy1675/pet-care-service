@@ -268,7 +268,7 @@ namespace BE_PetWeb_API.Controllers
         // PUT: api/Users/5
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> UpdateUser(int id, [FromForm] UserProfileUpdateDto userDto)
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UserProfileUpdateDto userDto)
         {
             try
             {
@@ -342,50 +342,8 @@ namespace BE_PetWeb_API.Controllers
                     user.IsActive = userDto.IsActive.Value;
                 }
 
-                // Xử lý avatar - chỉ khi có file được upload
-                if (userDto.Avatar != null && userDto.Avatar.Length > 0)
-                {
-                    try
-                    {
-                        // Xóa avatar cũ
-                        if (!string.IsNullOrEmpty(user.Avatar) && user.Avatar != "default-avatar.png")
-                        {
-                            var oldAvatarPath = Path.Combine(_environment.WebRootPath, "uploads", "avatars", Path.GetFileName(user.Avatar));
-                            if (System.IO.File.Exists(oldAvatarPath))
-                            {
-                                System.IO.File.Delete(oldAvatarPath);
-                            }
-                        }
-
-                        // Tạo thư mục uploads nếu chưa tồn tại
-                        string uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "avatars");
-                        Directory.CreateDirectory(uploadsFolder);
-
-                        // Tạo tên file duy nhất
-                        string uniqueFileName = $"{Guid.NewGuid()}_{userDto.Avatar.FileName}";
-                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                        // Lưu file
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await userDto.Avatar.CopyToAsync(fileStream);
-                        }
-
-                        // Cập nhật đường dẫn avatar
-                        user.Avatar = $"/uploads/avatars/{uniqueFileName}";
-                        _logger.LogInformation($"Đã tải lên avatar mới: {uniqueFileName}");
-                    }
-                    catch (Exception avatarEx)
-                    {
-                        _logger.LogError(avatarEx, "Lỗi khi xử lý avatar");
-                        // Không ném lỗi để vẫn cập nhật được thông tin khác
-                    }
-                }
-                else
-                {
-                    // Nếu không có avatar mới, giữ nguyên avatar cũ hoặc để null
-                    _logger.LogInformation("Không có avatar mới được upload, giữ nguyên avatar hiện tại");
-                }
+                // Note: Avatar upload không hỗ trợ khi dùng [FromBody] JSON
+                // Nếu cần upload avatar, tạo endpoint riêng với [FromForm]
 
                 // Cập nhật thời gian
                 user.UpdatedAt = _dateTimeService.Now;
@@ -396,8 +354,7 @@ namespace BE_PetWeb_API.Controllers
                 entry.Property(u => u.FullName).IsModified = true;
                 entry.Property(u => u.Phone).IsModified = !string.IsNullOrWhiteSpace(userDto.Phone);
                 entry.Property(u => u.Address).IsModified = !string.IsNullOrWhiteSpace(userDto.Address);
-                entry.Property(u => u.Avatar).IsModified = userDto.Avatar != null && userDto.Avatar.Length > 0;
-                entry.Property(u => u.Role).IsModified = isAdmin && userDto.Role != null;
+                entry.Property(u => u.Role).IsModified = isAdmin && !string.IsNullOrWhiteSpace(userDto.Role);
                 entry.Property(u => u.IsActive).IsModified = isAdmin && userDto.IsActive.HasValue;
                 entry.Property(u => u.UpdatedAt).IsModified = true;
                 // Đảm bảo CreatedAt không bị thay đổi
@@ -510,14 +467,14 @@ namespace BE_PetWeb_API.Controllers
             }
         }
 
-        // DELETE: api/Users/5
+        // DELETE: api/Users/5 - Soft delete only (vô hiệu hóa tài khoản)
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             try
             {
-                _logger.LogInformation($"Bắt đầu xóa người dùng ID: {id}");
+                _logger.LogInformation($"Bắt đầu vô hiệu hóa người dùng ID: {id}");
 
                 var user = await _context.Users.FindAsync(id);
                 if (user == null)
@@ -526,22 +483,26 @@ namespace BE_PetWeb_API.Controllers
                     return NotFound("Không tìm thấy người dùng");
                 }
 
-                // Không xóa tài khoản admin mặc định
+                // Không vô hiệu hóa tài khoản admin mặc định
                 if (user.Role == "Admin" && user.Username == "admin")
                 {
-                    _logger.LogWarning("Từ chối xóa tài khoản admin mặc định");
-                    return BadRequest("Không thể xóa tài khoản admin mặc định");
+                    _logger.LogWarning("Từ chối vô hiệu hóa tài khoản admin mặc định");
+                    return BadRequest("Không thể vô hiệu hóa tài khoản admin mặc định");
                 }
 
-                _context.Users.Remove(user);
+                // Soft delete - chỉ vô hiệu hóa tài khoản
+                user.IsActive = false;
+                user.UpdatedAt = _dateTimeService.Now;
+                
+                _context.Entry(user).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation($"Xóa người dùng {id} thành công");
-                return NoContent();
+                _logger.LogInformation($"Vô hiệu hóa người dùng {id} thành công");
+                return Ok(new { message = "Đã vô hiệu hóa tài khoản người dùng thành công" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Lỗi khi xóa người dùng {id}");
+                _logger.LogError(ex, $"Lỗi khi vô hiệu hóa người dùng {id}");
                 return StatusCode(500, $"Lỗi máy chủ: {ex.Message}");
             }
         }

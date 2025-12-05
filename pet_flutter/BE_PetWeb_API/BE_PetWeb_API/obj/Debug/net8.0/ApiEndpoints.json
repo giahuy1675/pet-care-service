@@ -1,41 +1,5 @@
 [
   {
-    "ContainingType": "BE_PetWeb_API.Controllers.AdminSetupController",
-    "Method": "CheckAdmin",
-    "RelativePath": "api/AdminSetup/check-admin",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "BE_PetWeb_API.Controllers.AdminSetupController",
-    "Method": "CreateAdmin",
-    "RelativePath": "api/AdminSetup/create-admin",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "request",
-        "Type": "BE_PetWeb_API.Controllers.CreateAdminRequest",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "BE_PetWeb_API.Controllers.AdminSetupController",
-    "Method": "CreateAdminSimple",
-    "RelativePath": "api/AdminSetup/create-admin-simple",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
     "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
     "Method": "GetAllAppointments",
     "RelativePath": "api/Appointments",
@@ -301,6 +265,16 @@
   },
   {
     "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
+    "Method": "GetCancelCountThisMonth",
+    "RelativePath": "api/Appointments/cancel-count",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
     "Method": "CheckTimeSlotAvailability",
     "RelativePath": "api/Appointments/check-availability",
     "HttpMethod": "GET",
@@ -345,151 +319,6 @@
       }
     ],
     "ReturnTypes": []
-  },
-  {
-    "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
-    "Method": "GetAppointmentsByDate",
-    "RelativePath": "api/Appointments/Date/{date}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "date",
-        "Type": "System.DateTime",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[BE_PetWeb_API.DTOs.Appointment.AppointmentDto, BE_PetWeb_API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
-    "Method": "DebugTimeSlotAvailability",
-    "RelativePath": "api/Appointments/debug-availability",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "date",
-        "Type": "System.DateTime",
-        "IsRequired": false
-      },
-      {
-        "Name": "serviceId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "staffId",
-        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      },
-      {
-        "Name": "petId",
-        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
-    "Method": "GetAvailableSlotsDebug",
-    "RelativePath": "api/Appointments/debug/available-slots",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "date",
-        "Type": "System.DateTime",
-        "IsRequired": false
-      },
-      {
-        "Name": "serviceId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "staffId",
-        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      },
-      {
-        "Name": "petId",
-        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
-    "Method": "GetStaffBusySlotsDebug",
-    "RelativePath": "api/Appointments/debug/staff/{staffId}/busy-slots",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "staffId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "date",
-        "Type": "System.DateTime",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
-    "Method": "GetDefaultSlots",
-    "RelativePath": "api/Appointments/default-slots",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "date",
-        "Type": "System.DateTime",
-        "IsRequired": false
-      },
-      {
-        "Name": "serviceId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "petId",
-        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[BE_PetWeb_API.DTOs.Appointment.TimeSlotDto, BE_PetWeb_API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
   },
   {
     "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
@@ -591,109 +420,6 @@
   },
   {
     "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
-    "Method": "GetPetAppointmentsByDateRange",
-    "RelativePath": "api/Appointments/Pet/{id}/range",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "startDate",
-        "Type": "System.DateTime",
-        "IsRequired": false
-      },
-      {
-        "Name": "endDate",
-        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[BE_PetWeb_API.DTOs.Appointment.AppointmentDto, BE_PetWeb_API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
-    "Method": "GetPetBusyDates",
-    "RelativePath": "api/Appointments/pet/{petId}/busy-dates",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "petId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "startDate",
-        "Type": "System.DateTime",
-        "IsRequired": false
-      },
-      {
-        "Name": "endDate",
-        "Type": "System.DateTime",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[BE_PetWeb_API.DTOs.Appointment.BusyDateDto, BE_PetWeb_API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
-    "Method": "GetPetBusyTimeSlotsV2",
-    "RelativePath": "api/Appointments/Pet/{petId}/busy-slots/v2",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "petId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "date",
-        "Type": "System.DateTime",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
     "Method": "GetStaffAppointments",
     "RelativePath": "api/Appointments/Staff",
     "HttpMethod": "GET",
@@ -756,69 +482,12 @@
   },
   {
     "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
-    "Method": "GetAppointmentsByStatus",
-    "RelativePath": "api/Appointments/Status/{status}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "status",
-        "Type": "System.String",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[BE_PetWeb_API.DTOs.Appointment.AppointmentDto, BE_PetWeb_API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
     "Method": "GetUserAppointments",
     "RelativePath": "api/Appointments/User",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[BE_PetWeb_API.DTOs.Appointment.AppointmentDto, BE_PetWeb_API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
-    "Method": "GetWeeklyAppointments",
-    "RelativePath": "api/Appointments/weekly",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "startDate",
-        "Type": "System.DateTime",
-        "IsRequired": false
-      },
-      {
-        "Name": "endDate",
-        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      }
-    ],
     "ReturnTypes": [
       {
         "Type": "System.Collections.Generic.IEnumerable\u00601[[BE_PetWeb_API.DTOs.Appointment.AppointmentDto, BE_PetWeb_API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
@@ -4439,16 +4108,6 @@
     ]
   },
   {
-    "ContainingType": "BE_PetWeb_API.Controllers.TimeController",
-    "Method": "GetVietnamTime",
-    "RelativePath": "api/Time/vietnam-time",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
     "ContainingType": "BE_PetWeb_API.Controllers.UsersController",
     "Method": "GetUsers",
     "RelativePath": "api/Users",
@@ -4498,39 +4157,9 @@
         "IsRequired": true
       },
       {
-        "Name": "FullName",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "Email",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "Phone",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "Address",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "Avatar",
-        "Type": "Microsoft.AspNetCore.Http.IFormFile",
-        "IsRequired": false
-      },
-      {
-        "Name": "Role",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "IsActive",
-        "Type": "System.Nullable\u00601[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
+        "Name": "userDto",
+        "Type": "BE_PetWeb_API.DTOs.Users.UserProfileUpdateDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -4892,26 +4521,5 @@
         "StatusCode": 200
       }
     ]
-  },
-  {
-    "ContainingType": "BE_PetWeb_API.Controllers.WeatherForecastController",
-    "Method": "Get",
-    "RelativePath": "WeatherForecast",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[BE_PetWeb_API.WeatherForecast, BE_PetWeb_API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ],
-    "EndpointName": "GetWeatherForecast"
   }
 ]

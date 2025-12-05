@@ -80,11 +80,11 @@ class _StaffSchedulePageState extends State<StaffSchedulePage> {
           await _loadScheduleFromAPI();
         }
       } catch (e) {
-        print('Could not load staff info from API: $e');
+
         // Tiếp tục với mock data
       }
     } catch (e) {
-      print('Error loading staff info: $e');
+
     }
   }
 
@@ -99,10 +99,9 @@ class _StaffSchedulePageState extends State<StaffSchedulePage> {
       
       // Process API data and update _weeklySchedule if needed
       // For now, we'll keep using mock data as fallback
-      print('Loaded schedule data from API: $scheduleData');
-      
+
     } catch (e) {
-      print('Error loading schedule from API: $e');
+
       // Continue with mock data
     } finally {
       setState(() => _loading = false);

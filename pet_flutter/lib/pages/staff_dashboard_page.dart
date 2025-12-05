@@ -56,11 +56,9 @@ class _StaffDashboardPageState extends State<StaffDashboardPage> {
           _staffId = staffInfo['staffId'];
         });
       } catch (e) {
-        print('Could not load staff info from API: $e');
         // Tiếp tục với thông tin từ storage
       }
     } catch (e) {
-      print('Error loading staff info: $e');
     }
   }
 
@@ -81,7 +79,6 @@ class _StaffDashboardPageState extends State<StaffDashboardPage> {
         _loading = false;
       });
     } catch (e) {
-      print('Error loading dashboard data: $e');
       if (!mounted) return;
       setState(() => _loading = false);
     }

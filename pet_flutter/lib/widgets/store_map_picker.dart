@@ -549,7 +549,7 @@ class _StoreMapPickerState extends State<StoreMapPicker> {
       await _getPolylineOSRM(origin, destination);
       return;
     } catch (e) {
-      print('⚠️ OSRM lỗi: $e');
+
       _drawStraightLine(origin, destination);
     }
   }
@@ -609,7 +609,7 @@ class _StoreMapPickerState extends State<StoreMapPicker> {
 
       throw Exception('OSRM: ${data['code']}');
     } catch (e) {
-      print('❌ OSRM Exception: $e');
+
       rethrow;
     }
   }

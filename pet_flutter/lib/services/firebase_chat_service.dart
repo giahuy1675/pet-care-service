@@ -50,7 +50,6 @@ class FirebaseChatService {
     );
     
     await _database.child('chatRooms/$chatRoomId').set(newChatRoom.toJson());
-    print('✅ Created chat room for appointment $appointmentId: $chatRoomId');
     return newChatRoom;
   }
 
@@ -67,7 +66,6 @@ class FirebaseChatService {
       'isActive': isActive,
     });
     
-    print('✅ Updated chat room $chatRoomId: status=$appointmentStatus, isActive=$isActive');
   }
 
   // Tạo hoặc lấy chat room giữa khách hàng và nhân viên (legacy - giữ lại cho tương thích)
@@ -116,7 +114,6 @@ class FirebaseChatService {
     MessageType type = MessageType.text,
     String? recipientId, // ID của người nhận để gửi notification
   }) async {
-    print('📤 [FirebaseChat] Starting sendMessage...');
     final messageId = _database.child('messages/$chatRoomId').push().key!;
     
     final chatMessage = ChatMessage(
@@ -132,14 +129,11 @@ class FirebaseChatService {
     );
 
     // Lưu message
-    print('💾 [FirebaseChat] Saving message to Firebase...');
     await _database
         .child('messages/$chatRoomId/$messageId')
         .set(chatMessage.toJson());
-    print('✅ [FirebaseChat] Message saved to Firebase');
 
     // Cập nhật last message trong chat room và tăng unread count
-    print('🔄 [FirebaseChat] Updating chat room...');
     
     // Lấy thông tin chat room hiện tại
     final roomSnapshot = await _database.child('chatRooms/$chatRoomId').get();
@@ -159,11 +153,9 @@ class FirebaseChatService {
       if (senderId == staffId) {
         // Staff gửi → tăng unreadCount cho customer
         unreadCountCustomer++;
-        print('📊 [FirebaseChat] Staff sent message → unreadCountCustomer: $unreadCountCustomer');
       } else if (senderId == customerId) {
         // Customer gửi → tăng unreadCount cho staff
         unreadCountStaff++;
-        print('📊 [FirebaseChat] Customer sent message → unreadCountStaff: $unreadCountStaff');
       }
     }
     
@@ -175,12 +167,10 @@ class FirebaseChatService {
       // Keep old field for backward compatibility
       'unreadCount': unreadCountStaff,
     });
-    print('✅ [FirebaseChat] Chat room updated - Staff: $unreadCountStaff, Customer: $unreadCountCustomer');
 
     // Gửi notification đến người nhận (nếu có recipientId)
     // Chạy async không cần await để không block UI
     if (recipientId != null && recipientId.isNotEmpty) {
-      print('🔔 [FirebaseChat] Sending notification to recipient: $recipientId (async)');
       // Fire and forget - không await
       _chatApiService.sendChatNotification(
         recipientUserId: recipientId,
@@ -189,13 +179,10 @@ class FirebaseChatService {
         chatRoomId: chatRoomId,
         senderAvatar: senderAvatar,
       ).then((_) {
-        print('✅ [FirebaseChat] Notification sent successfully');
       }).catchError((e) {
-        print('⚠️ [FirebaseChat] Failed to send notification: $e');
       });
     }
     
-    print('✅ [FirebaseChat] sendMessage completed');
   }
 
   // Lấy danh sách tin nhắn
@@ -245,32 +232,25 @@ class FirebaseChatService {
 
   // Lấy danh sách chat rooms của nhân viên
   Stream<List<ChatRoom>> getStaffChatRooms(int staffId) {
-    print('🔵 [Firebase] Getting staff chat rooms for staffId: $staffId');
     return _database
         .child('chatRooms')
         .onValue
         .map((event) {
       final chatRooms = <ChatRoom>[];
-      print('🔵 [Firebase] Event snapshot exists: ${event.snapshot.exists}');
-      print('🔵 [Firebase] Event snapshot value: ${event.snapshot.value}');
       
       if (event.snapshot.value != null) {
         final data = Map<String, dynamic>.from(event.snapshot.value as Map);
-        print('🔵 [Firebase] Total chat rooms in DB: ${data.length}');
         
         data.forEach((key, value) {
           final room = ChatRoom.fromJson(key, Map<String, dynamic>.from(value));
-          print('🔵 [Firebase] Room: $key, staffId: ${room.staffId}, target: $staffId');
           
           // Filter by staffId client-side
           if (room.staffId == staffId) {
-            print('✅ [Firebase] Match! Adding room: $key');
             chatRooms.add(room);
           }
         });
       }
       
-      print('🔵 [Firebase] Filtered chat rooms count: ${chatRooms.length}');
       
       chatRooms.sort((a, b) {
         if (a.lastMessageTime == null) return 1;
@@ -292,14 +272,12 @@ class FirebaseChatService {
       
       return downloadUrl;
     } catch (e) {
-      print('Error uploading image: $e');
       return null;
     }
   }
 
   // Đánh dấu tin nhắn đã đọc
   Future<void> markMessagesAsRead(String chatRoomId, String userId) async {
-    print('👁️ [FirebaseChat] Marking messages as read for chatRoom: $chatRoomId, user: $userId');
     
     final snapshot = await _database.child('messages/$chatRoomId').get();
     
@@ -317,7 +295,6 @@ class FirebaseChatService {
         }
       });
       
-      print('✅ [FirebaseChat] Marked $markedCount messages as read');
       
       // Reset unreadCount về 0 khi đã đọc - cần xác định ai đang đọc
       if (markedCount > 0) {
@@ -333,13 +310,11 @@ class FirebaseChatService {
               'unreadCountStaff': 0,
               'unreadCount': 0, // backward compatibility
             });
-            print('✅ [FirebaseChat] Reset unreadCountStaff to 0');
           } else {
             // Customer đang đọc → reset unreadCountCustomer
             await _database.child('chatRooms/$chatRoomId').update({
               'unreadCountCustomer': 0,
             });
-            print('✅ [FirebaseChat] Reset unreadCountCustomer to 0');
           }
         }
       }
@@ -348,11 +323,9 @@ class FirebaseChatService {
   
   // Reset unread count cho staff khi vào chat room
   Future<void> resetUnreadCountForStaff(String chatRoomId) async {
-    print('🔄 [FirebaseChat] Resetting staff unread count for chatRoom: $chatRoomId');
     await _database.child('chatRooms/$chatRoomId').update({
       'unreadCountStaff': 0,
       'unreadCount': 0, // backward compatibility
     });
-    print('✅ [FirebaseChat] Staff unread count reset successfully');
   }
 }

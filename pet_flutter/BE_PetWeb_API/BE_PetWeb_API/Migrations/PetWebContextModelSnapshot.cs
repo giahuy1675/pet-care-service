@@ -33,6 +33,9 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime>("AppointmentDate")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime");
+
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")

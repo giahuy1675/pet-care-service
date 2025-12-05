@@ -40,7 +40,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
         _loadUnreadChats();
       }
     } catch (e) {
-      print('❌ Error loading user: $e');
       setState(() {
         _isLoading = false;
       });
@@ -79,7 +78,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
         }
       });
     } catch (e) {
-      print('❌ Error loading unread chats: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;

@@ -30,7 +30,7 @@ class AppointmentService {
         throw Exception('Failed to load staff: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching staff by service: $e');
+
       return [];
     }
   }
@@ -68,7 +68,7 @@ class AppointmentService {
         throw Exception('Failed to load appointments: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching all appointments: $e');
+
       return [];
     }
   }
@@ -89,7 +89,7 @@ class AppointmentService {
         throw Exception('Failed to load user appointments: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching user appointments: $e');
+
       return [];
     }
   }
@@ -110,7 +110,7 @@ class AppointmentService {
         throw Exception('Failed to load appointments by status: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching appointments by status: $e');
+
       return [];
     }
   }
@@ -132,7 +132,7 @@ class AppointmentService {
         throw Exception('Failed to load appointments by date: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching appointments by date: $e');
+
       return [];
     }
   }
@@ -141,16 +141,39 @@ class AppointmentService {
   Future<bool> cancelAppointment(int appointmentId, String reason) async {
     try {
       final headers = await getAuthHeaders();
-      final response = await _client.patch(
-        Uri.parse('$appointmentsUrl/$appointmentId/cancel'),
+
+      final response = await _client.delete(
+        Uri.parse('$appointmentsUrl/$appointmentId/reason'),
         headers: headers,
-        body: json.encode({'cancellationReason': reason}),
+        body: json.encode({'Reason': reason}),  // Chữ R hoa để khớp với backend DTO
       );
+
 
       return response.statusCode == 200;
     } catch (e) {
-      print('Error canceling appointment: $e');
+
       return false;
+    }
+  }
+
+  // Kiểm tra số lần hủy lịch trong tháng
+  Future<int> getCancelledCountThisMonth() async {
+    try {
+      final headers = await getAuthHeaders();
+      final response = await _client.get(
+        Uri.parse('$appointmentsUrl/cancel-count'),
+        headers: headers,
+      );
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['count'] ?? 0;
+      }
+      
+      return 0;
+    } catch (e) {
+
+      return 0;
     }
   }
 
@@ -169,11 +192,11 @@ class AppointmentService {
         
         if (response.statusCode == 200) {
           final List<dynamic> data = json.decode(response.body);
-          print('✅ Staff $staffId busy slots from API: $data');
+
           return data.map((slot) => slot.toString()).toList();
         }
       } catch (apiError) {
-        print('📡 Staff busy slots API not available, using fallback method: $apiError');
+
       }
       
       // Fallback: lấy từ lịch làm việc của nhân viên
@@ -189,13 +212,12 @@ class AppointmentService {
         if (appointmentDate != null) {
           final timeStr = '${appointmentDate.hour.toString().padLeft(2, '0')}:${appointmentDate.minute.toString().padLeft(2, '0')}';
           busySlots.add(timeStr);
-          print('Staff $staffId busy at $timeStr (${apt.service?.name ?? 'Unknown service'}) - Status: ${apt.status}');
         }
       }
       
       return busySlots;
     } catch (e) {
-      print('❌ Error fetching staff busy slots for staff $staffId: $e');
+
       return [];
     }
   }
@@ -215,13 +237,12 @@ class AppointmentService {
         if (appointmentDate != null) {
           final timeStr = '${appointmentDate.hour.toString().padLeft(2, '0')}:${appointmentDate.minute.toString().padLeft(2, '0')}';
           busySlots.add(timeStr);
-          print('Pet $petId busy at $timeStr (${apt.service?.name ?? 'Unknown service'}) - Status: ${apt.status}');
         }
       }
       
       return busySlots;
     } catch (e) {
-      print('❌ Error fetching pet busy slots for pet $petId: $e');
+
       return [];
     }
   }
@@ -275,10 +296,8 @@ class AppointmentService {
         if (petId != null && staffId != null) {
           final petBusySlots = await getPetBusyTimeSlots(petId, date);
           final staffBusySlots = await getStaffBusyTimeSlots(staffId, date);
-          
-          print('🔍 [BUSY CHECK] Pet busy slots: $petBusySlots');
-          print('🔍 [BUSY CHECK] Staff busy slots: $staffBusySlots');
-          
+
+
           // Cập nhật trạng thái busy cho các time slots
           for (final slot in timeSlots) {
             final slotStart = slot.startTime;
@@ -297,7 +316,6 @@ class AppointmentService {
                   busySlotStart == slotStart) {
                 slot.isPetBusy = true;
                 slot.isAvailable = false;
-                print('🐕 [BUSY] Slot ${slotStart.hour}:${slotStart.minute.toString().padLeft(2, '0')} overlaps with pet busy slot $busyTimeStr');
                 break;
               }
             }
@@ -315,7 +333,6 @@ class AppointmentService {
                   busySlotStart == slotStart) {
                 slot.isStaffBusy = true;
                 slot.isAvailable = false;
-                print('👤 [BUSY] Slot ${slotStart.hour}:${slotStart.minute.toString().padLeft(2, '0')} overlaps with staff busy slot $busyTimeStr');
                 break;
               }
             }
@@ -327,7 +344,7 @@ class AppointmentService {
         throw Exception('Failed to load available time slots: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching available time slots: $e');
+
       return _generateDefaultTimeSlots(date);
     }
   }
@@ -337,9 +354,7 @@ class AppointmentService {
     try {
       // Thêm thông tin múi giờ
       appointmentData['timeZoneOffset'] = DateTime.now().timeZoneOffset.inMinutes;
-      
-      print('Creating appointment with data: $appointmentData');
-      
+
       final headers = await getAuthHeaders();
       final response = await _client.post(
         Uri.parse(appointmentsUrl),
@@ -347,8 +362,6 @@ class AppointmentService {
         body: json.encode(appointmentData),
       );
 
-      print('Create appointment response: ${response.statusCode}');
-      print('Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(response.body);
@@ -360,7 +373,7 @@ class AppointmentService {
           await serviceService.incrementBookingCount(appointmentData['serviceId']);
         } catch (e) {
           // Không hiển thị lỗi cho user vì đây chỉ là thống kê
-          print('Failed to increment booking count: $e');
+
         }
         
         return appointment;
@@ -368,7 +381,7 @@ class AppointmentService {
         throw Exception('Failed to create appointment: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Error creating appointment: $e');
+
       throw e;
     }
   }
@@ -434,7 +447,7 @@ class AppointmentService {
         throw Exception('Failed to update appointment status: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error updating appointment status: $e');
+
       throw Exception('Không thể cập nhật trạng thái lịch hẹn: $e');
     }
   }

@@ -1,5 +1,4 @@
 ﻿using BE_PetWeb_API.Extensions;
-using BE_PetWeb_API.Middleware;
 using BE_PetWeb_API.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
@@ -37,14 +36,6 @@ builder.Services.AddControllers()
 builder.Services.AddDbContext<PetWebContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("PetWebConnection")));
 
-builder.Services.AddAuthentication()
-    .AddGoogle(options =>
-    {
-        options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-        options.CallbackPath = "/api/auth/google-callback";
-    });
-
 // Add HttpClient for OneSignal and other services
 builder.Services.AddHttpClient();
 
@@ -56,9 +47,6 @@ builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = true; // Enable detailed errors for development
 });
-
-// Add Background Service for cleanup
-builder.Services.AddHostedService<BE_PetWeb_API.Services.Implementations.ReservationCleanupService>();
 
 // Tăng kích thước tối đa của request để hỗ trợ file lớn
 builder.Services.Configure<IISServerOptions>(options =>
@@ -256,7 +244,7 @@ app.Use(async (context, next) =>
 
 // Serve static files from wwwroot folder (for images and other assets)
 app.UseStaticFiles();
-app.UseExceptionHandlingMiddleware();
+
 // Cập nhật phần này - Sử dụng chính sách CORS đã cập nhật
 app.UseCors("AllowLocalhost");
 

@@ -29,19 +29,17 @@ class TimeSlotSignalRService {
   /// Initialize SignalR connection
   Future<void> initialize() async {
     if (_connection != null && _connection!.state == HubConnectionState.connected) {
-      debugPrint('✅ SignalR already connected');
+
       return;
     }
 
     try {
-      debugPrint('🔌 Creating SignalR connection to TimeSlotHub...');
-      
+
       // Tạo connection đến TimeSlotHub (giống web)
       _connection = HubConnectionBuilder()
         .withUrl(
           'https://localhost:7164/timeSlotHub',
           HttpConnectionOptions(
-            logging: (level, message) => debugPrint('SignalR: $message'),
           ),
         )
         .withAutomaticReconnect([0, 2000, 10000, 30000])
@@ -54,10 +52,9 @@ class TimeSlotSignalRService {
       await _connection!.start();
       _isConnected = true;
       _connectionStatusController.add(true);
-      
-      debugPrint('✅ SignalR Connected successfully, state: ${_connection!.state}');
+
     } catch (e) {
-      debugPrint('❌ SignalR Connection Error: $e');
+
       _isConnected = false;
       _connectionStatusController.add(false);
       rethrow;
@@ -70,13 +67,13 @@ class TimeSlotSignalRService {
 
     // Connection lifecycle events
     _connection!.onreconnecting((error) {
-      debugPrint('🔄 SignalR Reconnecting... Error: $error');
+
       _isConnected = false;
       _connectionStatusController.add(false);
     });
 
     _connection!.onreconnected((connectionId) {
-      debugPrint('✅ SignalR Reconnected with ID: $connectionId');
+
       _isConnected = true;
       _connectionStatusController.add(true);
       
@@ -87,7 +84,7 @@ class TimeSlotSignalRService {
     });
 
     _connection!.onclose((error) {
-      debugPrint('🔌 SignalR Disconnected. Error: $error');
+
       _isConnected = false;
       _connectionStatusController.add(false);
     });
@@ -98,9 +95,7 @@ class TimeSlotSignalRService {
       
       final data = arguments[0] as Map<String, dynamic>?;
       if (data == null) return;
-      
-      debugPrint('🔔 [SignalR] TimeSlotSelected received: $data');
-      
+
       final selection = TimeSlotSelection(
         timeSlot: data['timeSlot'] as String,
         userId: data['userId'] as String,
@@ -118,9 +113,7 @@ class TimeSlotSignalRService {
       
       final data = arguments[0] as Map<String, dynamic>?;
       if (data == null) return;
-      
-      debugPrint('🔔 [SignalR] TimeSlotCleared received: $data');
-      
+
       final selection = TimeSlotSelection(
         timeSlot: data['timeSlot'] as String,
         userId: data['userId'] as String,
@@ -136,13 +129,13 @@ class TimeSlotSignalRService {
     _connection!.on('UserJoinedTimeSlotRoom', (arguments) {
       if (arguments == null || arguments.isEmpty) return;
       final data = arguments[0] as Map<String, dynamic>?;
-      debugPrint('👤 [SignalR] UserJoinedTimeSlotRoom: $data');
+
     });
 
     _connection!.on('UserLeftTimeSlotRoom', (arguments) {
       if (arguments == null || arguments.isEmpty) return;
       final data = arguments[0] as Map<String, dynamic>?;
-      debugPrint('👋 [SignalR] UserLeftTimeSlotRoom: $data');
+
     });
   }
 
@@ -153,7 +146,7 @@ class TimeSlotSignalRService {
     required String date,
   }) async {
     if (_connection == null || _connection!.state != HubConnectionState.connected) {
-      debugPrint('⚠️ Cannot join room: Not connected');
+
       return false;
     }
 
@@ -170,13 +163,13 @@ class TimeSlotSignalRService {
 
   Future<bool> _joinRoom(String roomKey) async {
     try {
-      debugPrint('📥 Joining room: $roomKey');
+
       await _connection!.invoke('JoinTimeSlotRoom', args: [roomKey]);
       _currentRoomKey = roomKey;
-      debugPrint('✅ Successfully joined room: $roomKey');
+
       return true;
     } catch (e) {
-      debugPrint('❌ Failed to join room: $e');
+
       return false;
     }
   }
@@ -190,11 +183,11 @@ class TimeSlotSignalRService {
     }
 
     try {
-      debugPrint('📤 Leaving room: $_currentRoomKey');
+
       await _connection!.invoke('LeaveTimeSlotRoom', args: [_currentRoomKey]);
-      debugPrint('✅ Successfully left room: $_currentRoomKey');
+
     } catch (e) {
-      debugPrint('⚠️ Failed to leave room: $e');
+
     } finally {
       _currentRoomKey = null;
     }
@@ -210,18 +203,17 @@ class TimeSlotSignalRService {
     String? date,
   }) async {
     if (_connection == null || _connection!.state != HubConnectionState.connected) {
-      debugPrint('⚠️ Cannot select slot: Not connected');
+
       return;
     }
 
     if (_currentRoomKey == null) {
-      debugPrint('⚠️ Cannot select slot: Not in any room');
+
       return;
     }
 
     try {
-      debugPrint('📤 Broadcasting TimeSlotSelected: $timeSlot by $userName');
-      
+
       await _connection!.invoke('SelectTimeSlot', args: [
         _currentRoomKey,
         {
@@ -233,10 +225,9 @@ class TimeSlotSignalRService {
           'date': date,
         }
       ]);
-      
-      debugPrint('✅ Successfully broadcasted TimeSlotSelected');
+
     } catch (e) {
-      debugPrint('❌ Failed to broadcast TimeSlotSelected: $e');
+
     }
   }
 
@@ -250,18 +241,17 @@ class TimeSlotSignalRService {
     String? date,
   }) async {
     if (_connection == null || _connection!.state != HubConnectionState.connected) {
-      debugPrint('⚠️ Cannot clear slot: Not connected');
+
       return;
     }
 
     if (_currentRoomKey == null) {
-      debugPrint('⚠️ Cannot clear slot: Not in any room');
+
       return;
     }
 
     try {
-      debugPrint('📤 Broadcasting TimeSlotCleared: $timeSlot');
-      
+
       await _connection!.invoke('ClearTimeSlot', args: [
         _currentRoomKey,
         {
@@ -273,10 +263,9 @@ class TimeSlotSignalRService {
           'date': date,
         }
       ]);
-      
-      debugPrint('✅ Successfully broadcasted TimeSlotCleared');
+
     } catch (e) {
-      debugPrint('❌ Failed to broadcast TimeSlotCleared: $e');
+
     }
   }
 
@@ -289,9 +278,9 @@ class TimeSlotSignalRService {
       await _connection!.stop();
       _isConnected = false;
       _connectionStatusController.add(false);
-      debugPrint('🔌 SignalR Disconnected');
+
     } catch (e) {
-      debugPrint('⚠️ Error disconnecting SignalR: $e');
+
     }
   }
 

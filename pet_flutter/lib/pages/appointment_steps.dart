@@ -651,6 +651,12 @@ class _DateTimeStepState extends State<DateTimeStep> {
   Map<String, TimeSlotSelectionEvent> _otherUsersSelections = {};
   bool _signalRConnected = false;
   String? _currentRoomKey;
+  
+  // Timer to update countdown every second
+  Timer? _countdownTimer;
+  
+  // Track my selection timestamp
+  DateTime? _mySelectionTimestamp;
 
   Future<void> fetchStaff() async {
     if (widget.bookingData.selectedService == null) {
@@ -685,6 +691,7 @@ class _DateTimeStepState extends State<DateTimeStep> {
     super.initState();
     fetchStaff();
     _initializeSignalR();
+    _startCountdownTimer();
   }
 
   @override
@@ -698,34 +705,54 @@ class _DateTimeStepState extends State<DateTimeStep> {
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
     _slotSelectedSubscription?.cancel();
     _slotClearedSubscription?.cancel();
     _connectionStatusSubscription?.cancel();
     _leaveCurrentRoom();
     super.dispose();
   }
+  
+  // Start timer to update countdown every second
+  void _startCountdownTimer() {
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      // Always setState to update countdown for both my selection and others
+      if (_otherUsersSelections.isNotEmpty || _mySelectionTimestamp != null) {
+        setState(() {
+          // Remove expired selections
+          _otherUsersSelections.removeWhere((key, selection) {
+            final elapsed = DateTime.now().difference(selection.timestamp).inSeconds;
+            return elapsed >= 60;
+          });
+          
+          // Clear my selection if expired
+          if (_mySelectionTimestamp != null) {
+            final elapsed = DateTime.now().difference(_mySelectionTimestamp!).inSeconds;
+            if (elapsed >= 60) {
+              _mySelectionTimestamp = null;
+            }
+          }
+        });
+      }
+    });
+  }
 
   // Initialize SignalR connection
   Future<void> _initializeSignalR() async {
     try {
-      print('🔌 [DEBUG] Starting SignalR initialization...');
       final success = await _signalRService.initialize();
-      print('🔌 [DEBUG] SignalR initialize result: $success');
       
       if (success) {
         setState(() {
           _signalRConnected = true;
         });
         _setupSignalRListeners();
-        print('✅ [DEBUG] SignalR initialized and listeners setup');
       } else {
         setState(() {
           _signalRConnected = false;
         });
-        print('❌ [DEBUG] SignalR initialization failed');
       }
     } catch (e) {
-      print('❌ Failed to initialize SignalR: $e');
       setState(() {
         _signalRConnected = false;
       });
@@ -736,14 +763,12 @@ class _DateTimeStepState extends State<DateTimeStep> {
   void _setupSignalRListeners() {
     // Listen for connection status changes
     _connectionStatusSubscription = _signalRService.connectionStatusStream.listen((isConnected) {
-      print('🔌 [DEBUG] SignalR connection status changed: $isConnected');
       setState(() {
         _signalRConnected = isConnected;
       });
       
       if (isConnected && _currentRoomKey != null) {
         // Rejoin room after reconnection
-        print('🔄 [DEBUG] Rejoining room after reconnection: $_currentRoomKey');
         _signalRService.joinTimeSlotRoom(_currentRoomKey!);
       }
       
@@ -755,62 +780,46 @@ class _DateTimeStepState extends State<DateTimeStep> {
 
     // Listen for other users selecting slots
     _slotSelectedSubscription = _signalRService.timeSlotSelectedStream.listen((event) {
-      print('🔔 [DEBUG] Received TimeSlotSelected: ${event.timeSlot} by ${event.userName}');
-      print('🔔 [DEBUG] Current room: $_currentRoomKey');
-      print('🔔 [DEBUG] Event room: ${event.roomKey}');
       
       setState(() {
         _otherUsersSelections[event.timeSlot] = event;
       });
       
-      print('🔔 [DEBUG] Total selections: ${_otherUsersSelections.length}');
       
       // Auto-clear after 15 seconds (same as web)
       Timer(const Duration(seconds: 15), () {
         setState(() {
           _otherUsersSelections.remove(event.timeSlot);
         });
-        print('⏰ [DEBUG] Auto-cleared ${event.timeSlot}');
       });
     });
 
     // Listen for other users clearing slots
     _slotClearedSubscription = _signalRService.timeSlotClearedStream.listen((event) {
-      print('🔕 [DEBUG] Received TimeSlotCleared: ${event.timeSlot}');
       
       setState(() {
         _otherUsersSelections.remove(event.timeSlot);
       });
       
-      print('🔕 [DEBUG] Total selections after clear: ${_otherUsersSelections.length}');
     });
   }
 
   // Join SignalR room when conditions are met
   Future<void> _joinSignalRRoom() async {
-    print('🚪 [DEBUG] _joinSignalRRoom called');
-    print('🚪 [DEBUG] Connected: $_signalRConnected');
-    print('🚪 [DEBUG] Service: ${widget.bookingData.selectedService?.serviceId}');
-    print('🚪 [DEBUG] Staff: ${selectedStaff?.staffId}');
-    print('🚪 [DEBUG] Date: $selectedDate');
     
     if (!_signalRConnected) {
-      print('⚠️ [DEBUG] Cannot join room: Not connected');
       return;
     }
     
     if (widget.bookingData.selectedService == null) {
-      print('⚠️ [DEBUG] Cannot join room: No service selected');
       return;
     }
     
     if (selectedStaff == null) {
-      print('⚠️ [DEBUG] Cannot join room: No staff selected');
       return;
     }
     
     if (selectedDate == null) {
-      print('⚠️ [DEBUG] Cannot join room: No date selected');
       return;
     }
 
@@ -820,24 +829,18 @@ class _DateTimeStepState extends State<DateTimeStep> {
       date: selectedDate!.toIso8601String().split('T')[0],
     );
     
-    print('🚪 [DEBUG] Generated room key: $roomKey');
-    print('🚪 [DEBUG] Current room key: $_currentRoomKey');
 
     if (_currentRoomKey != roomKey) {
       await _leaveCurrentRoom();
       
-      print('🚪 [DEBUG] Attempting to join room: $roomKey');
       final success = await _signalRService.joinTimeSlotRoom(roomKey);
       if (success) {
         setState(() {
           _currentRoomKey = roomKey;
         });
-        print('✅ Joined SignalR room: $roomKey');
       } else {
-        print('❌ Failed to join room: $roomKey');
       }
     } else {
-      print('ℹ️ [DEBUG] Already in room: $roomKey');
     }
   }
 
@@ -855,13 +858,11 @@ class _DateTimeStepState extends State<DateTimeStep> {
   // Notify slot selection via SignalR
   Future<void> _notifySlotSelection(TimeSlot slot) async {
     if (_currentRoomKey == null || !_signalRConnected) {
-      print('⚠️ [DEBUG] Cannot notify: room=$_currentRoomKey, connected=$_signalRConnected');
       return;
     }
 
     final timeStr = '${slot.startTime.hour.toString().padLeft(2, '0')}:${slot.startTime.minute.toString().padLeft(2, '0')}';
     
-    print('📤 [DEBUG] Broadcasting slot selection: $timeStr in room $_currentRoomKey');
     
     await _signalRService.notifyTimeSlotSelected(
       roomKey: _currentRoomKey!,
@@ -871,19 +872,16 @@ class _DateTimeStepState extends State<DateTimeStep> {
       date: selectedDate!.toIso8601String().split('T')[0],
     );
     
-    print('✅ [DEBUG] Broadcast complete for $timeStr');
   }
 
   // Notify slot deselection via SignalR
   Future<void> _notifySlotDeselection(TimeSlot slot) async {
     if (_currentRoomKey == null || !_signalRConnected) {
-      print('⚠️ [DEBUG] Cannot notify clear: room=$_currentRoomKey, connected=$_signalRConnected');
       return;
     }
 
     final timeStr = '${slot.startTime.hour.toString().padLeft(2, '0')}:${slot.startTime.minute.toString().padLeft(2, '0')}';
     
-    print('📤 [DEBUG] Broadcasting slot clear: $timeStr');
     
     await _signalRService.notifyTimeSlotCleared(
       roomKey: _currentRoomKey!,
@@ -893,7 +891,6 @@ class _DateTimeStepState extends State<DateTimeStep> {
       date: selectedDate!.toIso8601String().split('T')[0],
     );
     
-    print('✅ [DEBUG] Broadcast clear complete for $timeStr');
   }
 
   Widget _buildLegendItem(String icon, String label, Color color) {
@@ -1317,10 +1314,14 @@ class _DateTimeStepState extends State<DateTimeStep> {
                 final now = DateTime.now();
                 final isPast = slot.startTime.isBefore(now);
                 
-                // Kiểm tra người khác đang chọn
+                // Kiểm tra người khác đang chọn hoặc chính mình đang chọn
                 final timeStr = '${slot.startTime.hour.toString().padLeft(2, '0')}:${slot.startTime.minute.toString().padLeft(2, '0')}';
                 final otherUserSelection = _otherUsersSelections[timeStr];
                 final isBeingSelectedByOthers = otherUserSelection != null;
+                
+                // Kiểm tra xem mình có đang chọn slot này không
+                final isSelected = selectedSlot?.id == slot.id;
+                final isSelectedByMe = isSelected;
                 
                 if (isPast) {
                   borderColor = Colors.grey;
@@ -1329,10 +1330,29 @@ class _DateTimeStepState extends State<DateTimeStep> {
                   statusIcon = '⏰';
                 } else if (isBeingSelectedByOthers) {
                   // Ưu tiên cao: người khác đang chọn (màu tím như web)
+                  // Tính remaining seconds
+                  final elapsedSeconds = DateTime.now().difference(otherUserSelection.timestamp).inSeconds;
+                  final remainingSeconds = 60 - elapsedSeconds;
+                  
                   borderColor = Colors.purple;
                   backgroundColor = Colors.purple.shade50;
-                  statusText = '${otherUserSelection.userName} đang chọn';
-                  statusIcon = '👥';
+                  statusText = remainingSeconds > 0 
+                      ? '${otherUserSelection.userName} (${remainingSeconds}s)'
+                      : 'Hết hạn';
+                  statusIcon = '⏱️';
+                } else if (isSelectedByMe) {
+                  // Mình đang chọn - hiển thị countdown
+                  final selectionTime = _mySelectionTimestamp ?? DateTime.now();
+                  final elapsedSeconds = DateTime.now().difference(selectionTime).inSeconds;
+                  final remainingSeconds = 60 - elapsedSeconds;
+                  
+                  borderColor = Theme.of(context).colorScheme.primary;
+                  backgroundColor = Theme.of(context).colorScheme.primary.withOpacity(0.1);
+                  statusText = remainingSeconds > 0 
+                      ? 'Bạn đang chọn (${remainingSeconds}s)'
+                      : 'Khả dụng';
+                  statusIcon = '⏱️';
+                  isEnabled = true;
                 } else if (slot.isPetBusy) {
                   // Ưu tiên cao nhất: thú cưng bận (màu đỏ như web)
                   borderColor = Colors.red;
@@ -1360,28 +1380,9 @@ class _DateTimeStepState extends State<DateTimeStep> {
                   isEnabled = true;
                 }
                         
-                final isSelected = selectedSlot?.id == slot.id;
+                final bool showCountdown = isBeingSelectedByOthers || isSelectedByMe;
                         
-                return GestureDetector(
-                  onTap: isEnabled && selectedStaff != null && !isBeingSelectedByOthers
-                      ? () async {
-                          // Notify deselection of previous slot
-                          if (selectedSlot != null) {
-                            await _notifySlotDeselection(selectedSlot!);
-                          }
-                          
-                          setState(() { selectedSlot = slot; });
-                          widget.onChanged(
-                            selectedDate!,
-                            slot,
-                            selectedStaff!,
-                          );
-                          
-                          // Notify selection of new slot
-                          await _notifySlotSelection(slot);
-                        }
-                      : null,
-                  child: Stack(
+                return Stack(
                     children: [
                       // Main time slot card with pulse animation
                       AnimatedContainer(
@@ -1439,7 +1440,10 @@ class _DateTimeStepState extends State<DateTimeStep> {
                                       await _notifySlotDeselection(selectedSlot!);
                                     }
                                     
-                                    setState(() { selectedSlot = slot; });
+                                    setState(() { 
+                                      selectedSlot = slot;
+                                      _mySelectionTimestamp = DateTime.now(); // Lưu thời gian chọn
+                                    });
                                     widget.onChanged(
                                       selectedDate!,
                                       slot,
@@ -1451,7 +1455,7 @@ class _DateTimeStepState extends State<DateTimeStep> {
                                   }
                                 : null,
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 mainAxisSize: MainAxisSize.min,
@@ -1465,7 +1469,7 @@ class _DateTimeStepState extends State<DateTimeStep> {
                                         Text(
                                           statusIcon,
                                           style: TextStyle(
-                                            fontSize: 10,
+                                            fontSize: 9,
                                             color: isSelected ? Colors.white : borderColor,
                                           ),
                                         ),
@@ -1479,7 +1483,7 @@ class _DateTimeStepState extends State<DateTimeStep> {
                                             color: isSelected 
                                                 ? Colors.white
                                                 : borderColor,
-                                            fontSize: 10,
+                                            fontSize: 9,
                                           ),
                                           textAlign: TextAlign.center,
                                           maxLines: 1,
@@ -1488,29 +1492,59 @@ class _DateTimeStepState extends State<DateTimeStep> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 2),
-                                  // Enhanced Status
-                                  Flexible(
-                                    child: Text(
-                                      statusText,
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: isSelected 
-                                            ? Colors.white.withOpacity(0.9)
-                                            : borderColor,
-                                        fontSize: 7,
-                                        fontWeight: FontWeight.w600,
+                                  
+                                  // Countdown timer (nổi bật hơn nếu có người đang chọn HOẶC mình chọn)
+                                  if (showCountdown) ...[
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 0),
+                                      margin: const EdgeInsets.only(top: 1),
+                                      decoration: BoxDecoration(
+                                        color: isSelectedByMe 
+                                            ? Colors.white.withOpacity(0.3)
+                                            : Colors.purple.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(2),
                                       ),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                      child: Text(
+                                        statusText,
+                                        style: TextStyle(
+                                          fontSize: 7.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: isSelectedByMe 
+                                              ? Colors.white
+                                              : Colors.purple.shade700,
+                                          height: 1.0,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                        maxLines: 2,
+                                      ),
                                     ),
-                                  ),
+                                  ] else ...[
+                                    // Enhanced Status (cho các trạng thái khác)
+                                    Flexible(
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(top: 1),
+                                        child: Text(
+                                          statusText,
+                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                            color: isSelected 
+                                                ? Colors.white.withOpacity(0.9)
+                                                : borderColor,
+                                            fontSize: 7,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
                           ),
                         ),
-                      ),
+                      ), // AnimatedContainer
                       
                       // User indicator badge (giống web - top-right corner)
                       if (isBeingSelectedByOthers)
@@ -1548,10 +1582,9 @@ class _DateTimeStepState extends State<DateTimeStep> {
                           child: _PulsingBorder(),
                         ),
                     ],
-                  ),
-                );
+                  ); // return Stack from itemBuilder
               },
-            ),
+            ), // GridView.builder
                   ],
                 ],
               ),

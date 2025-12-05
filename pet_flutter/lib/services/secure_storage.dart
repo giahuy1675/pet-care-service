@@ -34,7 +34,6 @@ class SecureStorageService {
         final user = json.decode(userJson);
         return user['userId']?.toString() ?? user['id']?.toString();
       } catch (e) {
-        print('Error parsing user data for userId: $e');
       }
     }
     return null;
@@ -47,7 +46,6 @@ class SecureStorageService {
         final user = json.decode(userJson);
         return user['fullName'] ?? user['name'] ?? user['userName'];
       } catch (e) {
-        print('Error parsing user data for userName: $e');
       }
     }
     return null;
@@ -60,7 +58,6 @@ class SecureStorageService {
         final user = json.decode(userJson);
         return user['role'] ?? 'Customer';
       } catch (e) {
-        print('Error parsing user data for role: $e');
       }
     }
     return 'Customer';
@@ -74,7 +71,6 @@ class SecureStorageService {
         // Ưu tiên staffId, nếu không có thì dùng userId
         return user['staffId']?.toString() ?? user['userId']?.toString();
       } catch (e) {
-        print('Error parsing user data for staffId: $e');
       }
     }
     return null;

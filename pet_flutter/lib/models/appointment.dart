@@ -14,6 +14,7 @@ class Appointment {
   final String status;
   final String? notes;
   final String? cancellationReason;
+  final DateTime? cancelledAt;
 
   // Thông tin liên quan (navigation properties)
   final Pet? pet;
@@ -37,6 +38,7 @@ class Appointment {
     required this.status,
     this.notes,
     this.cancellationReason,
+    this.cancelledAt,
     this.pet,
     this.service,
     this.staff,
@@ -60,6 +62,7 @@ class Appointment {
       status: json['status'] ?? 'Pending',
       notes: json['notes'],
       cancellationReason: json['cancellationReason'],
+      cancelledAt: json['cancelledAt'] != null ? DateTime.parse(json['cancelledAt']) : null,
       pet: json['pet'] != null ? Pet.fromJson(json['pet']) : null,
       service: json['service'] != null ? Service.fromJson(json['service']) : null,
       staff: json['staff'] != null ? Staff.fromJson(json['staff']) : null,
@@ -84,6 +87,7 @@ class Appointment {
       'status': status,
       'notes': notes,
       'cancellationReason': cancellationReason,
+      'cancelledAt': cancelledAt?.toIso8601String(),
     };
   }
 
@@ -103,6 +107,7 @@ class Appointment {
     String? status,
     String? notes,
     String? cancellationReason,
+    DateTime? cancelledAt,
     Pet? pet,
     Service? service,
     Staff? staff,
@@ -124,6 +129,7 @@ class Appointment {
       status: status ?? this.status,
       notes: notes ?? this.notes,
       cancellationReason: cancellationReason ?? this.cancellationReason,
+      cancelledAt: cancelledAt ?? this.cancelledAt,
       pet: pet ?? this.pet,
       service: service ?? this.service,
       staff: staff ?? this.staff,

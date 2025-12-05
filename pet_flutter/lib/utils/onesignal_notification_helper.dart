@@ -24,10 +24,8 @@ class OneSignalNotificationHelper {
         if (data != null) 'data': data,
       };
 
-      debugPrint('🔔 [OneSignal] Sending notification to all users...');
-      debugPrint('   Title: $title');
-      debugPrint('   Message: $message');
-      debugPrint('   Data: $data');
+
+
 
       final response = await http.post(
         url,
@@ -40,15 +38,15 @@ class OneSignalNotificationHelper {
 
       if (response.statusCode == 200) {
         final result = jsonDecode(response.body);
-        debugPrint('✅ [OneSignal] Notification sent successfully!');
-        debugPrint('   Recipients: ${result['recipients']}');
+
+
       } else {
-        debugPrint('❌ [OneSignal] Failed to send notification');
-        debugPrint('   Status: ${response.statusCode}');
-        debugPrint('   Response: ${response.body}');
+
+
+
       }
     } catch (e) {
-      debugPrint('❌ [OneSignal] Error sending notification: $e');
+
     }
   }
 
@@ -70,9 +68,7 @@ class OneSignalNotificationHelper {
         if (data != null) 'data': data,
       };
 
-      debugPrint('🔔 [OneSignal] Sending notification to user: $userId');
-      debugPrint('   Title: $title');
-      debugPrint('   Message: $message');
+
 
       final response = await http.post(
         url,
@@ -84,14 +80,14 @@ class OneSignalNotificationHelper {
       );
 
       if (response.statusCode == 200) {
-        debugPrint('✅ [OneSignal] Notification sent successfully!');
+
       } else {
-        debugPrint('❌ [OneSignal] Failed to send notification');
-        debugPrint('   Status: ${response.statusCode}');
-        debugPrint('   Response: ${response.body}');
+
+
+
       }
     } catch (e) {
-      debugPrint('❌ [OneSignal] Error sending notification: $e');
+
     }
   }
 
@@ -113,9 +109,7 @@ class OneSignalNotificationHelper {
         if (data != null) 'data': data,
       };
 
-      debugPrint('🔔 [OneSignal] Sending notification to Player ID: $playerId');
-      debugPrint('   Title: $title');
-      debugPrint('   Message: $message');
+
 
       final response = await http.post(
         url,
@@ -127,14 +121,14 @@ class OneSignalNotificationHelper {
       );
 
       if (response.statusCode == 200) {
-        debugPrint('✅ [OneSignal] Notification sent successfully!');
+
       } else {
-        debugPrint('❌ [OneSignal] Failed to send notification');
-        debugPrint('   Status: ${response.statusCode}');
-        debugPrint('   Response: ${response.body}');
+
+
+
       }
     } catch (e) {
-      debugPrint('❌ [OneSignal] Error sending notification: $e');
+
     }
   }
 

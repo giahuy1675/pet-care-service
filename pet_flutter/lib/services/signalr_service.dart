@@ -33,13 +33,12 @@ class SignalRService {
   // Initialize SignalR connection
   Future<bool> initialize() async {
     if (_connection != null && _isConnected) {
-      print('✅ SignalR already connected');
+
       return true;
     }
 
     try {
-      print('🔌 Initializing SignalR connection...');
-      
+
       // Get user info for authentication
       final storage = SecureStorageService();
       final token = await storage.readToken();
@@ -69,11 +68,10 @@ class SignalRService {
       await _connection!.start();
       _isConnected = true;
       _connectionStatusController.add(true);
-      
-      print('✅ SignalR Connected successfully');
+
       return true;
     } catch (e) {
-      print('❌ SignalR Connection Error: $e');
+
       _isConnected = false;
       _connectionStatusController.add(false);
       return false;
@@ -86,13 +84,13 @@ class SignalRService {
 
     // Connection state events
     _connection!.onreconnecting((error) {
-      print('🔄 SignalR Reconnecting...');
+
       _isConnected = false;
       _connectionStatusController.add(false);
     });
 
     _connection!.onreconnected((connectionId) {
-      print('✅ SignalR Reconnected');
+
       _isConnected = true;
       _connectionStatusController.add(true);
       
@@ -103,7 +101,7 @@ class SignalRService {
     });
 
     _connection!.onclose((error) {
-      print('❌ SignalR Disconnected: $error');
+
       _isConnected = false;
       _connectionStatusController.add(false);
     });
@@ -113,19 +111,18 @@ class SignalRService {
       if (arguments != null && arguments.isNotEmpty) {
         try {
           final data = arguments[0] as Map<String, dynamic>;
-          print('📩 [DEBUG] Raw TimeSlotSelected data: $data');
-          
+
           final event = TimeSlotSelectionEvent.fromJson(data);
           
           // Only process events from other users
           if (event.userId != _currentUserId) {
-            print('📥 [SignalR] TimeSlotSelected received: ${event.timeSlot} by ${event.userName}');
+
             _timeSlotSelectedController.add(event);
           } else {
-            print('⏭️ [DEBUG] Skipping own event for slot ${event.timeSlot}');
+
           }
         } catch (e) {
-          print('❌ Error parsing TimeSlotSelected event: $e');
+
         }
       }
     });
@@ -134,19 +131,18 @@ class SignalRService {
       if (arguments != null && arguments.isNotEmpty) {
         try {
           final data = arguments[0] as Map<String, dynamic>;
-          print('📩 [DEBUG] Raw TimeSlotCleared data: $data');
-          
+
           final event = TimeSlotSelectionEvent.fromJson(data);
           
           // Only process events from other users
           if (event.userId != _currentUserId) {
-            print('📥 [SignalR] TimeSlotCleared received: ${event.timeSlot} by ${event.userName}');
+
             _timeSlotClearedController.add(event);
           } else {
-            print('⏭️ [DEBUG] Skipping own clear event for slot ${event.timeSlot}');
+
           }
         } catch (e) {
-          print('❌ Error parsing TimeSlotCleared event: $e');
+
         }
       }
     });
@@ -154,14 +150,14 @@ class SignalRService {
     _connection!.on('UserJoinedTimeSlotRoom', (arguments) {
       if (arguments != null && arguments.isNotEmpty) {
         final data = arguments[0] as Map<String, dynamic>;
-        print('👋 [SignalR] User joined room: ${data['userName']}');
+
       }
     });
 
     _connection!.on('UserLeftTimeSlotRoom', (arguments) {
       if (arguments != null && arguments.isNotEmpty) {
         final data = arguments[0] as Map<String, dynamic>;
-        print('👋 [SignalR] User left room: ${data['userName']}');
+
       }
     });
   }
@@ -169,7 +165,7 @@ class SignalRService {
   // Join time slot room for real-time updates
   Future<bool> joinTimeSlotRoom(String roomKey) async {
     if (!_isConnected || _connection == null) {
-      print('❌ Cannot join room: SignalR not connected');
+
       return false;
     }
 
@@ -181,10 +177,10 @@ class SignalRService {
 
       await _connection!.invoke('JoinTimeSlotRoom', args: [roomKey]);
       _currentRoomKey = roomKey;
-      print('✅ [SignalR] Joined time slot room: $roomKey');
+
       return true;
     } catch (e) {
-      print('❌ [SignalR] Error joining time slot room: $e');
+
       return false;
     }
   }
@@ -200,10 +196,10 @@ class SignalRService {
       if (_currentRoomKey == roomKey) {
         _currentRoomKey = null;
       }
-      print('✅ [SignalR] Left time slot room: $roomKey');
+
       return true;
     } catch (e) {
-      print('❌ [SignalR] Error leaving time slot room: $e');
+
       return false;
     }
   }
@@ -217,7 +213,7 @@ class SignalRService {
     required String date,
   }) async {
     if (!_isConnected || _connection == null) {
-      print('❌ Cannot notify slot selection: SignalR not connected');
+
       return false;
     }
 
@@ -237,15 +233,12 @@ class SignalRService {
         'Date': date,  // Capital D
       };
 
-      print('📤 [DEBUG] Sending data to NotifyTimeSlotSelected: $data');
-      
       // Send as single argument (the data object)
       await _connection!.invoke('NotifyTimeSlotSelected', args: [data]);
-      
-      print('📤 [SignalR] Notified time slot selected: $timeSlot');
+
       return true;
     } catch (e) {
-      print('❌ [SignalR] Error notifying time slot selected: $e');
+
       return false;
     }
   }
@@ -259,7 +252,7 @@ class SignalRService {
     required String date,
   }) async {
     if (!_isConnected || _connection == null) {
-      print('❌ Cannot notify slot clear: SignalR not connected');
+
       return false;
     }
 
@@ -279,15 +272,12 @@ class SignalRService {
         'Date': date,  // Capital D
       };
 
-      print('📤 [DEBUG] Sending data to NotifyTimeSlotCleared: $data');
-      
       // Send as single argument (the data object)
       await _connection!.invoke('NotifyTimeSlotCleared', args: [data]);
-      
-      print('📤 [SignalR] Notified time slot cleared: $timeSlot');
+
       return true;
     } catch (e) {
-      print('❌ [SignalR] Error notifying time slot cleared: $e');
+
       return false;
     }
   }
@@ -313,10 +303,9 @@ class SignalRService {
       _isConnected = false;
       _currentRoomKey = null;
       _connectionStatusController.add(false);
-      
-      print('🔌 SignalR Disconnected');
+
     } catch (e) {
-      print('❌ Error disconnecting SignalR: $e');
+
     }
   }
 

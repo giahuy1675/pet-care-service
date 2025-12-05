@@ -51,17 +51,12 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _submit() async {
-    print('🔐 Login attempt started');
     
     // Check if form is valid
     if (_formKey.currentState != null && !_formKey.currentState!.validate()) {
-      print('❌ Form validation failed');
       return;
     }
     
-    print('✅ Form validation passed');
-    print('📝 Username/Email: ${_usernameOrEmailController.text.trim()}');
-    print('🔑 Password length: ${_passwordController.text.length}');
     
     setState(() {
       _loading = true;
@@ -69,31 +64,22 @@ class _LoginPageState extends State<LoginPage> {
     });
     
     try {
-      print('🌐 Calling auth service...');
       final res = await _authService.login(
         usernameOrEmail: _usernameOrEmailController.text.trim(),
         password: _passwordController.text,
       );
       
-      print('✅ Auth service response received');
-      print('📄 Response: $res');
       
       final token = res['token'] as String?;
       final user = res['user']; // Get user object from response
       
       if (token != null) {
-        print('💾 Saving token...');
         await _storage.saveToken(token);
-        print('✅ Token saved');
       } else {
-        print('⚠️ No token in response');
       }
       
       if (user != null) {
-        print('💾 Saving user data...');
-        print('👤 User data: $user');
         await _storage.saveUser(jsonEncode(user));
-        print('✅ User data saved');
         
         // 🔔 Set OneSignal External User ID
         try {
@@ -108,17 +94,13 @@ class _LoginPageState extends State<LoginPage> {
           
           if (externalId != null) {
             await OneSignalService().setExternalUserId(externalId);
-            print('🔔 OneSignal External User ID set: $externalId (role: $role)');
           }
         } catch (e) {
-          print('⚠️ Failed to set OneSignal External User ID: $e');
         }
       } else {
-        print('⚠️ No user data in response');
       }
       
       if (mounted) {
-        print('🏠 Navigating to home...');
         // Show success animation
         await _showSuccessAnimation();
         // Navigate back to AuthWrapper which will automatically show RootNav for authenticated users
@@ -126,10 +108,8 @@ class _LoginPageState extends State<LoginPage> {
           '/',
           (route) => false,
         );
-        print('✅ Navigation completed');
       }
     } catch (e) {
-      print('❌ Login error: $e');
       setState(() {
         _error = e.toString();
       });
@@ -143,7 +123,6 @@ class _LoginPageState extends State<LoginPage> {
         setState(() {
           _loading = false;
         });
-        print('🔄 Loading state reset');
       }
     }
   }

@@ -179,7 +179,6 @@ class ReviewService {
   // Tạo review mới
   Future<Review> createReview(CreateReviewRequest request) async {
     try {
-      print('Creating review with data: ${request.toJson()}');
       
       final response = await http.post(
         Uri.parse(_baseUrl),
@@ -187,8 +186,6 @@ class ReviewService {
         body: json.encode(request.toJson()),
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
 
       if (response.statusCode == 201) {
         if (response.body.isNotEmpty) {
@@ -212,7 +209,6 @@ class ReviewService {
         throw Exception(errorMessage);
       }
     } catch (e) {
-      print('Error creating review: $e');
       throw Exception('Error creating review: $e');
     }
   }

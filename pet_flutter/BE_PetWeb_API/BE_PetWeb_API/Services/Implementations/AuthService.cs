@@ -88,6 +88,10 @@ namespace BE_PetWeb_API.Services.Implementations
             if (user == null)
                 throw new Exception("Không tìm thấy tài khoản");
 
+            // Kiểm tra tài khoản có bị vô hiệu hóa không
+            if (user.IsActive == false)
+                throw new Exception("Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.");
+
             bool passwordValid = false;
 
             // Trường hợp đặc biệt cho tài khoản admin
@@ -196,6 +200,10 @@ namespace BE_PetWeb_API.Services.Implementations
                 else
                 {
                     Console.WriteLine($"Found existing user for Google login - Username: {user.Username}, Email: {user.Email}");
+                    
+                    // Kiểm tra tài khoản có bị vô hiệu hóa không
+                    if (user.IsActive == false)
+                        throw new Exception("Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.");
                 }
 
                 // Tạo JWT token

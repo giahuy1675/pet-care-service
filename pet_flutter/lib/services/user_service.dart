@@ -53,9 +53,7 @@ class UserService {
     }
     
     // Debug logging
-    print('Sending fields to profile endpoint: ${request.fields}');
-    print('Role value: $role (will be set to Customer by backend)');
-    print('Avatar value: $avatar (ignored by profile endpoint)');
+
 
     final streamed = await request.send();
     final response = await http.Response.fromStream(streamed);

@@ -47,6 +47,9 @@ public partial class Appointment
     [Column(TypeName = "datetime")]
     public DateTime? UpdatedAt { get; set; }
 
+    [Column(TypeName = "datetime")]
+    public DateTime? CancelledAt { get; set; }
+
     public virtual Pet Pet { get; set; }
 
     public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();

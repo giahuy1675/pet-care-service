@@ -38,7 +38,7 @@ class StaffService {
         throw Exception('Failed to load staff info: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching current staff info: $e');
+
       throw Exception('Không thể tải thông tin nhân viên: $e');
     }
   }
@@ -59,7 +59,7 @@ class StaffService {
         throw Exception('Failed to load staff appointments: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching staff appointments: $e');
+
       throw Exception('Không thể tải lịch hẹn: $e');
     }
   }
@@ -80,7 +80,7 @@ class StaffService {
         throw Exception('Failed to load staff schedule: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching staff schedule: $e');
+
       // Return empty list if API fails, will use mock data
       return [];
     }
@@ -103,7 +103,7 @@ class StaffService {
         throw Exception('Failed to update staff schedule: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error updating staff schedule: $e');
+
       throw Exception('Không thể cập nhật lịch làm việc: $e');
     }
   }
@@ -124,7 +124,7 @@ class StaffService {
         throw Exception('Failed to check staff availability: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error checking staff availability: $e');
+
       return {'available': true}; // Default to available if API fails
     }
   }
@@ -145,7 +145,7 @@ class StaffService {
         throw Exception('Failed to load staff schedule for date: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching staff schedule for date: $e');
+
       return {}; // Return empty if API fails
     }
   }
@@ -186,7 +186,7 @@ class StaffService {
         'allAppointments': appointments,
       };
     } catch (e) {
-      print('Error calculating dashboard stats: $e');
+
       return {
         'todayAppointments': 0,
         'pendingAppointments': 0,
@@ -211,7 +211,7 @@ class StaffService {
         throw Exception('Failed to update appointment status: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error updating appointment status: $e');
+
       throw Exception('Không thể cập nhật trạng thái lịch hẹn: $e');
     }
   }
@@ -233,7 +233,7 @@ class StaffService {
         throw Exception('Failed to load staff busy slots: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching staff busy slots: $e');
+
       return []; // Return empty list if API fails
     }
   }
@@ -254,7 +254,7 @@ class StaffService {
         throw Exception('Failed to load staff statistics: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching staff statistics: $e');
+
       return null;
     }
   }

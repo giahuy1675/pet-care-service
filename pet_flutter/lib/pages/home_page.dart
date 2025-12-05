@@ -6,6 +6,10 @@ import 'package:lottie/lottie.dart';
 import 'package:pet_flutter/services/secure_storage.dart';
 import 'package:pet_flutter/pages/profile_page.dart';
 import 'package:pet_flutter/pages/reviews_page.dart';
+import 'package:pet_flutter/pages/appointment_booking_page.dart';
+import 'package:pet_flutter/pages/pets_page.dart';
+import 'package:pet_flutter/pages/enhanced_services_page.dart';
+import 'package:pet_flutter/pages/appointment_list_page.dart';
 import 'package:pet_flutter/widgets/banner_carousel.dart';
 import 'package:pet_flutter/widgets/shimmer_placeholders.dart';
 
@@ -422,9 +426,10 @@ class _HomePageState extends State<HomePage> {
                   FontAwesomeIcons.calendarPlus,
                   Theme.of(context).colorScheme.primary,
                   () {
-                    // TODO: Navigate to appointment booking
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Tính năng đặt lịch đang được phát triển')),
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const AppointmentBookingPage(),
+                      ),
                     );
                   },
                 ),
@@ -437,9 +442,10 @@ class _HomePageState extends State<HomePage> {
                   FontAwesomeIcons.paw,
                   Colors.orange,
                   () {
-                    // TODO: Navigate to pets page
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Tính năng quản lý thú cưng đang được phát triển')),
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const PetsPage(),
+                      ),
                     );
                   },
                 ),
@@ -452,9 +458,10 @@ class _HomePageState extends State<HomePage> {
                   FontAwesomeIcons.stethoscope,
                   Colors.green,
                   () {
-                    // TODO: Navigate to services page
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Tính năng dịch vụ đang được phát triển')),
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const EnhancedServicesPage(),
+                      ),
                     );
                   },
                 ),
@@ -487,9 +494,10 @@ class _HomePageState extends State<HomePage> {
                   FontAwesomeIcons.calendarCheck,
                   Colors.blue,
                   () {
-                    // TODO: Navigate to appointments page
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Tính năng lịch hẹn đang được phát triển')),
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const AppointmentListPage(),
+                      ),
                     );
                   },
                 ),
@@ -607,9 +615,10 @@ class _HomePageState extends State<HomePage> {
               ),
               TextButton(
             onPressed: () {
-                  // TODO: Navigate to all services
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Tính năng xem tất cả dịch vụ đang được phát triển')),
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const EnhancedServicesPage(),
+                    ),
                   );
                 },
                 child: Text(
@@ -1224,11 +1233,9 @@ class _HomePageState extends State<HomePage> {
                     // Book Button
                     GestureDetector(
                       onTap: () {
-                        // TODO: Navigate to booking form
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Đặt dịch vụ: $name'),
-                            backgroundColor: color,
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const AppointmentBookingPage(),
                           ),
                         );
                       },
@@ -1306,9 +1313,10 @@ class _HomePageState extends State<HomePage> {
               ),
               TextButton(
                 onPressed: () {
-                  // TODO: Navigate to appointments page
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Xem tất cả lịch hẹn')),
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const AppointmentListPage(),
+                    ),
                   );
                 },
                 child: Text(

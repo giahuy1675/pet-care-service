@@ -96,7 +96,6 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
       
       if (userId == null) return;
       
-      print('🔵 [AppointmentList] Loading unread counts for customer: $userId');
       
       // Get all chat rooms for this customer
       final chatRoomsStream = _chatService.getCustomerChatRooms(int.parse(userId));
@@ -104,16 +103,13 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
       chatRoomsStream.listen((chatRooms) {
         final newUnreadCounts = <int, int>{};
         
-        print('🔵 [AppointmentList] Got ${chatRooms.length} chat rooms');
         
         for (final room in chatRooms) {
           // Use unreadCountCustomer for customer view
           final unreadCount = room.unreadCountCustomer;
-          print('🔵 [AppointmentList] Room ${room.id}, appointment: ${room.appointmentId}, unreadCustomer: $unreadCount');
           
           if (room.appointmentId != null && unreadCount > 0) {
             newUnreadCounts[room.appointmentId!] = unreadCount;
-            print('✅ [AppointmentList] Added badge for appointment ${room.appointmentId}: $unreadCount');
           }
         }
         
@@ -124,14 +120,12 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
           setState(() {
             _unreadCounts = newUnreadCounts;
           });
-          print('✅ [AppointmentList] Updated _unreadCounts: $_unreadCounts, total: $totalUnread');
           
           // Trigger bell animation if count increased
           _triggerBellAnimation(totalUnread);
         }
       });
     } catch (e) {
-      print('❌ [AppointmentList] Error loading unread counts: $e');
     }
   }
 
@@ -1270,7 +1264,6 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
       }
 
       // Tạo hoặc lấy chat room theo appointmentId (Grab style)
-      print('🔵 [AppointmentList] Creating chat for appointment ${appointment.appointmentId}');
       final chatService = FirebaseChatService();
       final chatRoom = await chatService.createChatRoomFromAppointment(
         appointmentId: appointment.appointmentId,
@@ -1284,7 +1277,6 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
         serviceName: appointment.serviceName, // Thêm tên dịch vụ
       );
       
-      print('✅ [AppointmentList] Chat room created: ${chatRoom.id}');
 
       // Xác định thông tin người chat kia dựa trên vai trò
       final String otherUserId;
@@ -1322,7 +1314,6 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
         ),
       );
     } catch (e) {
-      print('❌ [AppointmentList] Error opening chat: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Không thể mở chat. Vui lòng thử lại.')),

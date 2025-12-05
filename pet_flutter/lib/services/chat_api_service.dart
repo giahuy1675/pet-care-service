@@ -29,15 +29,11 @@ class ChatApiService {
       );
 
       if (response.statusCode == 200) {
-        print('✅ Chat notification sent successfully');
         return true;
       } else {
-        print('❌ Failed to send chat notification: ${response.statusCode}');
-        print('Response: ${response.body}');
         return false;
       }
     } catch (e) {
-      print('❌ Error sending chat notification: $e');
       return false;
     }
   }

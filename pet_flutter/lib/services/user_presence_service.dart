@@ -17,9 +17,8 @@ class UserPresenceService {
         'lastSeen': ServerValue.timestamp,
       });
 
-      print('✅ [Presence] User $userId set online');
     } catch (e) {
-      print('❌ [Presence] Error setting user online: $e');
+
     }
   }
 
@@ -30,9 +29,9 @@ class UserPresenceService {
         'online': false,
         'lastSeen': ServerValue.timestamp,
       });
-      print('✅ [Presence] User $userId set offline');
+
     } catch (e) {
-      print('❌ [Presence] Error setting user offline: $e');
+
     }
   }
 
@@ -55,7 +54,7 @@ class UserPresenceService {
         return DateTime.fromMillisecondsSinceEpoch(snapshot.value as int);
       }
     } catch (e) {
-      print('❌ [Presence] Error getting last seen: $e');
+
     }
     return null;
   }

@@ -366,7 +366,6 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
       await serviceService.incrementViewCount(service.serviceId);
     } catch (e) {
       // Không hiển thị lỗi cho user vì đây chỉ là thống kê
-      print('Failed to increment view count: $e');
     }
   }
 
@@ -421,28 +420,22 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
             userId: userId,
           );
           
-          debugPrint('✅ [Booking] Reminders scheduled for appointment ${appointment.appointmentId}');
         } catch (e) {
-          debugPrint('⚠️ [Booking] Failed to schedule reminders: $e');
         }
         
         // 🎉 Send OneSignal notification for successful booking
         try {
-          debugPrint('🔔 [Booking] Attempting to send success notification...');
           final storage = SecureStorageService();
           final userJson = await storage.readUser();
-          debugPrint('🔔 [Booking] User JSON: $userJson');
           
           if (userJson != null) {
             final user = jsonDecode(userJson);
             final userId = user['userId']?.toString(); // Changed from 'id' to 'userId'
-            debugPrint('🔔 [Booking] User ID from storage: $userId');
             
             if (userId != null) {
               final dateFormat = '${appointment.appointmentDate.day}/${appointment.appointmentDate.month}/${appointment.appointmentDate.year}';
               final timeFormat = '${appointment.appointmentDate.hour}:${appointment.appointmentDate.minute.toString().padLeft(2, '0')}';
               
-              debugPrint('🔔 [Booking] Calling sendNotificationToUser...');
               await OneSignalNotificationHelper.sendNotificationToUser(
                 userId: userId,
                 title: '🎉 Đặt lịch thành công!',
@@ -454,16 +447,11 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
                 },
               );
               
-              debugPrint('✅ [Booking] Success notification sent to user $userId');
             } else {
-              debugPrint('⚠️ [Booking] User ID is null!');
             }
           } else {
-            debugPrint('⚠️ [Booking] User JSON is null!');
           }
         } catch (e) {
-          debugPrint('⚠️ [Booking] Failed to send success notification: $e');
-          debugPrint('⚠️ [Booking] Stack trace: ${StackTrace.current}');
         }
         
         _showSuccessDialog();

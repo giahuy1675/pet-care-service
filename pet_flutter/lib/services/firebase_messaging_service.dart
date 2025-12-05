@@ -21,7 +21,6 @@ class FirebaseMessagingService {
   /// Khởi tạo Firebase Messaging
   Future<void> initialize() async {
     try {
-      debugPrint('🔥 [FCM] Initializing Firebase Messaging...');
 
       // Request permission
       NotificationSettings settings = await _firebaseMessaging.requestPermission(
@@ -32,22 +31,18 @@ class FirebaseMessagingService {
       );
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-        debugPrint('✅ [FCM] User granted permission');
       } else {
-        debugPrint('⚠️ [FCM] User declined or has not accepted permission');
         return;
       }
 
       // Get FCM token
       _fcmToken = await _firebaseMessaging.getToken();
-      debugPrint('📱 [FCM] Token: $_fcmToken');
 
       // Setup local notifications
       await _setupLocalNotifications();
 
       // Listen to token refresh
       _firebaseMessaging.onTokenRefresh.listen((newToken) {
-        debugPrint('🔄 [FCM] Token refreshed: $newToken');
         _fcmToken = newToken;
         // TODO: Send new token to your server
       });
@@ -67,9 +62,7 @@ class FirebaseMessagingService {
         _handleMessageOpenedApp(initialMessage);
       }
 
-      debugPrint('✅ [FCM] Initialization complete');
     } catch (e) {
-      debugPrint('❌ [FCM] Initialization error: $e');
     }
   }
 
@@ -109,10 +102,6 @@ class FirebaseMessagingService {
 
   /// Xử lý tin nhắn khi app đang mở (foreground)
   void _handleForegroundMessage(RemoteMessage message) {
-    debugPrint('📨 [FCM] Foreground message received');
-    debugPrint('   Title: ${message.notification?.title}');
-    debugPrint('   Body: ${message.notification?.body}');
-    debugPrint('   Data: ${message.data}');
 
     // Hiển thị local notification
     _showLocalNotification(message);
@@ -156,42 +145,34 @@ class FirebaseMessagingService {
 
   /// Xử lý khi user tap vào notification
   void _onNotificationTap(NotificationResponse response) {
-    debugPrint('🔔 [FCM] Notification tapped: ${response.payload}');
     // TODO: Navigate to chat screen
   }
 
   /// Xử lý khi app mở từ notification (từ background/terminated)
   void _handleMessageOpenedApp(RemoteMessage message) {
-    debugPrint('📬 [FCM] App opened from notification');
-    debugPrint('   Data: ${message.data}');
     // TODO: Navigate to chat screen
   }
 
   /// Subscribe to topic (nhận thông báo theo chủ đề)
   Future<void> subscribeToTopic(String topic) async {
     await _firebaseMessaging.subscribeToTopic(topic);
-    debugPrint('✅ [FCM] Subscribed to topic: $topic');
   }
 
   /// Unsubscribe from topic
   Future<void> unsubscribeFromTopic(String topic) async {
     await _firebaseMessaging.unsubscribeFromTopic(topic);
-    debugPrint('❌ [FCM] Unsubscribed from topic: $topic');
   }
 
   /// Gửi FCM token lên server
   Future<void> sendTokenToServer(String userId) async {
     if (_fcmToken == null) {
-      debugPrint('⚠️ [FCM] No token available to send');
       return;
     }
     
     try {
-      debugPrint('📤 [FCM] Sending token to server for user: $userId');
       
       final token = await SecureStorageService().readToken();
       if (token == null) {
-        debugPrint('⚠️ [FCM] No auth token found');
         return;
       }
       
@@ -205,12 +186,9 @@ class FirebaseMessagingService {
       );
       
       if (response.statusCode == 200 || response.statusCode == 204) {
-        debugPrint('✅ [FCM] Token sent successfully');
       } else {
-        debugPrint('❌ [FCM] Failed to send token: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      debugPrint('❌ [FCM] Error sending token: $e');
     }
   }
 }
@@ -218,8 +196,4 @@ class FirebaseMessagingService {
 /// Background message handler (phải là top-level function)
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  debugPrint('🌙 [FCM] Background message received');
-  debugPrint('   Title: ${message.notification?.title}');
-  debugPrint('   Body: ${message.notification?.body}');
-  debugPrint('   Data: ${message.data}');
 }

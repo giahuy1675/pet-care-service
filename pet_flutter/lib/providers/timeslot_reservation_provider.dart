@@ -49,12 +49,10 @@ class TimeSlotReservationProvider extends ChangeNotifier {
     _selectedSubscription = _signalRService.onTimeSlotSelected.listen((selection) {
       // Ignore our own selections
       if (selection.userId == _currentUserId) {
-        debugPrint('🔕 Ignoring own selection: ${selection.timeSlot}');
+
         return;
       }
-      
-      debugPrint('🔔 Other user selected slot: ${selection.timeSlot} by ${selection.userName}');
-      
+
       // Add to map
       _otherUsersSelections[selection.timeSlot] = selection;
       
@@ -73,12 +71,10 @@ class TimeSlotReservationProvider extends ChangeNotifier {
     _clearedSubscription = _signalRService.onTimeSlotCleared.listen((selection) {
       // Ignore our own clears
       if (selection.userId == _currentUserId) {
-        debugPrint('🔕 Ignoring own clear: ${selection.timeSlot}');
+
         return;
       }
-      
-      debugPrint('🔔 Other user cleared slot: ${selection.timeSlot}');
-      
+
       // Remove from map
       _otherUsersSelections.remove(selection.timeSlot);
       _clearTimers[selection.timeSlot]?.cancel();
@@ -114,9 +110,9 @@ class TimeSlotReservationProvider extends ChangeNotifier {
       await _signalRService.initialize();
       _isConnected = true;
       _error = null;
-      debugPrint('✅ TimeSlot reservation provider initialized');
+
     } catch (e) {
-      debugPrint('❌ Failed to initialize: $e');
+
       _error = 'Không thể kết nối đến server real-time';
       _isConnected = false;
     } finally {
@@ -133,7 +129,7 @@ class TimeSlotReservationProvider extends ChangeNotifier {
     required String date,
   }) async {
     if (!_isConnected) {
-      debugPrint('⚠️ Cannot join room: Not connected');
+
       return false;
     }
 
@@ -152,7 +148,7 @@ class TimeSlotReservationProvider extends ChangeNotifier {
     );
 
     if (success) {
-      debugPrint('✅ Joined room: service=$serviceId, staff=$staffId, date=$date');
+
     }
 
     return success;
@@ -183,7 +179,7 @@ class TimeSlotReservationProvider extends ChangeNotifier {
   /// Broadcast when user selects a time slot
   Future<void> selectTimeSlot(String timeSlot) async {
     if (!_isConnected || _currentUserId == null) {
-      debugPrint('⚠️ Cannot select slot: Not connected or no user ID');
+
       return;
     }
 
@@ -195,14 +191,13 @@ class TimeSlotReservationProvider extends ChangeNotifier {
       staffId: _currentStaffId,
       date: _currentDate,
     );
-    
-    debugPrint('📤 Broadcasted slot selection: $timeSlot');
+
   }
 
   /// Broadcast when user clears/deselects a time slot
   Future<void> clearTimeSlot(String timeSlot) async {
     if (!_isConnected || _currentUserId == null) {
-      debugPrint('⚠️ Cannot clear slot: Not connected or no user ID');
+
       return;
     }
 
@@ -214,8 +209,7 @@ class TimeSlotReservationProvider extends ChangeNotifier {
       staffId: _currentStaffId,
       date: _currentDate,
     );
-    
-    debugPrint('📤 Broadcasted slot clear: $timeSlot');
+
   }
 
   /// Check if a specific time slot is being selected by others

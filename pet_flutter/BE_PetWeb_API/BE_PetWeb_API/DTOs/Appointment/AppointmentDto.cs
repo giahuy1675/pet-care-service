@@ -19,5 +19,6 @@ namespace BE_PetWeb_API.DTOs.Appointment
         public string Status { get; set; }
         public string Notes { get; set; }
         public string CancellationReason { get; set; }
+        public DateTime? CancelledAt { get; set; }
     }
 }

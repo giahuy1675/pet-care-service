@@ -1,4 +1,4 @@
-﻿using BE_PetWeb_API.DTOs.Appointment;
+using BE_PetWeb_API.DTOs.Appointment;
 using BE_PetWeb_API.DTOs.Service;
 using BE_PetWeb_API.DTOs.Staff;
 using BE_PetWeb_API.Models;
@@ -39,7 +39,6 @@ namespace BE_PetWeb_API.Services.Implementations
                 .Where(a => a.AppointmentDate >= startDate.Date && a.AppointmentDate < endDate.Date.AddDays(1))
                 .OrderBy(a => a.AppointmentDate)
                 .ToListAsync();
-
             return appointments.Select(a => MapToAppointmentDto(a)).ToList();
         }
 
@@ -74,9 +73,8 @@ namespace BE_PetWeb_API.Services.Implementations
                 PetName = appointment.Pet?.Name,
                 ServiceName = appointment.Service?.Name,
                 CancellationReason = appointment.Notes,
-                StaffName = appointment.Staff?.User?.FullName
-
-
+                StaffName = appointment.Staff?.User?.FullName,
+                CancelledAt = appointment.CancelledAt
             };
         }
 
@@ -104,7 +102,8 @@ namespace BE_PetWeb_API.Services.Implementations
                     AppointmentDate = a.AppointmentDate,
                     EndTime = a.EndTime,
                     Status = a.Status,
-                    Notes = a.Notes
+                    Notes = a.Notes,
+                CancelledAt = a.CancelledAt
                 })
                 .ToListAsync();
 
@@ -136,7 +135,8 @@ namespace BE_PetWeb_API.Services.Implementations
                     AppointmentDate = a.AppointmentDate,
                     EndTime = a.EndTime,
                     Status = a.Status,
-                    Notes = a.Notes
+                    Notes = a.Notes,
+                CancelledAt = a.CancelledAt
                 })
                 .ToListAsync();
 
@@ -168,7 +168,8 @@ namespace BE_PetWeb_API.Services.Implementations
                     AppointmentDate = a.AppointmentDate,
                     EndTime = a.EndTime,
                     Status = a.Status,
-                    Notes = a.Notes
+                    Notes = a.Notes,
+                CancelledAt = a.CancelledAt
                 })
                 .ToListAsync();
 
@@ -199,7 +200,8 @@ namespace BE_PetWeb_API.Services.Implementations
                     AppointmentDate = a.AppointmentDate,
                     EndTime = a.EndTime,
                     Status = a.Status,
-                    Notes = a.Notes
+                    Notes = a.Notes,
+                    CancelledAt = a.CancelledAt
                 })
                 .FirstOrDefaultAsync();
 
@@ -234,7 +236,8 @@ namespace BE_PetWeb_API.Services.Implementations
                     AppointmentDate = a.AppointmentDate,
                     EndTime = a.EndTime,
                     Status = a.Status,
-                    Notes = a.Notes
+                    Notes = a.Notes,
+                CancelledAt = a.CancelledAt
                 })
                 .ToListAsync();
 
@@ -266,7 +269,8 @@ namespace BE_PetWeb_API.Services.Implementations
                     AppointmentDate = a.AppointmentDate,
                     EndTime = a.EndTime,
                     Status = a.Status,
-                    Notes = a.Notes
+                    Notes = a.Notes,
+                CancelledAt = a.CancelledAt
                 })
                 .ToListAsync();
 
@@ -442,7 +446,6 @@ namespace BE_PetWeb_API.Services.Implementations
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    Console.WriteLine($"Error in CreateAppointmentAsync: {ex.Message}");
                     throw;
                 }
             }
@@ -695,7 +698,6 @@ namespace BE_PetWeb_API.Services.Implementations
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    Console.WriteLine($"Error in UpdateAppointmentAsync: {ex.Message}");
                     throw;
                 }
             }
@@ -753,23 +755,24 @@ namespace BE_PetWeb_API.Services.Implementations
                 throw new Exception("You are not authorized to cancel this appointment");            // Nếu là người dùng (không phải admin hoặc nhân viên), kiểm tra thêm điều kiện
             if (isOwner && !isAdminOrStaff)
             {
-                // Kiểm tra số lần hủy trong vòng 1 tháng
+                // Kiểm tra số lần hủy trong vòng 1 tháng (dựa trên CancelledAt, không phải UpdatedAt)
                 var oneMonthAgo = _dateTimeService.Now.AddMonths(-1);
                 var cancelCount = await _context.Appointments
                     .Where(a => a.UserId == userId)
                     .Where(a => a.Status == "Cancelled")
-                    .Where(a => a.UpdatedAt >= oneMonthAgo)
+                    .Where(a => a.CancelledAt.HasValue && a.CancelledAt.Value >= oneMonthAgo)
                     .CountAsync();
 
                 if (cancelCount >= 3)
                 {
-                    throw new Exception("You have reached the maximum number of cancellations (3) in the last 1 month");
+                    throw new Exception("Bạn đã hủy 3 lịch hẹn trong tháng qua. Không thể hủy thêm lịch hẹn nữa.");
                 }
             }
 
             // Cập nhật trạng thái
             appointment.Status = "Cancelled";
             appointment.Notes = reason; // Lưu lý do hủy vào trường Notes
+            appointment.CancelledAt = _dateTimeService.Now; // Lưu thời điểm hủy chính xác
             appointment.UpdatedAt = _dateTimeService.Now;
             await _context.SaveChangesAsync();
 
@@ -956,16 +959,7 @@ namespace BE_PetWeb_API.Services.Implementations
                 ? allAppointments.Where(a => a.StaffId == staffId.Value).ToArray()
                 : new dynamic[0];
 
-            // ✅ DEBUG: Log staff appointments for debugging
-            if (staffId.HasValue)
-            {
-                Console.WriteLine($"DEBUG: Staff {staffId} appointments filter - Found {staffAppointments.Length} appointments");
-                foreach (var apt in staffAppointments)
-                {
-                    var endTimeStr = apt.EndTime?.ToString("HH:mm") ?? "No end time";
-                    Console.WriteLine($"DEBUG: Staff {staffId} appointment: {apt.AppointmentDate:HH:mm} - {endTimeStr} (Status: {apt.Status})");
-                }
-            }
+
 
             // Lấy thông tin nhân viên khả dụng
             var availableStaffQuery = _context.Staff
@@ -1008,8 +1002,6 @@ namespace BE_PetWeb_API.Services.Implementations
             
             // ✅ FIXED: Tính toán slot interval dựa trên service duration + buffer
             int slotIntervalMinutes = service.Duration + BUFFER_TIME_MINUTES; // Service duration + 10 min buffer
-            
-            Console.WriteLine($"🔧 [BACKEND SLOTS] Creating slots with service duration: {service.Duration}min, interval: {slotIntervalMinutes}min");
 
             for (TimeSpan currentTime = openingTime; currentTime <= closingTime; currentTime = currentTime.Add(TimeSpan.FromMinutes(slotIntervalMinutes)))
             {
@@ -1093,30 +1085,6 @@ namespace BE_PetWeb_API.Services.Implementations
                     }
                 }
                 // ✅ QUAN TRỌNG: Khi không có staffId, KHÔNG kiểm tra staff busy để tránh hiển thị lịch bận của các staff khác
-
-                // ✅ DEBUG: Log slot analysis for specific problematic times
-                if (staffId.HasValue && ((slotStartTime.Hour == 17 && slotStartTime.Minute == 20) || (slotStartTime.Hour == 19 && slotStartTime.Minute == 40)))
-                {
-                    Console.WriteLine($"🔍 DEBUG SLOT {slotStartTime:HH:mm}: Staff {staffId} busy analysis");
-                    Console.WriteLine($"   - Staff appointments count: {staffAppointments.Length}");
-                    Console.WriteLine($"   - Checking slot: {slotStartTime:HH:mm} - {slotEndTime:HH:mm}");
-                    
-                    foreach (var appointment in staffAppointments)
-                    {
-                        var appointmentEndTime = appointment.EndTime ?? appointment.AppointmentDate.AddMinutes(appointment.ServiceDuration);
-                        var appointmentBufferEndTime = appointmentEndTime.AddMinutes(BUFFER_TIME_MINUTES);
-                        
-                        var conflict1 = slotStartTime >= appointment.AppointmentDate && slotStartTime < appointmentEndTime;
-                        var conflict2 = slotEndTime > appointment.AppointmentDate && slotEndTime <= appointmentBufferEndTime;
-                        var conflict3 = slotStartTime <= appointment.AppointmentDate && slotEndTime >= appointmentBufferEndTime;
-                        var hasConflict = conflict1 || conflict2 || conflict3;
-                        
-                        Console.WriteLine($"   - Appointment {appointment.AppointmentDate:HH:mm}-{appointmentEndTime:HH:mm}(+{BUFFER_TIME_MINUTES}min) Status:{appointment.Status} => Conflict: {hasConflict}");
-                        Console.WriteLine($"     Checks: C1={conflict1}, C2={conflict2}, C3={conflict3}");
-                    }
-                    
-                    Console.WriteLine($"   - Final isStaffBusy: {isStaffBusy}");
-                }
 
                 // ✅ KIỂM TRA PET BUSY - Kiểm tra có conflict với lịch hẹn của thú cưng không
                 bool isPetBusy = false;
@@ -1240,21 +1208,6 @@ namespace BE_PetWeb_API.Services.Implementations
                 }
 
                 // ✅ DEBUG: Log để kiểm tra logic
-                if ((slotStartTime.Hour == 17 && slotStartTime.Minute == 20) || 
-                    (slotStartTime.Hour == 19 && slotStartTime.Minute == 40) ||
-                    (slotStartTime.Hour == 9 && slotStartTime.Minute == 0) ||
-                    (slotStartTime.Hour == 13 && slotStartTime.Minute == 0))
-                {
-                    Console.WriteLine($"🔍 SLOT {slotStartTime:HH:mm} Decision:");
-                    Console.WriteLine($"   - Available: {timeSlotDto.Available}");
-                    Console.WriteLine($"   - IsStaffBusy: {timeSlotDto.IsStaffBusy}");
-                    Console.WriteLine($"   - IsPetBusy: {timeSlotDto.IsPetBusy}");
-                    Console.WriteLine($"   - IsPast: {isPast}");
-                    Console.WriteLine($"   - IncludeUnavailable: {includeUnavailable}");
-                    Console.WriteLine($"   - StaffId: {staffId?.ToString() ?? "null"}");
-                    Console.WriteLine($"   - ShouldInclude: {shouldIncludeSlot}");
-                }
-
                 if (shouldIncludeSlot)
                 {
                     timeSlots.Add(timeSlotDto);
