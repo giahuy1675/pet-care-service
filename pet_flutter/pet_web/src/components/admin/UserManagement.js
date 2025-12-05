@@ -851,6 +851,20 @@ const UserManagement = () => {
     message: '',
     type: 'info' // 'info', 'success', 'error'
   });
+  
+  // State cho create user modal
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createFormData, setCreateFormData] = useState({
+    username: '',
+    password: '',
+    confirmPassword: '',
+    email: '',
+    fullName: '',
+    phone: '',
+    address: '',
+    role: 'Customer'
+  });
+  const [createLoading, setCreateLoading] = useState(false);
 
   // State form cho việc chỉnh sửa người dùng
   const [formData, setFormData] = useState({
@@ -916,9 +930,9 @@ const UserManagement = () => {
       // Thử lần lượt các đường dẫn API khác nhau
       let response;
       try {
-        // Đường dẫn 1: /api/Users
-        console.log('Đang thử đường dẫn: /api/Users');
-        response = await axiosClient.get('/api/Users');
+        // Đường dẫn 1: /Users
+        console.log('Đang thử đường dẫn: /Users');
+        response = await axiosClient.get('/Users');
       } catch (apiError) {
         console.log('Lần thử đầu tiên thất bại, đang thử đường dẫn thay thế');
         try {
@@ -926,10 +940,10 @@ const UserManagement = () => {
           console.log('Đang thử đường dẫn: /Users');
           response = await axiosClient.get('/Users');
         } catch (apiError2) {
-          // Nếu cả hai đều thất bại, thử đường dẫn 3: /api/admin/Users
+          // Nếu cả hai đều thất bại, thử đường dẫn 3: /admin/Users
           console.log('Lần thử thứ hai thất bại, đang thử đường dẫn cuối cùng');
-          console.log('Đang thử đường dẫn: /api/admin/Users');
-          response = await axiosClient.get('/api/admin/Users');
+          console.log('Đang thử đường dẫn: /admin/Users');
+          response = await axiosClient.get('/admin/Users');
         }
       }
       
@@ -1033,7 +1047,7 @@ const UserManagement = () => {
       
       console.log('Gửi dữ liệu cập nhật:', updatedData);
       // Sử dụng đường dẫn đã xác định là hoạt động từ fetchUsers
-      await axiosClient.put(`/api/Users/${currentUser.userId}`, updatedData);
+      await axiosClient.put(`/Users/${currentUser.userId}`, updatedData);
       fetchUsers();
       setEditMode(false);
       setCurrentUser(null);
@@ -1051,12 +1065,71 @@ const UserManagement = () => {
       setLoading(false);
     }
   };
+  
+  // Tạo người dùng mới
+  const handleCreateUser = async () => {
+    try {
+      // Validate
+      if (!createFormData.username || !createFormData.password || !createFormData.email || !createFormData.fullName) {
+        showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'error');
+        return;
+      }
+      
+      if (createFormData.password !== createFormData.confirmPassword) {
+        showToast('Mật khẩu xác nhận không khớp', 'error');
+        return;
+      }
+      
+      if (createFormData.password.length < 6) {
+        showToast('Mật khẩu phải có ít nhất 6 ký tự', 'error');
+        return;
+      }
+      
+      setCreateLoading(true);
+      
+      const newUserData = {
+        username: createFormData.username,
+        password: createFormData.password,
+        email: createFormData.email,
+        fullName: createFormData.fullName,
+        phone: createFormData.phone || '',
+        address: createFormData.address || '',
+        role: createFormData.role
+      };
+      
+      console.log('Tạo người dùng mới:', newUserData);
+      await axiosClient.post('/Auth/register', newUserData);
+      
+      showToast('Tạo người dùng thành công!', 'success');
+      setShowCreateModal(false);
+      setCreateFormData({
+        username: '',
+        password: '',
+        confirmPassword: '',
+        email: '',
+        fullName: '',
+        phone: '',
+        address: '',
+        role: 'Customer'
+      });
+      fetchUsers();
+    } catch (err) {
+      console.error('Lỗi khi tạo người dùng:', err);
+      if (err.response && err.response.data) {
+        showToast('Không thể tạo người dùng: ' + err.response.data, 'error');
+      } else {
+        showToast('Không thể tạo người dùng. Vui lòng thử lại.', 'error');
+      }
+    } finally {
+      setCreateLoading(false);
+    }
+  };
 
   // Chuyển đổi trạng thái hoạt động của người dùng - Cập nhật để khớp với DTO backend
   const toggleUserStatus = async (userId, currentStatus) => {
     try {
       setLoading(true);
-      await axiosClient.patch(`/api/Users/${userId}/status`, {
+      await axiosClient.patch(`/Users/${userId}/status`, {
         IsActive: !currentStatus
       });
       fetchUsers();
@@ -1077,20 +1150,23 @@ const UserManagement = () => {
 
   // Xóa người dùng
   const handleDelete = async (userId) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này? Hành động này không thể hoàn tác.')) {
+    if (window.confirm('Bạn có chắc chắn muốn vô hiệu hóa người dùng này?')) {
       try {
         setLoading(true);
-        await axiosClient.delete(`/api/Users/${userId}`);
+        // Thay vì xóa, chúng ta sẽ vô hiệu hóa người dùng
+        await axiosClient.patch(`/Users/${userId}/status`, {
+          IsActive: false
+        });
         fetchUsers();
-        showToast('Đã xóa người dùng thành công', 'success');
+        showToast('Đã vô hiệu hóa người dùng thành công', 'success');
       } catch (err) {
-        console.error('Lỗi khi xóa người dùng:', err);
+        console.error('Lỗi khi vô hiệu hóa người dùng:', err);
         if (err.response) {
-          setError(`Không thể xóa người dùng: ${err.response.data}`);
-          showToast('Không thể xóa người dùng', 'error');
+          setError(`Không thể vô hiệu hóa người dùng: ${err.response.data}`);
+          showToast('Không thể vô hiệu hóa người dùng', 'error');
         } else {
-          setError('Không thể xóa người dùng. Vui lòng thử lại.');
-          showToast('Không thể xóa người dùng. Vui lòng thử lại.', 'error');
+          setError('Không thể vô hiệu hóa người dùng. Vui lòng thử lại.');
+          showToast('Không thể vô hiệu hóa người dùng. Vui lòng thử lại.', 'error');
         }
       } finally {
         setLoading(false);
@@ -1148,10 +1224,33 @@ const UserManagement = () => {
             <TeamOutlined />
             Quản lý người dùng
           </h1>
-          <button className="refresh-button" onClick={fetchUsers} disabled={loading}>
-            <SyncOutlined spin={loading} />
-            Làm mới dữ liệu
-          </button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button 
+              className="create-button"
+              onClick={() => setShowCreateModal(true)}
+              style={{
+                padding: '10px 20px',
+                background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 15px rgba(82, 196, 26, 0.4)'
+              }}
+            >
+              <PlusOutlined /> Tạo người dùng
+            </button>
+            <button className="refresh-button" onClick={fetchUsers} disabled={loading}>
+              <SyncOutlined spin={loading} />
+              Làm mới dữ liệu
+            </button>
+          </div>
         </Header>
         
         {error && (
@@ -1443,6 +1542,306 @@ const UserManagement = () => {
           )}
         </AnimatePresence>
       </UserManagementContainer>
+      
+      {/* Modal tạo người dùng mới */}
+      {showCreateModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '600px',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
+            position: 'relative'
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '24px',
+              borderBottom: '1px solid #f0f0f0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              position: 'sticky',
+              top: 0,
+              background: 'white',
+              zIndex: 1
+            }}>
+              <h2 style={{ margin: 0, color: '#52c41a', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <PlusOutlined /> Tạo người dùng mới
+              </h2>
+              <button
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setCreateFormData({
+                    username: '',
+                    password: '',
+                    confirmPassword: '',
+                    email: '',
+                    fullName: '',
+                    phone: '',
+                    address: '',
+                    role: 'Customer'
+                  });
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#999',
+                  lineHeight: 1
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '32px' }}>
+              <div style={{ marginBottom: '24px' }}>
+                <h3 style={{ marginBottom: '20px', color: '#333', fontSize: '16px' }}>
+                  Thông tin tài khoản
+                </h3>
+                
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                    Tên đăng nhập: <span style={{ color: 'red' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={createFormData.username}
+                    onChange={(e) => setCreateFormData({ ...createFormData, username: e.target.value })}
+                    placeholder="Nhập tên đăng nhập"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '2px solid #d9d9d9',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                    Mật khẩu: <span style={{ color: 'red' }}>*</span>
+                  </label>
+                  <input
+                    type="password"
+                    value={createFormData.password}
+                    onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
+                    placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '2px solid #d9d9d9',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                    Xác nhận mật khẩu: <span style={{ color: 'red' }}>*</span>
+                  </label>
+                  <input
+                    type="password"
+                    value={createFormData.confirmPassword}
+                    onChange={(e) => setCreateFormData({ ...createFormData, confirmPassword: e.target.value })}
+                    placeholder="Nhập lại mật khẩu"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '2px solid #d9d9d9',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <h3 style={{ marginBottom: '20px', color: '#333', fontSize: '16px' }}>
+                  Thông tin cá nhân
+                </h3>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                    Họ và tên: <span style={{ color: 'red' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={createFormData.fullName}
+                    onChange={(e) => setCreateFormData({ ...createFormData, fullName: e.target.value })}
+                    placeholder="Nhập họ và tên"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '2px solid #d9d9d9',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                    Email: <span style={{ color: 'red' }}>*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={createFormData.email}
+                    onChange={(e) => setCreateFormData({ ...createFormData, email: e.target.value })}
+                    placeholder="Nhập địa chỉ email"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '2px solid #d9d9d9',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                    Số điện thoại:
+                  </label>
+                  <input
+                    type="tel"
+                    value={createFormData.phone}
+                    onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
+                    placeholder="Nhập số điện thoại"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '2px solid #d9d9d9',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                    Địa chỉ:
+                  </label>
+                  <textarea
+                    value={createFormData.address}
+                    onChange={(e) => setCreateFormData({ ...createFormData, address: e.target.value })}
+                    placeholder="Nhập địa chỉ"
+                    rows="3"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '2px solid #d9d9d9',
+                      fontSize: '14px',
+                      boxSizing: 'border-box',
+                      resize: 'vertical'
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                    Vai trò: <span style={{ color: 'red' }}>*</span>
+                  </label>
+                  <select
+                    value={createFormData.role}
+                    onChange={(e) => setCreateFormData({ ...createFormData, role: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '2px solid #d9d9d9',
+                      fontSize: '14px',
+                      boxSizing: 'border-box',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="Customer">Khách hàng</option>
+                    <option value="Staff">Nhân viên</option>
+                    <option value="Admin">Quản trị viên</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setCreateFormData({
+                      username: '',
+                      password: '',
+                      confirmPassword: '',
+                      email: '',
+                      fullName: '',
+                      phone: '',
+                      address: '',
+                      role: 'Customer'
+                    });
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    background: '#f0f0f0',
+                    color: '#666',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '600'
+                  }}
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleCreateUser}
+                  disabled={createLoading}
+                  style={{
+                    padding: '12px 24px',
+                    background: createLoading ? '#d9d9d9' : 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: createLoading ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  {createLoading ? <LoadingOutlined /> : <CheckOutlined />}
+                  {createLoading ? 'Đang tạo...' : 'Tạo người dùng'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Modal và các thành phần khác */}
     </div>

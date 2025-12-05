@@ -27,12 +27,12 @@ const AdminRoute = ({ children }) => {
 
   if (!user) {
     console.log('AdminRoute - No user found, redirecting to login');
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" state={{ from: { pathname: '/admin' } }} replace />;
   }
 
-  if (user.role !== 'Admin') {
-    console.log('AdminRoute - User is not an Admin, redirecting to home');
-    return <Navigate to="/" />;
+  if (user.role !== 'Admin' && user.role !== 'Staff') {
+    console.log('AdminRoute - User is not Admin/Staff, redirecting to home');
+    return <Navigate to="/" replace />;
   }
 
   console.log('AdminRoute - User is Admin, rendering admin content');

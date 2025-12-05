@@ -419,6 +419,17 @@ const ActionButtons = styled.div`
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
     
+    &.view-detail {
+      background: rgba(138, 101, 255, 0.1);
+      color: #8A65FF;
+      
+      &:hover {
+        background: rgba(138, 101, 255, 0.2);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(138, 101, 255, 0.2);
+      }
+    }
+    
     &.edit {
       background: rgba(58, 139, 255, 0.1);
       color: #3A8BFF;
@@ -747,6 +758,84 @@ const ToastMessage = styled(motion.div)`
   }
 `;
 
+const DetailModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(5px);
+`;
+
+const DetailModalContent = styled.div`
+  background: white;
+  border-radius: 20px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .modal-header {
+    padding: 25px 30px;
+    border-bottom: 2px solid #eef0f7;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, #f7faff 0%, #ffffff 100%);
+    border-radius: 20px 20px 0 0;
+
+    h2 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+      color: #2B3674;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      .anticon {
+        color: #304FFE;
+      }
+    }
+
+    .close-button {
+      background: #f7faff;
+      border: 1px solid #e8f0fe;
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #707EAE;
+      transition: all 0.3s;
+
+      &:hover {
+        background: #304FFE;
+        color: white;
+        border-color: #304FFE;
+      }
+    }
+  }
+`;
+
 const LoadingState = styled.div`
   display: flex;
   flex-direction: column;
@@ -1063,6 +1152,10 @@ const AppointmentManagement = () => {
   const [isCompleteModalVisible, setIsCompleteModalVisible] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   
+  // Thêm state cho modal xem chi tiết
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailAppointment, setDetailAppointment] = useState(null);
+  
   // Thêm state cho tính năng quản lý lịch hẹn chưa có nhân viên
   const [showStaffAssignModal, setShowStaffAssignModal] = useState(false);
   const [selectedUnassignedAppointment, setSelectedUnassignedAppointment] = useState(null);
@@ -1108,6 +1201,10 @@ const AppointmentManagement = () => {
     appointmentTime: '',
     notes: ''
   });
+  
+  // State cho searchable user select
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [createTimeSlots, setCreateTimeSlots] = useState([]);
   const [selectedCreateTimeSlot, setSelectedCreateTimeSlot] = useState(null);
   const [loadingCreateTimeSlots, setLoadingCreateTimeSlots] = useState(false);
@@ -1193,12 +1290,9 @@ const AppointmentManagement = () => {
   const extractTimeFromISOString = (isoString) => {
     if (!isoString) return '';
     try {
-      const date = new Date(isoString);
-      return date.toLocaleTimeString('vi-VN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      });
+      // Convert UTC to Vietnam timezone
+      const vietnamTime = dayjs.utc(isoString).tz('Asia/Ho_Chi_Minh');
+      return vietnamTime.format('HH:mm');
     } catch (error) {
       console.error('Lỗi khi trích xuất thời gian:', error);
       return '';
@@ -1212,6 +1306,20 @@ const AppointmentManagement = () => {
     fetchPets();
     fetchServices();
   }, []);
+  
+  // Close user dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showUserDropdown && !event.target.closest('.user-search-container')) {
+        setShowUserDropdown(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserDropdown]);
 
   // Auto-select current appointment time slot when editTimeSlots changes
   useEffect(() => {
@@ -1697,6 +1805,39 @@ const AppointmentManagement = () => {
       // Reset selected time slot when parameters change
       setSelectedEditTimeSlot(null);
     }
+  };
+
+  // Xem chi tiết lịch hẹn
+  const handleViewDetail = async (appointment) => {
+    try {
+      setShowDetailModal(true);
+      setDetailAppointment(null); // Reset trước khi load
+      
+      // Gọi API để lấy chi tiết đầy đủ
+      const detailData = await appointmentService.getAppointmentById(appointment.appointmentId);
+      console.log('📋 Chi tiết appointment từ API:', detailData);
+      
+      if (detailData) {
+        // Chuẩn hóa appointmentDate về Date object
+        if (detailData.appointmentDate && typeof detailData.appointmentDate === 'string') {
+          detailData.appointmentDate = new Date(detailData.appointmentDate);
+        }
+        setDetailAppointment(detailData);
+      } else {
+        // Fallback về appointment hiện tại nếu API lỗi
+        setDetailAppointment(appointment);
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy chi tiết lịch hẹn:', error);
+      // Fallback về appointment hiện tại
+      setDetailAppointment(appointment);
+    }
+  };
+
+  // Đóng modal chi tiết
+  const handleCloseDetailModal = () => {
+    setShowDetailModal(false);
+    setDetailAppointment(null);
   };
 
   // Bắt đầu chỉnh sửa lịch hẹn
@@ -2496,11 +2637,9 @@ const AppointmentManagement = () => {
   const formatTime = (dateString) => {
     if (!dateString) return '';
     try {
-      const date = new Date(dateString);
-      return date.toLocaleTimeString('vi-VN', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+      // Convert UTC to Vietnam timezone
+      const vietnamTime = dayjs.utc(dateString).tz('Asia/Ho_Chi_Minh');
+      return vietnamTime.format('HH:mm');
     } catch (error) {
       console.error('Lỗi định dạng giờ:', error);
       return '';
@@ -2532,8 +2671,11 @@ const AppointmentManagement = () => {
 
   // Lọc danh sách lịch hẹn dựa trên tìm kiếm và bộ lọc
   const filteredAppointments = appointments.filter(appointment => {
+    const user = users.find(u => u.userId === appointment.userId);
     const matchesSearch = 
       getUserName(appointment.userId)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user?.phone && user.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (user?.email && user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (appointment.notes && appointment.notes.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = filterStatus === '' || appointment.status === filterStatus;
@@ -2931,7 +3073,8 @@ const AppointmentManagement = () => {
           }
           
           try {
-            const aptStartTime = dayjs(apt.appointmentDate).format('HH:mm');
+            // Convert UTC appointmentDate to Vietnam timezone
+            const aptStartTime = dayjs.utc(apt.appointmentDate).tz('Asia/Ho_Chi_Minh').format('HH:mm');
             const aptDuration = apt.duration || apt.serviceDuration || apt.service?.duration || 30;
             const aptEndTime = dayjs(`2023-01-01T${aptStartTime}`).add(aptDuration, 'minute').format('HH:mm');
             
@@ -2979,7 +3122,8 @@ const AppointmentManagement = () => {
           }
           
           try {
-            const aptStartTime = dayjs(apt.appointmentDate).format('HH:mm');
+            // Convert UTC appointmentDate to Vietnam timezone
+            const aptStartTime = dayjs.utc(apt.appointmentDate).tz('Asia/Ho_Chi_Minh').format('HH:mm');
             const aptDuration = apt.duration || apt.serviceDuration || apt.service?.duration || 30;
             const aptEndTime = dayjs(`2023-01-01T${aptStartTime}`).add(aptDuration, 'minute').format('HH:mm');
             
@@ -3212,34 +3356,83 @@ const AppointmentManagement = () => {
     <AppointmentContainer>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h1 style={{ margin: 0 }}><CalendarOutlined /> Quản lý lịch hẹn</h1>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          style={{
-            padding: '10px 20px',
-            background: 'linear-gradient(135deg, #304FFE 0%, #304FFE 100%)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            transition: 'all 0.3s ease',
-            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
-          }}
-        >
-          <PlusOutlined /> Tạo lịch hẹn mới
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={async () => {
+              setLoading(true);
+              await Promise.all([
+                fetchAppointments(),
+                fetchUsers(),
+                fetchPets(),
+                fetchServices()
+              ]);
+              setLoading(false);
+              setToast({
+                show: true,
+                message: 'Đã tải lại dữ liệu!',
+                type: 'success'
+              });
+            }}
+            disabled={loading}
+            style={{
+              padding: '10px 20px',
+              background: loading ? '#f0f0f0' : 'linear-gradient(135deg, #05CD99 0%, #00B894 100%)',
+              color: loading ? '#999' : 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.3s ease',
+              boxShadow: loading ? 'none' : '0 4px 15px rgba(5, 205, 153, 0.4)'
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(5, 205, 153, 0.6)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 15px rgba(5, 205, 153, 0.4)';
+              }
+            }}
+          >
+            <SyncOutlined spin={loading} /> {loading ? 'Đang tải...' : 'Tải lại'}
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            style={{
+              padding: '10px 20px',
+              background: 'linear-gradient(135deg, #304FFE 0%, #304FFE 100%)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
+            }}
+          >
+            <PlusOutlined /> Tạo lịch hẹn mới
+          </button>
+        </div>
       </div>
       
       {error && (
@@ -3256,7 +3449,7 @@ const AppointmentManagement = () => {
           <SearchOutlined />
           <input
             type="text"
-            placeholder="Tìm kiếm theo tên khách hàng hoặc ghi chú"
+            placeholder="Tìm kiếm theo tên, số điện thoại, email hoặc ghi chú"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -3531,7 +3724,13 @@ const AppointmentManagement = () => {
           <tbody>
             {filteredAppointments.length > 0 ? (
               currentAppointments.map(appointment => (
-                <tr key={appointment.appointmentId}>
+                <tr 
+                  key={appointment.appointmentId}
+                  onClick={() => handleViewDetail(appointment)}
+                  style={{ cursor: 'pointer' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f7faff'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ''}
+                >
                   <td>{appointment.appointmentId}</td>
                   <td>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -3598,7 +3797,7 @@ const AppointmentManagement = () => {
                       {statusEnToVi[appointment.status] || appointment.status}
                     </StatusBadge>
                   </td>
-                  <td>
+                  <td onClick={(e) => e.stopPropagation()}>
                     <ActionButtons>
                       {/* Nút gán nhân viên cho lịch hẹn chưa có nhân viên */}
                       {isUnassignedAppointment(appointment) && (
@@ -4954,11 +5153,13 @@ const AppointmentManagement = () => {
             background: 'white',
             borderRadius: '16px',
             width: '100%',
-            maxWidth: '1000px',
-            maxHeight: '90vh',
+            maxWidth: '1200px',
+            height: '85vh',
             overflow: 'auto',
             boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
-            position: 'relative'
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column'
           }}>
             {/* Header */}
             <div style={{
@@ -4991,6 +5192,8 @@ const AppointmentManagement = () => {
                   setCreateTimeSlots([]);
                   setCreatePetBusySlots([]);
                   setCreatePetAppointments([]);
+                  setUserSearchTerm('');
+                  setShowUserDropdown(false);
                   setUserPets([]);
                   setAvailableStaffForCreate([]);
                 }}
@@ -5008,59 +5211,166 @@ const AppointmentManagement = () => {
             </div>
 
             {/* Body */}
-            <div style={{ padding: '24px' }}>
+            <div style={{ padding: '32px', flex: 1, overflowY: 'auto' }}>
               {!createFormData.userId ? (
                 // Bước 1: Chọn khách hàng
                 <div>
-                  <h3 style={{ marginBottom: '16px', color: '#333' }}>Bước 1: Chọn khách hàng</h3>
-                  <div style={{ marginBottom: '20px' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                  <h3 style={{ marginBottom: '20px', color: '#333', fontSize: '20px' }}>Bước 1: Tìm và chọn khách hàng</h3>
+                  <div style={{ marginBottom: '24px' }}>
+                    <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', fontSize: '15px' }}>
                       Khách hàng: <span style={{ color: 'red' }}>*</span>
                     </label>
-                    <select
-                      value={createFormData.userId}
-                      onChange={(e) => {
-                        const userId = parseInt(e.target.value);
-                        console.log('👤 Selected userId:', userId);
-                        console.log('🐾 All pets:', pets);
-                        console.log('🐾 Pets length:', pets.length);
-                        
-                        setCreateFormData({
-                          ...createFormData,
-                          userId: e.target.value,
-                          petId: '',
-                          serviceId: '',
-                          staffId: '',
-                          appointmentDate: '',
-                          appointmentTime: ''
-                        });
-                        
-                        // Lọc thú cưng của khách hàng này
-                        const filteredPets = pets.filter(p => {
-                          console.log(`🔍 Checking pet ${p.petId}: userId=${p.userId}, name=${p.name}`);
-                          return p.userId === userId;
-                        });
-                        
-                        console.log('✅ Filtered pets for user:', filteredPets);
-                        setUserPets(filteredPets);
-                        setSelectedCreateTimeSlot(null);
-                      }}
-                      style={{
-                        width: '100%',
+                    
+                    {/* Searchable User Select */}
+                    <div className="user-search-container" style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        placeholder="Tìm theo tên, số điện thoại hoặc email..."
+                        value={userSearchTerm}
+                        onChange={(e) => {
+                          setUserSearchTerm(e.target.value);
+                          setShowUserDropdown(true);
+                        }}
+                        onFocus={() => setShowUserDropdown(true)}
+                        style={{
+                          width: '100%',
+                          padding: '16px 50px 16px 16px',
+                          borderRadius: '10px',
+                          border: '2px solid #d9d9d9',
+                          fontSize: '16px',
+                          boxSizing: 'border-box',
+                          transition: 'border-color 0.3s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = '#304FFE';
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!showUserDropdown) {
+                            e.currentTarget.style.borderColor = '#d9d9d9';
+                          }
+                        }}
+                      />
+                      <SearchOutlined 
+                        style={{ 
+                          position: 'absolute', 
+                          right: '16px', 
+                          top: '50%', 
+                          transform: 'translateY(-50%)',
+                          color: '#999',
+                          fontSize: '20px'
+                        }} 
+                      />
+                      
+                      {/* Dropdown list */}
+                      {showUserDropdown && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          maxHeight: '400px',
+                          overflowY: 'auto',
+                          background: 'white',
+                          border: '2px solid #304FFE',
+                          borderRadius: '10px',
+                          marginTop: '8px',
+                          zIndex: 1000,
+                          boxShadow: '0 8px 24px rgba(48, 79, 254, 0.15)'
+                        }}>
+                          {(() => {
+                            const filteredUsers = users.filter(user => {
+                              const searchLower = userSearchTerm.toLowerCase();
+                              return (
+                                user.fullName?.toLowerCase().includes(searchLower) ||
+                                user.phone?.toLowerCase().includes(searchLower) ||
+                                user.email?.toLowerCase().includes(searchLower)
+                              );
+                            });
+                            
+                            if (filteredUsers.length === 0) {
+                              return (
+                                <div style={{ 
+                                  padding: '24px', 
+                                  textAlign: 'center', 
+                                  color: '#999',
+                                  fontSize: '15px'
+                                }}>
+                                  Không tìm thấy khách hàng
+                                </div>
+                              );
+                            }
+                            
+                            return filteredUsers.map(user => (
+                              <div
+                                key={user.userId}
+                                onClick={() => {
+                                  const userId = user.userId;
+                                  console.log('👤 Selected userId:', userId);
+                                  console.log('🐾 All pets:', pets);
+                                  
+                                  setCreateFormData({
+                                    ...createFormData,
+                                    userId: userId.toString(),
+                                    petId: '',
+                                    serviceId: '',
+                                    staffId: '',
+                                    appointmentDate: '',
+                                    appointmentTime: ''
+                                  });
+                                  
+                                  setUserSearchTerm(`${user.fullName} - ${user.phone || user.email}`);
+                                  setShowUserDropdown(false);
+                                  
+                                  // Lọc thú cưng của khách hàng này
+                                  const filteredPets = pets.filter(p => p.userId === userId);
+                                  console.log('✅ Filtered pets for user:', filteredPets);
+                                  setUserPets(filteredPets);
+                                  setSelectedCreateTimeSlot(null);
+                                }}
+                                style={{
+                                  padding: '16px 20px',
+                                  cursor: 'pointer',
+                                  borderBottom: '1px solid #f0f0f0',
+                                  transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = '#f0f7ff';
+                                  e.currentTarget.style.borderLeft = '4px solid #304FFE';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = 'white';
+                                  e.currentTarget.style.borderLeft = 'none';
+                                }}
+                              >
+                                <div style={{ fontWeight: '600', color: '#333', marginBottom: '6px', fontSize: '16px' }}>
+                                  {user.fullName}
+                                </div>
+                                <div style={{ fontSize: '14px', color: '#666' }}>
+                                  {user.phone && <span>{user.phone}</span>}
+                                  {user.phone && user.email && <span style={{ margin: '0 10px', color: '#999' }}>|</span>}
+                                  {user.email && <span>{user.email}</span>}
+                                </div>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Selected user info */}
+                    {createFormData.userId && (
+                      <div style={{
+                        marginTop: '12px',
                         padding: '12px',
+                        background: '#e6f7ff',
                         borderRadius: '8px',
-                        border: '2px solid #d9d9d9',
-                        fontSize: '14px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <option value="">-- Chọn khách hàng --</option>
-                      {users.map(user => (
-                        <option key={user.userId} value={user.userId}>
-                          {user.fullName} ({user.email})
-                        </option>
-                      ))}
-                    </select>
+                        border: '1px solid #91d5ff'
+                      }}>
+                        <div style={{ fontSize: '14px', color: '#1890ff' }}>
+                          ✓ Đã chọn: {users.find(u => u.userId === parseInt(createFormData.userId))?.fullName}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   <div style={{ 
@@ -5070,7 +5380,7 @@ const AppointmentManagement = () => {
                     border: '1px solid #91d5ff'
                   }}>
                     <p style={{ margin: 0, color: '#1890ff', fontSize: '14px' }}>
-                      💡 <strong>Hướng dẫn:</strong> Chọn khách hàng để tiếp tục đặt lịch hẹn cho họ
+                      💡 <strong>Hướng dẫn:</strong> Tìm kiếm khách hàng theo tên, số điện thoại hoặc email, sau đó chọn để tiếp tục
                     </p>
                   </div>
                 </div>
@@ -5154,6 +5464,217 @@ const AppointmentManagement = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal xem chi tiết lịch hẹn */}
+      {showDetailModal && detailAppointment && (
+        <DetailModalOverlay onClick={handleCloseDetailModal}>
+          <DetailModalContent onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px', width: '90%' }}>
+            <div className="modal-header">
+              <h2><InfoCircleOutlined /> Chi tiết lịch hẹn #{detailAppointment.appointmentId}</h2>
+              <button className="close-button" onClick={handleCloseDetailModal}>
+                <CloseOutlined />
+              </button>
+            </div>
+            
+            <div className="modal-body" style={{ padding: '30px' }}>
+              {!detailAppointment ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                  <SyncOutlined spin style={{ fontSize: '40px', color: '#304FFE' }} />
+                  <p style={{ marginTop: '20px', color: '#707EAE' }}>Đang tải thông tin...</p>
+                </div>
+              ) : (
+                <>
+                  {/* Thông tin khách hàng */}
+                  <div style={{ 
+                    background: '#304FFE',
+                    padding: '20px',
+                    borderRadius: '12px',
+                    color: 'white',
+                    marginBottom: '20px'
+                  }}>
+                    <h3 style={{ margin: '0 0 15px 0', color: 'white', fontSize: '18px' }}>
+                      <UserOutlined /> Thông tin khách hàng
+                    </h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                      <div>
+                        <div style={{ opacity: 0.9, fontSize: '13px', marginBottom: '5px' }}>Tên khách hàng</div>
+                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
+                          {detailAppointment.user?.fullName || users.find(u => u.userId === detailAppointment.userId)?.fullName || 'N/A'}
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ opacity: 0.9, fontSize: '13px', marginBottom: '5px' }}>Số điện thoại</div>
+                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
+                          {detailAppointment.user?.phone || users.find(u => u.userId === detailAppointment.userId)?.phone || 'N/A'}
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ opacity: 0.9, fontSize: '13px', marginBottom: '5px' }}>Email</div>
+                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
+                          {detailAppointment.user?.email || users.find(u => u.userId === detailAppointment.userId)?.email || 'N/A'}
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ opacity: 0.9, fontSize: '13px', marginBottom: '5px' }}>Địa chỉ</div>
+                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
+                          {detailAppointment.user?.address || users.find(u => u.userId === detailAppointment.userId)?.address || 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Thông tin thú cưng */}
+                  <div style={{ 
+                    background: '#FF6B9D',
+                    padding: '20px',
+                    borderRadius: '12px',
+                    color: 'white',
+                    marginBottom: '20px'
+                  }}>
+                    <h3 style={{ margin: '0 0 15px 0', color: 'white', fontSize: '18px' }}>
+                      🐾 Thông tin thú cưng
+                    </h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                      <div>
+                        <div style={{ opacity: 0.9, fontSize: '13px', marginBottom: '5px' }}>Tên thú cưng</div>
+                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
+                          {detailAppointment.pet?.name || pets.find(p => p.petId === detailAppointment.petId)?.name || 'N/A'}
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ opacity: 0.9, fontSize: '13px', marginBottom: '5px' }}>Giống</div>
+                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
+                          {detailAppointment.pet?.breed || pets.find(p => p.petId === detailAppointment.petId)?.breed || 'N/A'}
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ opacity: 0.9, fontSize: '13px', marginBottom: '5px' }}>Tuổi</div>
+                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
+                          {detailAppointment.pet?.age || pets.find(p => p.petId === detailAppointment.petId)?.age || 'N/A'} tuổi
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ opacity: 0.9, fontSize: '13px', marginBottom: '5px' }}>Cân nặng</div>
+                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
+                          {detailAppointment.pet?.weight || pets.find(p => p.petId === detailAppointment.petId)?.weight || 'N/A'} kg
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Thông tin lịch hẹn */}
+              {detailAppointment && (
+                <div style={{ 
+                  background: '#f7faff',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  border: '2px solid #e8f0fe'
+                }}>
+                  <h3 style={{ margin: '0 0 15px 0', color: '#2B3674', fontSize: '18px' }}>
+                    <CalendarOutlined /> Thông tin lịch hẹn
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                    <div>
+                      <div style={{ color: '#707EAE', fontSize: '13px', marginBottom: '5px' }}>Dịch vụ</div>
+                      <div style={{ fontWeight: 'bold', color: '#2B3674', fontSize: '15px' }}>
+                        {detailAppointment.service?.serviceName || detailAppointment.service?.name || getServiceName(detailAppointment.serviceId)}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#707EAE', fontSize: '13px', marginBottom: '5px' }}>Giá dịch vụ</div>
+                      <div style={{ fontWeight: 'bold', color: '#05CD99', fontSize: '15px' }}>
+                        {(detailAppointment.service?.price || services.find(s => s.serviceId === detailAppointment.serviceId)?.price || 0).toLocaleString('vi-VN')}₫
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#707EAE', fontSize: '13px', marginBottom: '5px' }}>Ngày hẹn</div>
+                      <div style={{ fontWeight: 'bold', color: '#2B3674', fontSize: '15px' }}>
+                        {formatDate(detailAppointment.appointmentDate)}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#707EAE', fontSize: '13px', marginBottom: '5px' }}>Giờ hẹn</div>
+                      <div style={{ fontWeight: 'bold', color: '#2B3674', fontSize: '15px' }}>
+                        {formatTime(detailAppointment.appointmentDate)}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#707EAE', fontSize: '13px', marginBottom: '5px' }}>Nhân viên</div>
+                      <div style={{ fontWeight: 'bold', color: '#2B3674', fontSize: '15px' }}>
+                        {detailAppointment.staff?.fullName || (detailAppointment.staffId ? getUserName(detailAppointment.staffId) : 'Chưa phân công')}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#707EAE', fontSize: '13px', marginBottom: '5px' }}>Trạng thái</div>
+                      <div>
+                        <StatusBadge className={getStatusBadgeClass(detailAppointment.status)}>
+                          {getStatusIcon(detailAppointment.status)}
+                          {statusEnToVi[detailAppointment.status] || detailAppointment.status}
+                        </StatusBadge>
+                      </div>
+                    </div>
+                  </div>
+
+                {/* Ghi chú */}
+                {detailAppointment.notes && (
+                  <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e8f0fe' }}>
+                    <div style={{ color: '#707EAE', fontSize: '13px', marginBottom: '8px' }}>Ghi chú</div>
+                    <div style={{ 
+                      background: 'white',
+                      padding: '15px',
+                      borderRadius: '8px',
+                      color: '#2B3674',
+                      fontSize: '14px',
+                      lineHeight: '1.6'
+                    }}>
+                      {detailAppointment.notes}
+                    </div>
+                  </div>
+                )}
+
+                {/* Thông tin thời gian */}
+                <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e8f0fe' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', fontSize: '13px' }}>
+                    <div>
+                      <div style={{ color: '#707EAE', marginBottom: '5px' }}>Ngày tạo</div>
+                      <div style={{ color: '#2B3674' }}>
+                        {dayjs(detailAppointment.createdAt).format('DD/MM/YYYY HH:mm')}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#707EAE', marginBottom: '5px' }}>Cập nhật lần cuối</div>
+                      <div style={{ color: '#2B3674' }}>
+                        {dayjs(detailAppointment.updatedAt).format('DD/MM/YYYY HH:mm')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            </div>
+
+            <div className="modal-footer" style={{ padding: '20px 30px', borderTop: '1px solid #eef0f7' }}>
+              <button 
+                className="cancel-button" 
+                onClick={handleCloseDetailModal}
+                style={{
+                  padding: '10px 24px',
+                  background: '#f7faff',
+                  border: '1px solid #e8f0fe',
+                  borderRadius: '8px',
+                  color: '#2B3674',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Đóng
+              </button>
+            </div>
+          </DetailModalContent>
+        </DetailModalOverlay>
       )}
     </AppointmentContainer>
   );

@@ -4,6 +4,7 @@ wwwroot\uploads\pets\35656d45-2e9b-4a77-9d9f-9c1503de7f33.jpg
 wwwroot\uploads\pets\572fd76b-cb22-43b8-a827-fd7f50820522.png
 wwwroot\uploads\pets\6445ca50-1a62-43b2-9d60-74f418bfce87.png
 wwwroot\uploads\pets\6f06a31a-9be5-4156-9fbe-d8a974151c3a.png
+wwwroot\uploads\pets\813397b0-669d-4033-a7eb-a50d1b642854.png
 wwwroot\uploads\pets\84206cd4-262a-4a03-9ed5-14ffce6fbb6e.jpg
 wwwroot\uploads\pets\a0382061-dcb5-4da0-9663-d4cc88814fab.png
 wwwroot\uploads\pets\a726f084-035a-42c3-a416-9ed013f394f8.jpg
@@ -43,6 +44,7 @@ wwwroot\uploads\products\ea197c9e-0bfa-489c-8ba6-7822bd227f3b.jpg
 wwwroot\uploads\reviews\738feece-e7cc-4bc2-b8f7-612f540eaf54.jpg
 wwwroot\uploads\reviews\8f846e07-db7b-46c0-bb75-97c8d8a853f1.jpg
 wwwroot\uploads\services\13e3a5a2-541c-4f99-becc-0d8dc5962e9f.png
+wwwroot\uploads\services\16a7691b-2c5d-4689-b330-065d6861e80f.png
 wwwroot\uploads\services\2134703c-d36c-4f5a-ba3c-e3163e5c80b6.png
 wwwroot\uploads\services\45fd8172-4f89-4cd1-8539-df4126cbe97d.jpg
 wwwroot\uploads\services\4fe74b86-350e-449b-9d27-d38964d05f3e.png
@@ -54,5 +56,3 @@ wwwroot\uploads\services\9f5f77e2-d07d-4c1e-8b36-14b0d87c4d02.png
 wwwroot\uploads\services\a5c4a7cd-24b1-4bbc-a754-c32f1a1e9b17.jpg
 wwwroot\uploads\services\c9a81bd2-5a71-4e2f-8a90-704af7b336c6.jpg
 wwwroot\uploads\services\cattia.jpg
-wwwroot\uploads\services\16a7691b-2c5d-4689-b330-065d6861e80f.png
-wwwroot\uploads\pets\813397b0-669d-4033-a7eb-a50d1b642854.png

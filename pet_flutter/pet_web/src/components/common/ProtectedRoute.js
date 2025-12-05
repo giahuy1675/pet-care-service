@@ -15,6 +15,12 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
+  // Nếu là Admin/Staff, redirect về trang admin
+  if (user.role === 'Admin' || user.role === 'Staff') {
+    console.log('ProtectedRoute - Admin/Staff trying to access user page, redirecting to /admin');
+    return <Navigate to="/admin" replace />;
+  }
+  
   return children;
 };
 

@@ -229,16 +229,17 @@ const LoginForm = () => {
 
       // Đặt thời gian chờ ngắn để hiển thị hiệu ứng thành công
       setTimeout(() => {
-        // Lấy trang đích từ state (được truyền từ ProtectedRoute)
-        const from = location.state?.from?.pathname || '/';
-        
-        // Kiểm tra vai trò người dùng và chuyển hướng tương ứng
-        if (result.user && result.user.role === 'Admin') {
-          console.log('User is Admin, redirecting to /admin');
-          navigate('/admin');
+        // Kiểm tra vai trò người dùng TRƯỚC để admin không vào trang user
+        if (result.user && (result.user.role === 'Admin' || result.user.role === 'Staff')) {
+          console.log('User is Admin/Staff, redirecting to /admin');
+          navigate('/admin', { replace: true });
         } else {
-          console.log('User is not Admin, redirecting to:', from);
-          navigate(from, { replace: true });
+          // Lấy trang đích từ state (được truyền từ ProtectedRoute)
+          const from = location.state?.from?.pathname || '/';
+          // Đảm bảo user không vào trang admin
+          const destination = from.startsWith('/admin') ? '/' : from;
+          console.log('User is Customer, redirecting to:', destination);
+          navigate(destination, { replace: true });
         }
       }, 800);
       
@@ -295,13 +296,17 @@ const LoginForm = () => {
       
       // Điều hướng dựa vào vai trò
       setTimeout(() => {
-        // Lấy trang đích từ state (được truyền từ ProtectedRoute)
-        const from = location.state?.from?.pathname || '/';
-        
-        if (response.data.user && response.data.user.role === 'Admin') {
-          navigate('/admin');
+        // Kiểm tra vai trò TRƯỚC để admin không vào trang user
+        if (response.data.user && (response.data.user.role === 'Admin' || response.data.user.role === 'Staff')) {
+          console.log('Google login: User is Admin/Staff, redirecting to /admin');
+          navigate('/admin', { replace: true });
         } else {
-          navigate(from, { replace: true });
+          // Lấy trang đích từ state (được truyền từ ProtectedRoute)
+          const from = location.state?.from?.pathname || '/';
+          // Đảm bảo user không vào trang admin
+          const destination = from.startsWith('/admin') ? '/' : from;
+          console.log('Google login: User is Customer, redirecting to:', destination);
+          navigate(destination, { replace: true });
         }
       }, 800);
       

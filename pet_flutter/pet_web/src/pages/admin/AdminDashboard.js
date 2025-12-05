@@ -15,6 +15,7 @@ import StaffAccountCreation from '../../components/admin/StaffAccountCreation';
 import StaffServiceAssignment from '../../components/admin/StaffServiceAssignment';
 import OrderManagement from '../../components/admin/OrderManagement';
 import AdminReviewManagement from '../../components/admin/AdminReviewManagement';
+import DashboardStatistics from '../../components/admin/DashboardStatistics';
 import axiosClient from '../../utils/axiosClient';
 import './admin-dashboard.css';
 
@@ -663,132 +664,7 @@ const AdminDashboard = () => {
   // Render các nội dung khác nhau tùy thuộc vào tab được chọn
   const renderContent = () => {
     if (activeTab === 'dashboard') {
-      return (
-        <PlaceholderContent
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 100, damping: 15 }}
-        >
-          <h2 className="section-title">Tổng quan</h2>
-          <p>Chào mừng đến với bảng điều khiển quản trị. Dưới đây là tổng quan về hoạt động của hệ thống dịch vụ thú cưng.</p>
-          
-          {error && (
-            <ErrorMessage
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            >
-              <ExclamationCircleOutlined />
-              {error}
-            </ErrorMessage>
-          )}
-          
-          {loading && stats.users === 0 ? (
-            <LoadingStats
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="loader"></div>
-              <p>Đang tải thông tin thống kê...</p>
-            </LoadingStats>
-          ) : (
-            <>
-              <StatsGrid>
-                <StatCard 
-                  bgColor="#3498db" 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 100, damping: 15, delay: 0.1 }}
-                  whileHover={{ y: -10, boxShadow: "0 15px 30px rgba(0,0,0,0.1)" }}
-                  className="stat-card-animation"
-                >
-                  <div className="stat-icon users">
-                    <TeamOutlined />
-                  </div>
-                  <div className="stat-details">
-                    <h3>Người dùng</h3>
-                    <p className="stat-value">{stats.users}</p>
-                    <p className="stat-label">Tổng số người dùng</p>
-                  </div>
-                </StatCard>
-                
-                <StatCard 
-                  bgColor="#e74c3c" 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 100, damping: 15, delay: 0.2 }}
-                  whileHover={{ y: -10, boxShadow: "0 15px 30px rgba(0,0,0,0.1)" }}
-                  className="stat-card-animation"
-                >
-                  <div className="stat-icon pets">
-                    <HeartOutlined />
-                  </div>
-                  <div className="stat-details">
-                    <h3>Thú cưng</h3>
-                    <p className="stat-value">{stats.pets}</p>
-                    <p className="stat-label">Thú cưng đã đăng ký</p>
-                  </div>
-                </StatCard>
-                
-                <StatCard 
-                  bgColor="#2ecc71" 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 100, damping: 15, delay: 0.3 }}
-                  whileHover={{ y: -10, boxShadow: "0 15px 30px rgba(0,0,0,0.1)" }}
-                  className="stat-card-animation"
-                >
-                  <div className="stat-icon appointments">
-                    <CalendarOutlined />
-                  </div>
-                  <div className="stat-details">
-                    <h3>Lịch hẹn</h3>
-                    <p className="stat-value">{stats.appointments}</p>
-                    <p className="stat-label">Lịch hẹn đã đặt</p>
-                  </div>
-                </StatCard>
-                
-                <StatCard 
-                  bgColor="#f39c12" 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 100, damping: 15, delay: 0.4 }}
-                  whileHover={{ y: -10, boxShadow: "0 15px 30px rgba(0,0,0,0.1)" }}
-                  className="stat-card-animation"
-                >
-                  <div className="stat-icon services">
-                    <CustomerServiceOutlined />
-                  </div>
-                  <div className="stat-details">
-                    <h3>Dịch vụ</h3>
-                    <p className="stat-value">{stats.services}</p>
-                    <p className="stat-label">Dịch vụ hiện có</p>
-                  </div>
-                </StatCard>
-                
-                <StatCard 
-                  bgColor="#9b59b6" 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 100, damping: 15, delay: 0.5 }}
-                  whileHover={{ y: -10, boxShadow: "0 15px 30px rgba(0,0,0,0.1)" }}
-                  className="stat-card-animation"
-                >
-                  <div className="stat-icon orders">
-                    <ShoppingCartOutlined />
-                  </div>
-                  <div className="stat-details">
-                    <h3>Đơn hàng</h3>
-                    <p className="stat-value">{stats.orders || 0}</p>
-                    <p className="stat-label">Tổng đơn hàng</p>
-                  </div>
-                </StatCard>
-              </StatsGrid>
-            </>
-          )}
-        </PlaceholderContent>
-      );
+      return <DashboardStatistics />;
     } else if (activeTab === 'users') {
       return <UserManagement />;
     } else if (activeTab === 'appointments') {

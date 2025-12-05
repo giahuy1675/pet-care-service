@@ -467,14 +467,14 @@ namespace BE_PetWeb_API.Controllers
             }
         }
 
-        // DELETE: api/Users/5 - Soft delete only (vô hiệu hóa tài khoản)
+        // DELETE: api/Users/5 - Hard delete (xóa vĩnh viễn)
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             try
             {
-                _logger.LogInformation($"Bắt đầu vô hiệu hóa người dùng ID: {id}");
+                _logger.LogInformation($"Bắt đầu xóa người dùng ID: {id}");
 
                 var user = await _context.Users.FindAsync(id);
                 if (user == null)
@@ -483,21 +483,18 @@ namespace BE_PetWeb_API.Controllers
                     return NotFound("Không tìm thấy người dùng");
                 }
 
-                // Không vô hiệu hóa tài khoản admin mặc định
+                // Không xóa tài khoản admin mặc định
                 if (user.Role == "Admin" && user.Username == "admin")
                 {
-                    _logger.LogWarning("Từ chối vô hiệu hóa tài khoản admin mặc định");
-                    return BadRequest("Không thể vô hiệu hóa tài khoản admin mặc định");
+                    _logger.LogWarning("Từ chối xóa tài khoản admin mặc định");
+                    return BadRequest("Không thể xóa tài khoản admin mặc định");
                 }
 
-                // Soft delete - chỉ vô hiệu hóa tài khoản
-                user.IsActive = false;
-                user.UpdatedAt = _dateTimeService.Now;
-                
-                _context.Entry(user).State = EntityState.Modified;
+                // Hard delete - xóa vĩnh viễn khỏi database
+                _context.Users.Remove(user);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation($"Vô hiệu hóa người dùng {id} thành công");
+                _logger.LogInformation($"Xóa người dùng {id} thành công");
                 return Ok(new { message = "Đã vô hiệu hóa tài khoản người dùng thành công" });
             }
             catch (Exception ex)

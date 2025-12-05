@@ -109,6 +109,20 @@ export const NotificationProvider = ({ children }) => {
   // Show welcome notification
   const showWelcomeNotification = useCallback(() => {
     if (!hasShownWelcome && !notificationDisplayed.current) {
+      // Kiểm tra xem user có phải admin không
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          if (user.role === 'Admin') {
+            // Không hiển thị popup cho admin
+            return;
+          }
+        } catch (e) {
+          console.error('Error parsing user data:', e);
+        }
+      }
+      
       notificationDisplayed.current = true;
       
       setTimeout(() => {

@@ -296,7 +296,8 @@ const AppContent = () => {
         {/* Chỉ hiển thị Footer nếu không phải trang admin */}
         {!isAdminPage && <Footer />}
         
-        <ChatbotSupport />
+        {/* Chỉ hiển thị ChatbotSupport nếu không phải trang admin */}
+        {!isAdminPage && <ChatbotSupport />}
       </div>
     </NotificationProvider>
   );
