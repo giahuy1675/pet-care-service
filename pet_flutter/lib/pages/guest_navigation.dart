@@ -1,59 +1,62 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:convex_bottom_bar/convex_bottom_bar.dart';
+import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 import 'guest_home_page.dart';
 import 'guest_services_page.dart';
 import 'guest_booking_page.dart';
 import 'guest_profile_page.dart';
 
-class GuestNavigation extends StatefulWidget {
+class GuestNavigation extends StatelessWidget {
   const GuestNavigation({super.key});
 
-  @override
-  State<GuestNavigation> createState() => _GuestNavigationState();
-}
-
-class _GuestNavigationState extends State<GuestNavigation> {
-  int _index = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final pages = <Widget>[
-      const GuestHomePageContent(), // Tách content từ GuestHomePage
-      const GuestServicesPage(),
-      const GuestBookingPage(),
-      const GuestProfilePage(),
-    ];
-
-    return Scaffold(
-      body: IndexedStack(index: _index, children: pages),
-      bottomNavigationBar: ConvexAppBar(
-        style: TabStyle.react,
-        backgroundColor: const Color(0xFF304FFE),
-        activeColor: Colors.white,
-        color: Colors.white70,
-        height: 65,
-        curveSize: 90,
-        top: -30,
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF304FFE),
-            const Color(0xFF1976D2),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  List<PersistentTabConfig> _tabs() => [
+        PersistentTabConfig(
+          screen: const GuestHomePageContent(),
+          item: ItemConfig(
+            icon: const Icon(Icons.home),
+            title: "Trang chủ",
+            activeForegroundColor: Colors.white,
+            inactiveForegroundColor: Colors.white70,
+          ),
         ),
-        items: [
-          TabItem(icon: FontAwesomeIcons.house, title: 'Trang chủ'),
-          TabItem(icon: FontAwesomeIcons.paw, title: 'Dịch vụ'),
-          TabItem(icon: FontAwesomeIcons.calendarCheck, title: 'Đặt lịch'),
-          TabItem(icon: FontAwesomeIcons.user, title: 'Tài khoản'),
-        ],
-        initialActiveIndex: _index,
-        onTap: (int i) => setState(() => _index = i),
-      ),
-    );
-  }
+        PersistentTabConfig(
+          screen: const GuestServicesPage(),
+          item: ItemConfig(
+            icon: const Icon(Icons.pets),
+            title: "Dịch vụ",
+            activeForegroundColor: Colors.white,
+            inactiveForegroundColor: Colors.white70,
+          ),
+        ),
+        PersistentTabConfig(
+          screen: const GuestBookingPage(),
+          item: ItemConfig(
+            icon: const Icon(Icons.calendar_today),
+            title: "Đặt lịch",
+            activeForegroundColor: Colors.white,
+            inactiveForegroundColor: Colors.white70,
+          ),
+        ),
+        PersistentTabConfig(
+          screen: const GuestProfilePage(),
+          item: ItemConfig(
+            icon: const Icon(Icons.person),
+            title: "Tài khoản",
+            activeForegroundColor: Colors.white,
+            inactiveForegroundColor: Colors.white70,
+          ),
+        ),
+      ];
+
+  @override
+  Widget build(BuildContext context) => PersistentTabView(
+        tabs: _tabs(),
+        navBarBuilder: (navBarConfig) => Style2BottomNavBar(
+          navBarConfig: navBarConfig,
+          navBarDecoration: const NavBarDecoration(
+            color: Color(0xFF304FFE),
+          ),
+        ),
+      );
 }
 
 // Tách content của GuestHomePage để tái sử dụng

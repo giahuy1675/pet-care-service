@@ -1,60 +1,70 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:convex_bottom_bar/convex_bottom_bar.dart';
+import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 import 'staff_dashboard_page.dart';
 import 'staff_appointments_page.dart';
 import 'staff_schedule_page.dart';
 import 'staff_profile_page.dart';
 import 'staff_chat_page.dart';
 
-class StaffNavigation extends StatefulWidget {
+class StaffNavigation extends StatelessWidget {
   const StaffNavigation({super.key});
 
-  @override
-  State<StaffNavigation> createState() => _StaffNavigationState();
-}
-
-class _StaffNavigationState extends State<StaffNavigation> {
-  int _index = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final pages = <Widget>[
-      const StaffDashboardPage(),
-      const StaffAppointmentsPage(),
-      const StaffSchedulePage(),
-      const StaffChatPage(),
-      const StaffProfilePage(),
-    ];
-
-    return Scaffold(
-      body: IndexedStack(index: _index, children: pages),
-      bottomNavigationBar: ConvexAppBar(
-        style: TabStyle.react,
-        backgroundColor: const Color(0xFF304FFE),
-        activeColor: Colors.white,
-        color: Colors.white70,
-        height: 65,
-        curveSize: 90,
-        top: -30,
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF304FFE),
-            const Color(0xFF1976D2),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  List<PersistentTabConfig> _tabs() => [
+        PersistentTabConfig(
+          screen: const StaffDashboardPage(),
+          item: ItemConfig(
+            icon: const Icon(Icons.dashboard),
+            title: "Tổng quan",
+            activeForegroundColor: Colors.white,
+            inactiveForegroundColor: Colors.white70,
+          ),
         ),
-        items: [
-          TabItem(icon: FontAwesomeIcons.chartLine, title: 'Tổng quan'),
-          TabItem(icon: FontAwesomeIcons.calendarCheck, title: 'Lịch hẹn'),
-          TabItem(icon: FontAwesomeIcons.calendar, title: 'Ca làm'),
-          TabItem(icon: FontAwesomeIcons.comments, title: 'Chat'),
-          TabItem(icon: FontAwesomeIcons.user, title: 'Hồ sơ'),
-        ],
-        initialActiveIndex: _index,
-        onTap: (int i) => setState(() => _index = i),
-      ),
-    );
-  }
+        PersistentTabConfig(
+          screen: const StaffAppointmentsPage(),
+          item: ItemConfig(
+            icon: const Icon(Icons.calendar_today),
+            title: "Lịch hẹn",
+            activeForegroundColor: Colors.white,
+            inactiveForegroundColor: Colors.white70,
+          ),
+        ),
+        PersistentTabConfig(
+          screen: const StaffSchedulePage(),
+          item: ItemConfig(
+            icon: const Icon(Icons.schedule),
+            title: "Ca làm",
+            activeForegroundColor: Colors.white,
+            inactiveForegroundColor: Colors.white70,
+          ),
+        ),
+        PersistentTabConfig(
+          screen: const StaffChatPage(),
+          item: ItemConfig(
+            icon: const Icon(Icons.chat),
+            title: "Chat",
+            activeForegroundColor: Colors.white,
+            inactiveForegroundColor: Colors.white70,
+          ),
+        ),
+        PersistentTabConfig(
+          screen: const StaffProfilePage(),
+          item: ItemConfig(
+            icon: const Icon(Icons.person),
+            title: "Hồ sơ",
+            activeForegroundColor: Colors.white,
+            inactiveForegroundColor: Colors.white70,
+          ),
+        ),
+      ];
+
+  @override
+  Widget build(BuildContext context) => PersistentTabView(
+        tabs: _tabs(),
+        navBarBuilder: (navBarConfig) => Style2BottomNavBar(
+          navBarConfig: navBarConfig,
+          navBarDecoration: const NavBarDecoration(
+            color: Color(0xFF304FFE),
+          ),
+        ),
+      );
 }

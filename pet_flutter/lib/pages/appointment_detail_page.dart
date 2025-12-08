@@ -540,8 +540,6 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
             // Service Info
             _buildInfoCard(
               title: 'Dịch vụ',
-              icon: FontAwesomeIcons.scissors,
-              iconColor: Theme.of(context).colorScheme.primary,
               children: [
                 _buildInfoRow('Tên dịch vụ', appointment.serviceName),
                 if (appointment.service?.description != null)
@@ -558,8 +556,6 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
             // Pet Info
             _buildInfoCard(
               title: 'Thông tin thú cưng',
-              icon: FontAwesomeIcons.paw,
-              iconColor: Colors.orange,
               children: [
                 Row(
                   children: [
@@ -621,8 +617,6 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
             if (appointment.staffName.isNotEmpty)
               _buildInfoCard(
                 title: 'Bác sĩ / Nhân viên',
-                icon: FontAwesomeIcons.userDoctor,
-                iconColor: Colors.blue,
                 children: [
                   Row(
                     children: [
@@ -702,8 +696,6 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
             // Date & Time Info
             _buildInfoCard(
               title: 'Thời gian & Địa điểm',
-              icon: FontAwesomeIcons.calendar,
-              iconColor: Colors.green,
               children: [
                 _buildInfoRow('Ngày', dateFormat.format(appointment.appointmentDate)),
                 _buildInfoRow('Giờ', timeFormat.format(appointment.appointmentDate)),
@@ -772,7 +764,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                   Row(
                     children: [
                       Expanded(
-                        child: _buildInfoRow('Địa điểm', '123 Đường ABC, Quận 1, TP.HCM'),
+                        child: _buildInfoRow('Địa điểm', 'Hãy chọn cửa hàng gần bạn nhất'),
                       ),
                       IconButton(
                         onPressed: _openMap,
@@ -792,8 +784,6 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
             if (appointment.notes != null && appointment.notes!.isNotEmpty)
               _buildInfoCard(
                 title: 'Ghi chú',
-                icon: FontAwesomeIcons.noteSticky,
-                iconColor: Colors.amber.shade700,
                 children: [
                   Text(
                     appointment.notes!,
@@ -808,8 +798,6 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
             if (appointment.cancellationReason != null && appointment.cancellationReason!.isNotEmpty)
               _buildInfoCard(
                 title: 'Lý do hủy',
-                icon: FontAwesomeIcons.triangleExclamation,
-                iconColor: Colors.red,
                 children: [
                   Text(
                     appointment.cancellationReason!,
@@ -992,8 +980,6 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
 
   Widget _buildInfoCard({
     required String title,
-    required IconData icon,
-    required Color iconColor,
     required List<Widget> children,
   }) {
     return Container(
@@ -1014,25 +1000,12 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: FaIcon(icon, size: 20, color: iconColor),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           ...children,

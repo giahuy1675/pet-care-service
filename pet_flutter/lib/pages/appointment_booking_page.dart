@@ -400,72 +400,68 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
 
       final appointment = await _appointmentService.createAppointment(_bookingData.toJson());
       
+      if (!mounted) return;
       Navigator.of(context).pop(); // Close loading dialog
       
       if (appointment != null) {
-        // 🔔 Schedule appointment reminders (1 hour, 30 min, 10 min before)
-        try {
-          final storage = SecureStorageService();
-          final userJson = await storage.readUser();
-          String? userId;
-          if (userJson != null) {
-            final user = jsonDecode(userJson);
-            userId = user['userId']?.toString(); // Changed from 'id' to 'userId'
-          }
-          
-          await AppointmentReminderService().scheduleReminders(
-            appointmentId: appointment.appointmentId.toString(),
-            appointmentTime: appointment.appointmentDate,
-            petName: _bookingData.selectedPet?.name ?? 'thú cưng',
-            serviceName: _bookingData.selectedService?.name ?? 'dịch vụ',
-            userId: userId,
-          );
-          
-        } catch (e) {
-        }
-        
-        // 🎉 Send OneSignal notification for successful booking
-        try {
-          final storage = SecureStorageService();
-          final userJson = await storage.readUser();
-          
-          if (userJson != null) {
-            final user = jsonDecode(userJson);
-            final userId = user['userId']?.toString(); // Changed from 'id' to 'userId'
-            
-            if (userId != null) {
-              final dateFormat = '${appointment.appointmentDate.day}/${appointment.appointmentDate.month}/${appointment.appointmentDate.year}';
-              final timeFormat = '${appointment.appointmentDate.hour}:${appointment.appointmentDate.minute.toString().padLeft(2, '0')}';
-              
-              await OneSignalNotificationHelper.sendNotificationToUser(
-                userId: userId,
-                title: '🎉 Đặt lịch thành công!',
-                message: 'Lịch hẹn ${_bookingData.selectedService?.name ?? 'dịch vụ'} cho ${_bookingData.selectedPet?.name ?? 'thú cưng'} vào lúc $timeFormat, ngày $dateFormat đã được tạo.',
-                data: {
-                  'type': 'booking_success',
-                  'appointmentId': appointment.appointmentId.toString(),
-                  'timestamp': DateTime.now().toIso8601String(),
-                },
-              );
-              
-            } else {
-            }
-          } else {
-          }
-        } catch (e) {
-        }
-        
         _showSuccessDialog();
+        
+        // Send notifications in background
+        _sendNotificationsInBackground(appointment);
       } else {
         _showErrorDialog('Không thể tạo lịch hẹn. Vui lòng thử lại.');
       }
     } catch (e) {
-      Navigator.of(context).pop(); // Close loading dialog
-      _showErrorDialog('Lỗi: ${e.toString()}');
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        _showErrorDialog('Lỗi: ${e.toString()}');
+      }
+    }
+  }
+
+  Future<void> _sendNotificationsInBackground(Appointment appointment) async {
+    try {
+      final storage = SecureStorageService();
+      final userJson = await storage.readUser();
+      String? userId;
+      if (userJson != null) {
+        final user = jsonDecode(userJson);
+        userId = user['userId']?.toString();
+      }
+      
+      await AppointmentReminderService().scheduleReminders(
+        appointmentId: appointment.appointmentId.toString(),
+        appointmentTime: appointment.appointmentDate,
+        petName: _bookingData.selectedPet?.name ?? 'thú cưng',
+        serviceName: _bookingData.selectedService?.name ?? 'dịch vụ',
+        userId: userId,
+      );
+      
+      if (userId != null) {
+        final dateFormat = '${appointment.appointmentDate.day}/${appointment.appointmentDate.month}/${appointment.appointmentDate.year}';
+        final timeFormat = '${appointment.appointmentDate.hour}:${appointment.appointmentDate.minute.toString().padLeft(2, '0')}';
+        
+        await OneSignalNotificationHelper.sendNotificationToUser(
+          userId: userId,
+          title: '🎉 Đặt lịch thành công!',
+          message: 'Lịch hẹn ${_bookingData.selectedService?.name ?? 'dịch vụ'} cho ${_bookingData.selectedPet?.name ?? 'thú cưng'} vào lúc $timeFormat, ngày $dateFormat đã được tạo.',
+          data: {
+            'type': 'booking_success',
+            'appointmentId': appointment.appointmentId.toString(),
+            'timestamp': DateTime.now().toIso8601String(),
+          },
+        );
+      }
+    } catch (e) {
+      // Ignore notification errors
     }
   }
 
   void _showSuccessDialog() {
+    if (!mounted) return;
+    
+    final pageContext = context; // Capture context before showing dialog
+    
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -473,11 +469,11 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
       builder: (dialogContext) {
         // Auto close after animation
         Future.delayed(const Duration(milliseconds: 2500), () {
-          if (dialogContext.mounted && Navigator.canPop(dialogContext)) {
+          if (dialogContext.mounted) {
             Navigator.of(dialogContext).pop(); // Close dialog
-            if (context.mounted && Navigator.canPop(context)) {
-              Navigator.of(context).pop(); // Close booking page
-            }
+          }
+          if (mounted && pageContext.mounted) {
+            Navigator.of(pageContext).pop(); // Close booking page
           }
         });
 
@@ -509,12 +505,12 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
                   repeat: false,
                 ),
                 const SizedBox(height: 16),
-                Text(
+                const Text(
                   'Đặt lịch thành công!',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: Color(0xFF304FFE),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -534,15 +530,15 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      if (Navigator.canPop(dialogContext)) {
+                      if (dialogContext.mounted) {
                         Navigator.of(dialogContext).pop(); // Close dialog
                       }
-                      if (context.mounted && Navigator.canPop(context)) {
-                        Navigator.of(context).pop(); // Close booking page
+                      if (mounted && pageContext.mounted) {
+                        Navigator.of(pageContext).pop(); // Close booking page
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(dialogContext).colorScheme.primary,
+                      backgroundColor: const Color(0xFF304FFE),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -650,61 +646,6 @@ class _ServiceSelectionStepState extends State<ServiceSelectionStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Enhanced Header
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.medical_services,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Chọn dịch vụ',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Hãy chọn dịch vụ bạn muốn đặt lịch cho thú cưng của mình',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          
           // Enhanced Search Bar
           Container(
             decoration: BoxDecoration(
@@ -846,44 +787,6 @@ class _ServiceSelectionStepState extends State<ServiceSelectionStep> {
                                     padding: const EdgeInsets.all(20),
                                     child: Row(
                                       children: [
-                                        // Enhanced Service Icon
-                                        AnimatedContainer(
-                                          duration: const Duration(milliseconds: 200),
-                                          width: 70,
-                                          height: 70,
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: isSelected
-                                                  ? [
-                                                      Theme.of(context).colorScheme.primary,
-                                                      Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                                                    ]
-                                                  : [
-                                                      Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                                                      Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                                                    ],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                            ),
-                                            borderRadius: BorderRadius.circular(16),
-                                            boxShadow: isSelected ? [
-                                              BoxShadow(
-                                                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                                                blurRadius: 8,
-                                                spreadRadius: 2,
-                                              ),
-                                            ] : null,
-                                          ),
-                                          child: Icon(
-                                            _getServiceIcon(service.category),
-                                            color: isSelected 
-                                                ? Colors.white
-                                                : Theme.of(context).colorScheme.primary,
-                                            size: 32,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 20),
-                                        
                                         // Enhanced Service Details
                                         Expanded(
                                           child: Column(
@@ -1076,18 +979,6 @@ class _ServiceSelectionStepState extends State<ServiceSelectionStep> {
     );
   }
 
-  IconData _getServiceIcon(String category) {
-    switch (category.toLowerCase()) {
-      case 'grooming':
-        return Icons.content_cut;
-      case 'medical':
-        return Icons.medical_services;
-      case 'dental':
-        return Icons.medical_services;
-      default:
-        return Icons.pets;
-    }
-  }
 }
 
 // Placeholder for other steps - will be implemented in next todos

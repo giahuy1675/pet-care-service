@@ -29,7 +29,7 @@ class _EnhancedServicesPageState extends State<EnhancedServicesPage> {
 
   final List<Map<String, String>> _categories = [
     {'id': 'all', 'name': 'Tất cả', 'icon': 'paw', 'emoji': '🐾'},
-    {'id': 'grooming', 'name': 'Grooming', 'icon': 'scissors', 'emoji': '🐕'},
+    {'id': 'grooming', 'name': 'Tắm & Chăm sóc', 'icon': 'scissors', 'emoji': '🐕'},
     {'id': 'medical', 'name': 'Y tế', 'icon': 'stethoscope', 'emoji': '💉'},
     {'id': 'hotel', 'name': 'Khách sạn', 'icon': 'hotel', 'emoji': '🏨'},
     {'id': 'food', 'name': 'Thức ăn', 'icon': 'utensils', 'emoji': '🍖'},
@@ -525,30 +525,13 @@ class _EnhancedServicesPageState extends State<EnhancedServicesPage> {
         ),
         child: FilterChip(
           selected: isSelected,
-          label: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: isSelected ? color.withOpacity(0.2) : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  category['emoji']!,
-                  style: const TextStyle(fontSize: 18),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                category['name']!,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                  color: isSelected ? color : Colors.grey.shade700,
-                ),
-              ),
-            ],
+          label: Text(
+            category['name']!,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+              color: isSelected ? color : Colors.grey.shade700,
+            ),
           ),
           onSelected: (selected) {
             _onCategoryChanged(category['id']!);
@@ -743,6 +726,10 @@ class _EnhancedServicesPageState extends State<EnhancedServicesPage> {
                                   width: double.infinity,
                                   height: 180,
                                   fit: BoxFit.cover,
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return _buildEnhancedImagePlaceholder(categoryIcon, categoryColor);
+                                  },
                                   errorBuilder: (context, error, stackTrace) {
                                     return _buildEnhancedImagePlaceholder(categoryIcon, categoryColor);
                                   },
@@ -1297,7 +1284,7 @@ class _EnhancedServicesPageState extends State<EnhancedServicesPage> {
   String _getCategoryName(String category) {
     switch (category.toLowerCase()) {
       case 'grooming':
-        return 'Grooming';
+        return 'Tắm & Chăm sóc';
       case 'medical':
         return 'Y tế';
       case 'hotel':

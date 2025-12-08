@@ -172,7 +172,7 @@ class Pet {
       age: json['age'],
       weight: json['weight']?.toDouble(),
       gender: json['gender'],
-      imageUrl: json['imageUrl'],
+      imageUrl: json['photoUrl'] ?? json['photo'] ?? json['imageUrl'],
       notes: json['notes'],
       userId: json['userId'],
     );

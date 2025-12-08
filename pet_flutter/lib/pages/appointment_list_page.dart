@@ -883,19 +883,26 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
                 // Service name - simplified
                 Row(
                   children: [
-                    FaIcon(
-                      FontAwesomeIcons.scissors,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        appointment.serviceName,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                      child: RichText(
+                        text: TextSpan(
+                          style: const TextStyle(fontSize: 14),
+                          children: [
+                            TextSpan(
+                              text: 'Dịch vụ: ',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            TextSpan(
+                              text: appointment.serviceName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -905,12 +912,14 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
                 // Pet info - simplified
                 Row(
                   children: [
-                    FaIcon(
-                      FontAwesomeIcons.paw,
-                      size: 14,
-                      color: Colors.orange,
+                    Text(
+                      'Thú cưng: ',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    const SizedBox(width: 8),
                     Text(
                       appointment.petName,
                       style: const TextStyle(
@@ -938,18 +947,20 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
                     padding: const EdgeInsets.only(top: 8),
                     child: Row(
                       children: [
-                        FaIcon(
-                          FontAwesomeIcons.userDoctor,
-                          size: 14,
-                          color: Colors.blue,
-                        ),
-                        const SizedBox(width: 8),
                         Text(
-                          appointment.staffName,
+                          'Nhân viên: ',
                           style: TextStyle(
                             fontSize: 14,
+                            color: Colors.grey.shade600,
                             fontWeight: FontWeight.w500,
-                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                        Text(
+                          appointment.staffName,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
                           ),
                         ),
                       ],

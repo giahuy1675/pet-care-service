@@ -9,6 +9,18 @@ import '../services/pet_service.dart';
 import '../services/secure_storage.dart';
 import '../services/signalr_service.dart';
 
+// Helper function to translate category
+String _translateCategory(String category) {
+  const categoryMap = {
+    'Grooming': 'Tắm & Chăm sóc',
+    'Veterinary': 'Khám bệnh',
+    'Training': 'Đào tạo',
+    'Boarding': 'Lưu trú',
+    'Spa': 'Spa',
+  };
+  return categoryMap[category] ?? category;
+}
+
 // Step 1: Chọn dịch vụ
 class ServiceStep extends StatefulWidget {
   final AppointmentBookingData bookingData;
@@ -229,59 +241,6 @@ class _PetStepState extends State<PetStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.pets,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Chọn thú cưng',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Chọn thú cưng cần được chăm sóc',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
           const SizedBox(height: 24),
           
           // Pets list
@@ -321,73 +280,32 @@ class _PetStepState extends State<PetStep> {
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Row(
-                children: [
+                  children: [
                   // Enhanced Pet Avatar
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     width: 80,
                     height: 80,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: isSelected
-                            ? [
-                                _getSpeciesColor(species),
-                                _getSpeciesColor(species).withOpacity(0.8),
-                              ]
-                            : [
-                                _getSpeciesColor(species).withOpacity(0.1),
-                                _getSpeciesColor(species).withOpacity(0.05),
-                              ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isSelected
-                            ? _getSpeciesColor(species)
-                            : _getSpeciesColor(species).withOpacity(0.2),
-                        width: isSelected ? 3 : 2,
-                      ),
-                      boxShadow: isSelected ? [
-                        BoxShadow(
-                          color: _getSpeciesColor(species).withOpacity(0.3),
-                          blurRadius: 12,
-                          spreadRadius: 2,
-                        ),
-                      ] : null,
-                    ),
-                    child: pet.imageUrl != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(17),
-                            child: Image.network(
-                              pet.imageUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Center(
-                                  child: Icon(
-                                    _getSpeciesIcon(species),
-                                    color: isSelected 
-                                        ? Colors.white
-                                        : _getSpeciesColor(species),
-                                    size: 32,
-                                  ),
-                                );
-                              },
-                            ),
-                          )
-                        : Center(
-                            child: Icon(
+                    child: CircleAvatar(
+                      radius: 40,
+                      backgroundColor: isSelected 
+                          ? _getSpeciesColor(species)
+                          : _getSpeciesColor(species).withOpacity(0.1),
+                      backgroundImage: (pet.imageUrl != null && pet.imageUrl!.isNotEmpty)
+                          ? NetworkImage(pet.imageUrl!)
+                          : null,
+                      child: (pet.imageUrl == null || pet.imageUrl!.isEmpty)
+                          ? Icon(
                               _getSpeciesIcon(species),
                               color: isSelected 
                                   ? Colors.white
                                   : _getSpeciesColor(species),
                               size: 32,
-                            ),
-                          ),
+                            )
+                          : null,
+                    ),
                   ),
-                  const SizedBox(width: 20),
-                  
-                  // Enhanced Pet Info
+                  const SizedBox(width: 20),                  // Enhanced Pet Info
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -850,9 +768,11 @@ class _DateTimeStepState extends State<DateTimeStep> {
     if (_currentRoomKey != null) {
       await _signalRService.leaveTimeSlotRoom(_currentRoomKey!);
       _currentRoomKey = null;
-      setState(() {
-        _otherUsersSelections.clear();
-      });
+      if (mounted) {
+        setState(() {
+          _otherUsersSelections.clear();
+        });
+      }
     }
   }
 
@@ -894,15 +814,10 @@ class _DateTimeStepState extends State<DateTimeStep> {
     
   }
 
-  Widget _buildLegendItem(String icon, String label, Color color) {
+  Widget _buildLegendItem(String label, Color color) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          icon,
-          style: const TextStyle(fontSize: 12),
-        ),
-        const SizedBox(width: 4),
         Container(
           width: 12,
           height: 12,
@@ -912,7 +827,7 @@ class _DateTimeStepState extends State<DateTimeStep> {
             borderRadius: BorderRadius.circular(2),
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 6),
         Text(
           label,
           style: TextStyle(
@@ -931,104 +846,6 @@ class _DateTimeStepState extends State<DateTimeStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.schedule,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Chọn ngày và giờ',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Chọn nhân viên, ngày và khung giờ phù hợp',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      // SignalR status indicator with room info
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                _signalRConnected ? Icons.wifi : Icons.wifi_off,
-                                size: 12,
-                                color: _signalRConnected ? Colors.green : Colors.grey,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                _signalRConnected ? 'Real-time: Hoạt động' : 'Real-time: Tắt',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: _signalRConnected ? Colors.green : Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (_currentRoomKey != null) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              'Room: $_currentRoomKey',
-                              style: const TextStyle(
-                                fontSize: 8,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                          if (_otherUsersSelections.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              '${_otherUsersSelections.length} người khác đang chọn',
-                              style: const TextStyle(
-                                fontSize: 8,
-                                color: Colors.orange,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
           const SizedBox(height: 24),
           
           // Staff Selection
@@ -1227,11 +1044,11 @@ class _DateTimeStepState extends State<DateTimeStep> {
                           spacing: 16,
                           runSpacing: 8,
                           children: [
-                            _buildLegendItem('✅', 'Khả dụng', Colors.green),
-                            _buildLegendItem('🐕', 'Thú cưng bận', Colors.red),
-                            _buildLegendItem('👤', 'Nhân viên bận', Colors.orange),
-                            _buildLegendItem('👥', 'Người khác chọn', Colors.purple),
-                            _buildLegendItem('⏰', 'Đã qua', Colors.grey),
+                            _buildLegendItem('Khả dụng', Colors.green),
+                            _buildLegendItem('Thú cưng bận', Colors.red),
+                            _buildLegendItem('Nhân viên bận', Colors.orange),
+                            _buildLegendItem('Người khác chọn', Colors.purple),
+                            _buildLegendItem('Đã qua', Colors.grey),
                           ],
                         ),
                       ],
@@ -1620,52 +1437,6 @@ class ConfirmStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header với icon đẹp
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.check_circle_outline,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Xác nhận thông tin đặt lịch',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Vui lòng kiểm tra lại thông tin trước khi xác nhận',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
           const SizedBox(height: 24),
           
           if (!isComplete)
@@ -1831,7 +1602,7 @@ class ConfirmStep extends StatelessWidget {
                                   ),
                                 ),
                                 child: Text(
-                                  service.category,
+                                  _translateCategory(service.category),
                                   style: TextStyle(
                                     color: Theme.of(context).colorScheme.primary,
                                     fontWeight: FontWeight.bold,
@@ -2032,130 +1803,7 @@ class ConfirmStep extends StatelessWidget {
                 ),
               ),
             ),
-            // Compact Important Notes
-            Container(
-              margin: const EdgeInsets.only(bottom: 20),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Lưu ý quan trọng',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '• Đến sớm 10-15 phút • Hủy/đổi lịch trước 24h • Mang theo CMND',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                            height: 1.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
-          
-          // Enhanced Nút xác nhận
-          if (isComplete)
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: double.infinity,
-              margin: const EdgeInsets.only(top: 24),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
-                      blurRadius: 12,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: isLoading ? null : () async {
-                    // Gọi API tạo appointment, truyền thêm notes (không bắt buộc)
-                    // ...existing code tạo appointment, truyền bookingData.notes...
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: isLoading
-                      ? const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 3,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.check_circle,
-                                size: 24,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Xác nhận đặt lịch',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ],
-                        ),
-                ),
-              ),
-            ),
           if (errorMessage != null) ...[
             const SizedBox(height: 16),
             Text(errorMessage!, style: TextStyle(color: Colors.red)),
