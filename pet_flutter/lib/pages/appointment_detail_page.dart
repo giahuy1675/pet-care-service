@@ -440,7 +440,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     final statusIcon = _getStatusIcon(appointment.status);
     final dateFormat = DateFormat('dd/MM/yyyy');
     final timeFormat = DateFormat('HH:mm');
-    final priceFormat = NumberFormat.currency(symbol: '₫');
+    final priceFormat = NumberFormat('#,###', 'vi_VN');
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -498,7 +498,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    priceFormat.format(appointment.servicePrice),
+                    priceFormat.format(appointment.servicePrice) + ' VNĐ',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,

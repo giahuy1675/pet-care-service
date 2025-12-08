@@ -1,5 +1,41 @@
 [
   {
+    "ContainingType": "BE_PetWeb_API.Controllers.AdminSetupController",
+    "Method": "CheckAdmin",
+    "RelativePath": "api/AdminSetup/check-admin",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BE_PetWeb_API.Controllers.AdminSetupController",
+    "Method": "CreateAdmin",
+    "RelativePath": "api/AdminSetup/create-admin",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "BE_PetWeb_API.Controllers.CreateAdminRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BE_PetWeb_API.Controllers.AdminSetupController",
+    "Method": "CreateAdminSimple",
+    "RelativePath": "api/AdminSetup/create-admin-simple",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "BE_PetWeb_API.Controllers.AppointmentsController",
     "Method": "GetAllAppointments",
     "RelativePath": "api/Appointments",
@@ -4286,6 +4322,16 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "BE_PetWeb_API.Controllers.TimeController",
+    "Method": "GetVietnamTime",
+    "RelativePath": "api/Time/vietnam-time",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "BE_PetWeb_API.Controllers.UsersController",
     "Method": "GetUsers",
     "RelativePath": "api/Users",
@@ -4699,5 +4745,26 @@
         "StatusCode": 200
       }
     ]
+  },
+  {
+    "ContainingType": "BE_PetWeb_API.Controllers.WeatherForecastController",
+    "Method": "Get",
+    "RelativePath": "WeatherForecast",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[BE_PetWeb_API.WeatherForecast, BE_PetWeb_API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ],
+    "EndpointName": "GetWeatherForecast"
   }
 ]

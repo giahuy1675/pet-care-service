@@ -665,7 +665,7 @@ class _EnhancedServicesPageState extends State<EnhancedServicesPage> {
     final reviewCount = (service['reviewCount'] as num?)?.toInt() ?? 0;
     final bookingCount = (service['bookingCount'] as num?)?.toInt() ?? 0;
     
-    final priceFormat = NumberFormat.currency(symbol: '₫');
+    final priceFormat = NumberFormat('#,###', 'vi_VN');
     final categoryColor = _getCategoryColor(category);
     final categoryIcon = _getCategoryIcon(category);
     
@@ -826,7 +826,7 @@ class _EnhancedServicesPageState extends State<EnhancedServicesPage> {
                                   ],
                                 ),
                                 child: Text(
-                                  'Từ ${priceFormat.format(price)}',
+                                  'Từ ${priceFormat.format(price)} VNĐ',
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,

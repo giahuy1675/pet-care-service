@@ -1,0 +1,19 @@
+# Flutter
+.dart_tool/
+.build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# .NET
+bin/
+obj/
+
+# Visual Studio
+.vs/
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
+Desktop.ini

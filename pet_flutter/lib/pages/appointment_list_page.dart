@@ -809,7 +809,7 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
     final statusIcon = _getStatusIcon(appointment.status);
     final dateFormat = DateFormat('dd/MM/yyyy');
     final timeFormat = DateFormat('HH:mm');
-    final priceFormat = NumberFormat.currency(symbol: '₫');
+    final priceFormat = NumberFormat('#,###', 'vi_VN');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -870,7 +870,7 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
                     const Spacer(),
                     // Price - simplified
                     Text(
-                      priceFormat.format(appointment.servicePrice),
+                      priceFormat.format(appointment.servicePrice) + ' VNĐ',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,

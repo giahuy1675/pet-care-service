@@ -1221,7 +1221,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage>
 
   // 7. Pricing Packages / Bảng giá
   Widget _buildPricing() {
-    final priceFormat = NumberFormat.currency(symbol: '₫', decimalDigits: 0);
+    final priceFormat = NumberFormat('#,###', 'vi_VN');
     
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -1299,7 +1299,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      priceFormat.format(package['price']),
+                      priceFormat.format(package['price']) + ' VNĐ',
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -1697,7 +1697,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage>
 
   // Bottom Bar - CTA
   Widget _buildBottomBar(BuildContext context, double price) {
-    final priceFormat = NumberFormat.currency(symbol: '₫', decimalDigits: 0);
+    final priceFormat = NumberFormat('#,###', 'vi_VN');
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1726,7 +1726,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage>
                   ),
                 ),
                 Text(
-                  priceFormat.format(price),
+                  priceFormat.format(price) + ' VNĐ',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,

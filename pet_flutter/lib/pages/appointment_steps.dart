@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../models/appointment.dart';
 import '../models/time_slot.dart';
 import '../services/appointment_service.dart';
@@ -52,7 +53,7 @@ class _ServiceStepState extends State<ServiceStep> {
         ...services.map((service) => ListTile(
           title: Text(service.name),
           subtitle: Text(service.description),
-          trailing: Text('${service.price}đ'),
+          trailing: Text(NumberFormat('#,###', 'vi_VN').format(service.price) + ' VNĐ'),
           selected: widget.bookingData.selectedService?.serviceId == service.serviceId,
           onTap: () => widget.onChanged(service),
         ))
@@ -1623,14 +1624,7 @@ class ConfirmStep extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
@@ -1738,14 +1732,7 @@ class ConfirmStep extends StatelessWidget {
               duration: const Duration(milliseconds: 300),
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.white,
-                    Theme.of(context).colorScheme.primary.withOpacity(0.02),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
@@ -1770,12 +1757,7 @@ class ConfirmStep extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Theme.of(context).colorScheme.primary,
-                                Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                              ],
-                            ),
+                            color: Theme.of(context).colorScheme.primary,
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
@@ -1842,12 +1824,7 @@ class ConfirmStep extends StatelessWidget {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                 decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                                      Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                                    ],
-                                  ),
+                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
                                     color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
@@ -1900,12 +1877,7 @@ class ConfirmStep extends StatelessWidget {
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.green.shade600,
-                                Colors.green.shade500,
-                              ],
-                            ),
+                            color: Colors.green.shade600,
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
@@ -1918,10 +1890,8 @@ class ConfirmStep extends StatelessWidget {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.attach_money, size: 20, color: Colors.white),
-                              const SizedBox(width: 8),
                               Text(
-                                '${service.price.toStringAsFixed(0)}₫',
+                                NumberFormat('#,###', 'vi_VN').format(service.price) + ' VNĐ',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,

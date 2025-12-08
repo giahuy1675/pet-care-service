@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import '../models/appointment.dart';
 import '../models/time_slot.dart';
@@ -639,7 +640,7 @@ class _ServiceSelectionStepState extends State<ServiceSelectionStep> {
   }
 
   String _formatCurrency(double amount) {
-    return '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}₫';
+    return NumberFormat('#,###', 'vi_VN').format(amount) + ' VNĐ';
   }
 
   @override
@@ -1024,24 +1025,13 @@ class _ServiceSelectionStepState extends State<ServiceSelectionStep> {
                                                         ),
                                                       ],
                                                     ),
-                                                    child: Row(
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: [
-                                                        const Icon(
-                                                          Icons.attach_money,
-                                                          size: 15,
-                                                          color: Colors.white,
-                                                        ),
-                                                        const SizedBox(width: 2),
-                                                        Text(
-                                                          _formatCurrency(service.price),
-                                                          style: const TextStyle(
-                                                            color: Colors.white,
-                                                            fontWeight: FontWeight.bold,
-                                                            fontSize: 14,
-                                                          ),
-                                                        ),
-                                                      ],
+                                                    child: Text(
+                                                      _formatCurrency(service.price),
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 14,
+                                                      ),
                                                     ),
                                                   ),
                                                 ],

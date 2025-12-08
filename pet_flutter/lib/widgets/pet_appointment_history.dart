@@ -387,7 +387,7 @@ class _PetAppointmentHistoryState extends State<PetAppointmentHistory> {
                 ),
               ),
               Text(
-                '${NumberFormat.currency(symbol: '₫').format(price)}',
+                NumberFormat('#,###', 'vi_VN').format(price) + ' VNĐ',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
