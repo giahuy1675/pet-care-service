@@ -379,10 +379,6 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
               );
             },
           ),
-          IconButton(
-            icon: const FaIcon(FontAwesomeIcons.arrowsRotate),
-            onPressed: _fetchAppointments,
-          ),
         ],
       ),
       body: Column(
@@ -602,7 +598,12 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
               MaterialPageRoute(
                 builder: (context) => const AppointmentBookingPage(),
               ),
-            ).then((_) => _fetchAppointments()); // Refresh sau khi đặt lịch
+            ).then((result) {
+              // Only refresh if booking was successful
+              if (result == true) {
+                _fetchAppointments();
+              }
+            });
           },
           backgroundColor: Theme.of(context).colorScheme.primary,
           foregroundColor: Colors.white,

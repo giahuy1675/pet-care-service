@@ -783,7 +783,13 @@ const TimeSlotGrid = ({
       return;
     }
     
-    // 🔥 SET TIMESTAMP KHI USER CHỌN SLOT - Bắt đầu countdown 60s
+    // 🔥 Nếu click vào slot đã chọn → không làm gì (không reset timer)
+    if (isSelected(timeStr)) {
+      debugLog('Already selected - not resetting timer');
+      return;
+    }
+    
+    // 🔥 SET TIMESTAMP KHI USER CHỌN SLOT MỚI - Bắt đầu countdown 60s
     setMySelectionTimestamp(Date.now());
     
     const selectedDateStr = selectedDate ? dayjs(selectedDate).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD');

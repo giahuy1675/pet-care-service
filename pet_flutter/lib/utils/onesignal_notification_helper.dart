@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 
 class OneSignalNotificationHelper {
   // REST API Key từ OneSignal Dashboard (phải giống với Backend)
-  static const String _restApiKey = "os_v2_app_b5jnw3d2aba4zovz5e7ruj5fqjklfa6jk5se6jeveid2dvr2hre6dooqsbbhcp7bcpnnnywas37cut7nuyvjpjpxy4nlb4yroawtgya";
+  static const String _restApiKey = "os_v2_app_b5jnw3d2aba4zovz5e7ruj5fqll3tnswh5xebqmq5vup72ygcjhtkpj6nsr47fv6btao5fubswwcswiypsheo3pdwiqahmxa2mloaua";
   static const String _appId = "0f52db6c-7a00-41cc-bab9-e93f1a27a582";
 
   /// Gửi notification đến tất cả users
@@ -68,7 +68,9 @@ class OneSignalNotificationHelper {
         if (data != null) 'data': data,
       };
 
-
+      print('📤 Sending OneSignal notification to userId: $userId');
+      print('📤 Title: $title');
+      print('📤 Message: $message');
 
       final response = await http.post(
         url,
@@ -80,14 +82,14 @@ class OneSignalNotificationHelper {
       );
 
       if (response.statusCode == 200) {
-
+        final result = jsonDecode(response.body);
+        print('✅ OneSignal notification sent successfully: $result');
       } else {
-
-
-
+        print('❌ OneSignal notification failed: ${response.statusCode}');
+        print('❌ Response: ${response.body}');
       }
     } catch (e) {
-
+      print('❌ Exception sending OneSignal notification: $e');
     }
   }
 

@@ -400,8 +400,12 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
 
       final appointment = await _appointmentService.createAppointment(_bookingData.toJson());
       
+      // Close loading dialog first
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+      }
+      
       if (!mounted) return;
-      Navigator.of(context).pop(); // Close loading dialog
       
       if (appointment != null) {
         _showSuccessDialog();
@@ -429,6 +433,7 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
         userId = user['userId']?.toString();
       }
       
+      print('📲 Scheduling reminders for appointment ${appointment.appointmentId}');
       await AppointmentReminderService().scheduleReminders(
         appointmentId: appointment.appointmentId.toString(),
         appointmentTime: appointment.appointmentDate,
@@ -441,6 +446,7 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
         final dateFormat = '${appointment.appointmentDate.day}/${appointment.appointmentDate.month}/${appointment.appointmentDate.year}';
         final timeFormat = '${appointment.appointmentDate.hour}:${appointment.appointmentDate.minute.toString().padLeft(2, '0')}';
         
+        print('📲 Sending OneSignal notification to user $userId');
         await OneSignalNotificationHelper.sendNotificationToUser(
           userId: userId,
           title: '🎉 Đặt lịch thành công!',
@@ -451,8 +457,12 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
             'timestamp': DateTime.now().toIso8601String(),
           },
         );
+        print('✅ OneSignal notification sent successfully');
+      } else {
+        print('⚠️ No userId found, skipping notification');
       }
     } catch (e) {
+      print('❌ Error sending notifications: $e');
       // Ignore notification errors
     }
   }
@@ -473,7 +483,7 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
             Navigator.of(dialogContext).pop(); // Close dialog
           }
           if (mounted && pageContext.mounted) {
-            Navigator.of(pageContext).pop(); // Close booking page
+            Navigator.of(pageContext).pop(true); // Close booking page with success result
           }
         });
 
@@ -534,7 +544,7 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
                         Navigator.of(dialogContext).pop(); // Close dialog
                       }
                       if (mounted && pageContext.mounted) {
-                        Navigator.of(pageContext).pop(); // Close booking page
+                        Navigator.of(pageContext).pop(true); // Close booking page with success result
                       }
                     },
                     style: ElevatedButton.styleFrom(

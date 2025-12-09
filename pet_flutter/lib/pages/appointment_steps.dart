@@ -1253,6 +1253,11 @@ class _DateTimeStepState extends State<DateTimeStep> {
                             borderRadius: BorderRadius.circular(16),
                             onTap: isEnabled && selectedStaff != null && !isBeingSelectedByOthers
                                 ? () async {
+                                    // Nếu click vào slot đã chọn → không làm gì (không reset timer)
+                                    if (selectedSlot?.id == slot.id) {
+                                      return;
+                                    }
+                                    
                                     // Notify deselection of previous slot
                                     if (selectedSlot != null) {
                                       await _notifySlotDeselection(selectedSlot!);

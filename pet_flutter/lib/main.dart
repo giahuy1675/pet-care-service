@@ -5,6 +5,8 @@ import 'package:pet_flutter/pages/auth_wrapper.dart';
 import 'package:pet_flutter/services/onesignal_service.dart';
 import 'package:pet_flutter/services/firebase_messaging_service.dart';
 import 'package:pet_flutter/config/firebase_config.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 // Global navigator key for OneSignal navigation
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -16,6 +18,10 @@ class AppRoutes {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize timezone database
+  tz.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation('Asia/Ho_Chi_Minh'));
   
   // Initialize Firebase
   await FirebaseConfig.initialize();

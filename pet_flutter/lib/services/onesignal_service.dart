@@ -47,8 +47,11 @@ class OneSignalService {
   /// Đặt External User ID (User ID từ backend)
   Future<void> setExternalUserId(String userId) async {
     try {
+      print('🔔 OneSignal: Setting external user ID to $userId');
       await OneSignal.login(userId);
+      print('✅ OneSignal: External user ID set successfully');
     } catch (e) {
+      print('❌ OneSignal: Error setting external user ID: $e');
     }
   }
 

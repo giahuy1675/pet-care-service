@@ -7,6 +7,8 @@ import 'package:pet_flutter/services/auth_service.dart';
 import 'package:pet_flutter/services/secure_storage.dart';
 import 'package:pet_flutter/services/onesignal_service.dart';
 import 'package:pet_flutter/pages/register_page.dart';
+import 'package:pet_flutter/pages/root_nav.dart';
+import 'package:pet_flutter/pages/staff_navigation.dart';
 import 'package:pet_flutter/widgets/shimmer_placeholders.dart';
 
 class LoginPage extends StatefulWidget {
@@ -103,9 +105,19 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         // Show success animation
         await _showSuccessAnimation();
-        // Navigate back to AuthWrapper which will automatically show RootNav for authenticated users
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/',
+        
+        // Navigate to appropriate page based on user role
+        final role = user['role']?.toString();
+        Widget nextPage;
+        if (role == 'Staff' || role == 'Admin') {
+          nextPage = const StaffNavigation();
+        } else {
+          nextPage = const RootNav();
+        }
+        
+        // Replace the entire navigation stack with the new page
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => nextPage),
           (route) => false,
         );
       }
@@ -338,16 +350,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
       body: SafeArea(
         child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                Colors.grey.shade50,
-              ],
-            ),
-          ),
+          color: Colors.grey.shade50,
           child: SingleChildScrollView(
             child: ConstrainedBox(
               constraints: BoxConstraints(
@@ -979,12 +982,7 @@ class _LoginPageState extends State<LoginPage> {
       duration: const Duration(milliseconds: 300),
       height: 56,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.primary.withOpacity(0.8),
-          ],
-        ),
+        color: Theme.of(context).colorScheme.primary,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(

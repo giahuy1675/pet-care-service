@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pet_flutter/services/auth_service.dart';
+import 'package:pet_flutter/pages/guest_navigation.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -109,16 +110,7 @@ class _RegisterPageState extends State<RegisterPage> {
         centerTitle: true,
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              Colors.grey.shade50,
-            ],
-          ),
-        ),
+        color: Colors.grey.shade50,
         child: SingleChildScrollView(
           child: ConstrainedBox(
             constraints: BoxConstraints(
@@ -704,12 +696,7 @@ class _RegisterPageState extends State<RegisterPage> {
       duration: const Duration(milliseconds: 300),
       height: 56,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.primary.withOpacity(0.8),
-          ],
-        ),
+        color: Theme.of(context).colorScheme.primary,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -813,8 +800,8 @@ class _RegisterPageState extends State<RegisterPage> {
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () {
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  '/',
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const GuestNavigation()),
                   (route) => false,
                 );
               },
