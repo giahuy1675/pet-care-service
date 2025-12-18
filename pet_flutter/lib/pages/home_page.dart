@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:pet_flutter/services/secure_storage.dart';
-import 'package:pet_flutter/pages/profile_page.dart';
 import 'package:pet_flutter/pages/reviews_page.dart';
 import 'package:pet_flutter/pages/appointment_booking_page.dart';
 import 'package:pet_flutter/pages/pets_page.dart';
@@ -12,6 +11,7 @@ import 'package:pet_flutter/pages/enhanced_services_page.dart';
 import 'package:pet_flutter/pages/appointment_list_page.dart';
 import 'package:pet_flutter/widgets/banner_carousel.dart';
 import 'package:pet_flutter/widgets/shimmer_placeholders.dart';
+import 'package:pet_flutter/widgets/avatar_menu.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -332,46 +332,11 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // User Avatar
-                    GestureDetector(
-                      onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => ProfilePage(
-                    initialToken: _token,
-                    initialUserId: _userId,
-                  ),
-                ),
-              );
-            },
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
-                            width: 2,
-                          ),
-                        ),
-                        child: _username != null && _username!.isNotEmpty
-                            ? Center(
-                                child: Text(
-                                  _username![0].toUpperCase(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              )
-                            : const FaIcon(
-                                FontAwesomeIcons.user,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                      ),
+                    // User Avatar with Menu
+                    AvatarMenu(
+                      userName: _username,
+                      userId: _userId,
+                      token: _token,
                     ),
                   ],
                 ),

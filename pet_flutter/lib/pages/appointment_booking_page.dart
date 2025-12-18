@@ -389,35 +389,55 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
   }
 
   Future<void> _confirmBooking() async {
+    if (!mounted) return;
+    
+    final loadingContext = context;
+    bool isLoadingShown = false;
+    
     try {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
+        builder: (dialogContext) => const Center(
           child: CircularProgressIndicator(),
         ),
       );
+      isLoadingShown = true;
 
       final appointment = await _appointmentService.createAppointment(_bookingData.toJson());
       
       // Close loading dialog first
-      if (mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
+      if (isLoadingShown && loadingContext.mounted) {
+        Navigator.of(loadingContext).pop();
+        isLoadingShown = false;
       }
       
       if (!mounted) return;
       
       if (appointment != null) {
+        // Small delay to ensure loading dialog is fully closed
+        await Future.delayed(const Duration(milliseconds: 100));
+        
+        if (!mounted) return;
+        
         _showSuccessDialog();
         
-        // Send notifications in background
-        _sendNotificationsInBackground(appointment);
+        // Send notifications in background (non-blocking)
+        _sendNotificationsInBackground(appointment).catchError((e) {
+          print('❌ Background notification error: $e');
+          // Ignore notification errors, don't affect user experience
+        });
       } else {
         _showErrorDialog('Không thể tạo lịch hẹn. Vui lòng thử lại.');
       }
     } catch (e) {
+      // Ensure loading dialog is closed
+      if (isLoadingShown && loadingContext.mounted) {
+        Navigator.of(loadingContext).pop();
+        isLoadingShown = false;
+      }
+      
       if (mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
         _showErrorDialog('Lỗi: ${e.toString()}');
       }
     }
@@ -470,23 +490,11 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
   void _showSuccessDialog() {
     if (!mounted) return;
     
-    final pageContext = context; // Capture context before showing dialog
-    
     showDialog(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black.withOpacity(0.5),
       builder: (dialogContext) {
-        // Auto close after animation
-        Future.delayed(const Duration(milliseconds: 2500), () {
-          if (dialogContext.mounted) {
-            Navigator.of(dialogContext).pop(); // Close dialog
-          }
-          if (mounted && pageContext.mounted) {
-            Navigator.of(pageContext).pop(true); // Close booking page with success result
-          }
-        });
-
         return Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -535,17 +543,16 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
-                // Optional: Add button to close immediately
+                // Button to close immediately
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      if (dialogContext.mounted) {
-                        Navigator.of(dialogContext).pop(); // Close dialog
-                      }
-                      if (mounted && pageContext.mounted) {
-                        Navigator.of(pageContext).pop(true); // Close booking page with success result
-                      }
+                      // Close dialog
+                      int count = 0;
+                      Navigator.popUntil(dialogContext, (route) {
+                        return count++ >= 2; // Close dialog and booking page
+                      });
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF304FFE),

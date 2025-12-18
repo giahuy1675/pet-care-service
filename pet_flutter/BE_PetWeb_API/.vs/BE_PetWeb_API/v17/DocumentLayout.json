@@ -3,6 +3,22 @@
   "WorkspaceRootPath": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|d:\\dowloads_d\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\be_petweb_api\\be_petweb_api\\services\\implementations\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|solutionrelative:be_petweb_api\\services\\implementations\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|d:\\dowloads_d\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\be_petweb_api\\be_petweb_api\\services\\implementations\\appointmentservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|solutionrelative:be_petweb_api\\services\\implementations\\appointmentservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|d:\\dowloads_d\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\be_petweb_api\\be_petweb_api\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|solutionrelative:be_petweb_api\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|d:\\dowloads_d\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\be_petweb_api\\be_petweb_api\\controllers\\appointmentcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|solutionrelative:be_petweb_api\\controllers\\appointmentcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|d:\\dowloads_d\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\be_petweb_api\\be_petweb_api\\controllers\\staffcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|solutionrelative:be_petweb_api\\controllers\\staffcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -60,11 +76,63 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "AuthService.cs",
+              "DocumentMoniker": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Services\\Implementations\\AuthService.cs",
+              "RelativeDocumentMoniker": "BE_PetWeb_API\\Services\\Implementations\\AuthService.cs",
+              "ToolTip": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Services\\Implementations\\AuthService.cs",
+              "RelativeToolTip": "BE_PetWeb_API\\Services\\Implementations\\AuthService.cs",
+              "ViewState": "AgIAAEABAAAAAAAAAAAxwFMBAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-12T12:55:43.933Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "AppointmentService.cs",
+              "DocumentMoniker": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Services\\Implementations\\AppointmentService.cs",
+              "RelativeDocumentMoniker": "BE_PetWeb_API\\Services\\Implementations\\AppointmentService.cs",
+              "ToolTip": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Services\\Implementations\\AppointmentService.cs",
+              "RelativeToolTip": "BE_PetWeb_API\\Services\\Implementations\\AppointmentService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-12T12:55:42.751Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Controllers\\AuthController.cs",
+              "RelativeDocumentMoniker": "BE_PetWeb_API\\Controllers\\AuthController.cs",
+              "ToolTip": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Controllers\\AuthController.cs",
+              "RelativeToolTip": "BE_PetWeb_API\\Controllers\\AuthController.cs",
+              "ViewState": "AgIAAGEAAAAAAAAAAAAiwHgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-12T12:53:36.168Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "AppointmentController.cs",
+              "DocumentMoniker": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Controllers\\AppointmentController.cs",
+              "RelativeDocumentMoniker": "BE_PetWeb_API\\Controllers\\AppointmentController.cs",
+              "ToolTip": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Controllers\\AppointmentController.cs",
+              "RelativeToolTip": "BE_PetWeb_API\\Controllers\\AppointmentController.cs",
+              "ViewState": "AgIAAKcAAAAAAAAAAAA1wGgAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-12T12:51:35.083Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Bookmark",
@@ -72,20 +140,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 4,
               "Title": "StaffController.cs",
               "DocumentMoniker": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Controllers\\StaffController.cs",
               "RelativeDocumentMoniker": "BE_PetWeb_API\\Controllers\\StaffController.cs",
               "ToolTip": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Controllers\\StaffController.cs",
               "RelativeToolTip": "BE_PetWeb_API\\Controllers\\StaffController.cs",
-              "ViewState": "AgIAACQAAAAAAAAAAAAcwEoAAAA5AAAAAAAAAA==",
+              "ViewState": "AgIAAEcAAAAAAAAAAAAwwHcAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-10-17T03:32:48.258Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 5,
               "Title": "Program.cs",
               "DocumentMoniker": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Program.cs",
               "RelativeDocumentMoniker": "BE_PetWeb_API\\Program.cs",
@@ -97,7 +165,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 6,
               "Title": "CreateAdminAccount.sql",
               "DocumentMoniker": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Scripts\\CreateAdminAccount.sql",
               "RelativeDocumentMoniker": "BE_PetWeb_API\\Scripts\\CreateAdminAccount.sql",
@@ -108,7 +176,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 8,
               "Title": "ReservationCleanupService.cs",
               "DocumentMoniker": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Services\\Implementations\\ReservationCleanupService.cs",
               "RelativeDocumentMoniker": "BE_PetWeb_API\\Services\\Implementations\\ReservationCleanupService.cs",
@@ -120,7 +188,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 7,
               "Title": "appsettings.json",
               "DocumentMoniker": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\appsettings.json",
               "RelativeDocumentMoniker": "BE_PetWeb_API\\appsettings.json",
@@ -132,7 +200,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 11,
               "Title": "BE_PetWeb_API.csproj.Backup (1).tmp",
               "DocumentMoniker": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\BE_PetWeb_API.csproj.Backup (1).tmp",
               "RelativeDocumentMoniker": "BE_PetWeb_API\\BE_PetWeb_API.csproj.Backup (1).tmp",
@@ -144,7 +212,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 9,
               "Title": "Microsoft.Common.CurrentVersion.targets",
               "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
               "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
@@ -154,7 +222,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 10,
               "Title": "BE_PetWeb_API.csproj.Backup.tmp",
               "DocumentMoniker": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\BE_PetWeb_API.csproj.Backup.tmp",
               "RelativeDocumentMoniker": "BE_PetWeb_API\\BE_PetWeb_API.csproj.Backup.tmp",
@@ -166,7 +234,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 12,
               "Title": "20250930061343_InitialMigration.cs",
               "DocumentMoniker": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Migrations\\20250930061343_InitialMigration.cs",
               "RelativeDocumentMoniker": "BE_PetWeb_API\\Migrations\\20250930061343_InitialMigration.cs",
@@ -178,7 +246,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 13,
               "Title": "UpdateOrderStatusToVietnamese.sql",
               "DocumentMoniker": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Scripts\\UpdateOrderStatusToVietnamese.sql",
               "RelativeDocumentMoniker": "BE_PetWeb_API\\Scripts\\UpdateOrderStatusToVietnamese.sql",
@@ -189,7 +257,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 14,
               "Title": "SeedProducts.sql",
               "DocumentMoniker": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Scripts\\SeedProducts.sql",
               "RelativeDocumentMoniker": "BE_PetWeb_API\\Scripts\\SeedProducts.sql",
@@ -200,7 +268,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 15,
               "Title": "SeedCategories.sql",
               "DocumentMoniker": "D:\\Dowloads_D\\dacn_10_10_2025\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Scripts\\SeedCategories.sql",
               "RelativeDocumentMoniker": "BE_PetWeb_API\\Scripts\\SeedCategories.sql",
@@ -211,7 +279,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 16,
               "Title": "test_admin_setup.ps1",
               "DocumentMoniker": "C:\\Users\\giahu\\Downloads\\BanTestThayDoi\\6_6_2025_V1\\BE_PetWeb_API\\BE_PetWeb_API\\test_admin_setup.ps1",
               "ToolTip": "C:\\Users\\giahu\\Downloads\\BanTestThayDoi\\6_6_2025_V1\\BE_PetWeb_API\\BE_PetWeb_API\\test_admin_setup.ps1",

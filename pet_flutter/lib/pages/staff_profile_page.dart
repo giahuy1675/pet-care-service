@@ -84,8 +84,8 @@ class _StaffProfilePageState extends State<StaffProfilePage> {
         ),
       );
 
-      // Clear storage and disconnect SignalR
-      await _storage.clear();
+      // Clear only auth data (KEEP biometric credentials)
+      await _storage.clearAuthData();
       
       try {
         final signalRService = SignalRService();

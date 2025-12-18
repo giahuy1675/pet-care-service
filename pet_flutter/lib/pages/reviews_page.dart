@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/review.dart';
 import '../services/review_service.dart';
+import '../widgets/shimmer_placeholders.dart';
 
 class ReviewsPage extends StatefulWidget {
   const ReviewsPage({Key? key}) : super(key: key);
@@ -118,9 +119,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return _buildShimmerBody();
     }
 
     if (_error.isNotEmpty) {
@@ -418,5 +417,56 @@ class _ReviewsPageState extends State<ReviewsPage> {
     } else {
       return '${date.day}/${date.month}/${date.year}';
     }
+  }
+
+  Widget _buildShimmerBody() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 4,
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const ShimmerAvatar(size: 40),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ShimmerText(width: 120, height: 16),
+                          const SizedBox(height: 4),
+                          ShimmerText(width: 80, height: 14),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ShimmerText(width: double.infinity, height: 14),
+                const SizedBox(height: 6),
+                ShimmerText(width: 200, height: 14),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }

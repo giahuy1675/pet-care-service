@@ -7,6 +7,9 @@ import 'package:pet_flutter/pages/add_pet_page.dart';
 import 'package:pet_flutter/pages/pet_detail_tabbed_page.dart';
 import 'package:pet_flutter/utils/format_utils.dart';
 import 'package:pet_flutter/widgets/pet_age_chart.dart';
+import 'package:pet_flutter/widgets/shimmer_placeholders.dart';
+import 'package:pet_flutter/widgets/avatar_menu.dart';
+import 'dart:convert';
 
 class PetsPage extends StatefulWidget {
   const PetsPage({super.key});
@@ -21,6 +24,8 @@ class _PetsPageState extends State<PetsPage> {
   List<Map<String, dynamic>> _items = const [];
   List<Map<String, dynamic>> _filteredItems = const [];
   String? _token;
+  String? _username;
+  int? _userId;
   String _searchQuery = '';
   String _currentFilter = 'all';
   String _currentSort = 'name';
@@ -29,13 +34,27 @@ class _PetsPageState extends State<PetsPage> {
   void initState() {
     super.initState();
     _load();
+    _loadUserInfo();
+  }
+  
+  Future<void> _loadUserInfo() async {
+    final userJson = await SecureStorageService().readUser();
+    if (userJson != null) {
+      final map = json.decode(userJson) as Map<String, dynamic>;
+      setState(() {
+        _username = (map['fullName'] as String?) ?? (map['username'] as String?);
+        _userId = (map['userId'] as num?)?.toInt();
+      });
+    }
   }
 
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  Future<void> _load({bool showLoading = true}) async {
+    if (showLoading) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     try {
       _token = await SecureStorageService().readToken();
       if (_token == null) throw Exception('Bạn chưa đăng nhập');
@@ -44,15 +63,24 @@ class _PetsPageState extends State<PetsPage> {
       setState(() {
         _items = data;
         _filteredItems = data;
+        _error = null;
       });
       _applyFilters();
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+        });
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && showLoading) {
+        setState(() => _loading = false);
+      }
     }
+  }
+
+  Future<void> _refresh() async {
+    await _load(showLoading: false);
   }
 
   void _applyFilters() {
@@ -108,335 +136,6 @@ class _PetsPageState extends State<PetsPage> {
     });
   }
 
-  void _showSearchDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        elevation: 20,
-        child: Container(
-          width: MediaQuery.of(context).size.width * 0.9,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white,
-                Colors.grey.shade50,
-              ],
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header với gradient
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const FaIcon(
-                        FontAwesomeIcons.magnifyingGlass,
-                        size: 24,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Tìm kiếm thú cưng',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Tìm theo tên, loài hoặc giống',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white.withOpacity(0.9),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const FaIcon(
-                        FontAwesomeIcons.xmark,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              // Search content
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    // Search input với animation
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                            spreadRadius: 0,
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: TextField(
-                        autofocus: true,
-                        decoration: InputDecoration(
-                          hintText: 'Nhập tên, loài, giống...',
-                          hintStyle: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 16,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                              width: 2,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide(
-                              color: Colors.grey.shade300,
-                              width: 1.5,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary,
-                              width: 2,
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 16,
-                          ),
-                          prefixIcon: Container(
-                            margin: const EdgeInsets.all(12),
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: FaIcon(
-                              FontAwesomeIcons.magnifyingGlass,
-                              size: 18,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                          suffixIcon: _searchQuery.isNotEmpty
-                              ? Container(
-                                  margin: const EdgeInsets.all(8),
-                                  child: IconButton(
-                                    icon: Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.red.shade100,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: FaIcon(
-                                        FontAwesomeIcons.xmark,
-                                        size: 14,
-                                        color: Colors.red.shade600,
-                                      ),
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _searchQuery = '';
-                                      });
-                                      _applyFilters();
-                                    },
-                                  ),
-                                )
-                              : null,
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value;
-                          });
-                          _applyFilters();
-                        },
-                        controller: TextEditingController(text: _searchQuery),
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    
-                    // Search results info
-                    if (_searchQuery.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            FaIcon(
-                              FontAwesomeIcons.infoCircle,
-                              size: 16,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Tìm thấy ${_filteredItems.length} thú cưng cho "${_searchQuery}"',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Action buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            height: 48,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.grey.shade300,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: TextButton.icon(
-                              onPressed: () {
-                                setState(() {
-                                  _searchQuery = '';
-                                });
-                                _applyFilters();
-                                Navigator.pop(context);
-                              },
-                              icon: FaIcon(
-                                FontAwesomeIcons.rotateLeft,
-                                size: 16,
-                                color: Colors.grey.shade600,
-                              ),
-                              label: Text(
-                                'Xóa bộ lọc',
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              style: TextButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Container(
-                            height: 48,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              gradient: LinearGradient(
-                                colors: [
-                                  Theme.of(context).colorScheme.primary,
-                                  Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                                ],
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                                  spreadRadius: 0,
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: ElevatedButton.icon(
-                              onPressed: () => Navigator.pop(context),
-                              icon: const FaIcon(
-                                FontAwesomeIcons.check,
-                                size: 16,
-                                color: Colors.white,
-                              ),
-                              label: const Text(
-                                'Hoàn thành',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   void _handleFilter(String value) {
     setState(() {
       _currentFilter = value;
@@ -454,32 +153,7 @@ class _PetsPageState extends State<PetsPage> {
   @override
   Widget build(BuildContext context) {
     final body = _loading
-        ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
-                    strokeWidth: 3,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Đang tải thú cưng...',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          )
+        ? _buildShimmerBody()
         : _error != null
             ? Center(
                 child: Padding(
@@ -674,31 +348,34 @@ class _PetsPageState extends State<PetsPage> {
                           
                           // Pets List
                           Expanded(
-                            child: ListView.builder(
-                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                              itemCount: _filteredItems.length,
-                              itemBuilder: (context, index) {
-                                final p = _filteredItems[index];
-                                final name = (p['name'] as String?) ?? 'Thú cưng';
-                                final photo = (p['photoUrl'] as String?) ?? (p['photo'] as String?);
-                                final species = (p['species'] as String?) ?? '';
-                                final breed = (p['breed'] as String?) ?? '';
-                                final gender = (p['gender'] as String?) ?? '';
-                                final weight = (p['weight'] as num?)?.toDouble();
-                                final dobStr = p['dateOfBirth'] as String?;
-                                
-                                return _buildPetCard(
-                                  context,
-                                  pet: p,
-                                  name: name,
-                                  photo: photo,
-                                  species: species,
-                                  breed: breed,
-                                  gender: gender,
-                                  weight: weight,
-                                  dobStr: dobStr,
-                                );
-                              },
+                            child: RefreshIndicator(
+                              onRefresh: _refresh,
+                              child: ListView.builder(
+                                padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                                itemCount: _filteredItems.length,
+                                itemBuilder: (context, index) {
+                                  final p = _filteredItems[index];
+                                  final name = (p['name'] as String?) ?? 'Thú cưng';
+                                  final photo = (p['photoUrl'] as String?) ?? (p['photo'] as String?);
+                                  final species = (p['species'] as String?) ?? '';
+                                  final breed = (p['breed'] as String?) ?? '';
+                                  final gender = (p['gender'] as String?) ?? '';
+                                  final weight = (p['weight'] as num?)?.toDouble();
+                                  final dobStr = p['dateOfBirth'] as String?;
+                                  
+                                  return _buildPetCard(
+                                    context,
+                                    pet: p,
+                                    name: name,
+                                    photo: photo,
+                                    species: species,
+                                    breed: breed,
+                                    gender: gender,
+                                    weight: weight,
+                                    dobStr: dobStr,
+                                  );
+                                },
+                              ),
                             ),
                           ),
                         ],
@@ -708,20 +385,50 @@ class _PetsPageState extends State<PetsPage> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Thú cưng của tôi'),
-            if (_items.isNotEmpty)
-              Text(
-                '${_filteredItems.length}${_searchQuery.isNotEmpty || _currentFilter != 'all' ? ' / ${_items.length}' : ''} thú cưng',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.normal,
-                  color: Colors.white.withOpacity(0.9),
-                ),
+        title: Container(
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: TextField(
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value.toLowerCase();
+                _applyFilters();
+              });
+            },
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: 'Tìm kiếm thú cưng...',
+              hintStyle: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 14,
               ),
-          ],
+              prefixIcon: Icon(
+                Icons.search,
+                size: 20,
+                color: Colors.white.withOpacity(0.9),
+              ),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: Icon(
+                        Icons.clear,
+                        size: 18,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _searchQuery = '';
+                          _applyFilters();
+                        });
+                      },
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 10),
+            ),
+          ),
         ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
@@ -739,29 +446,6 @@ class _PetsPageState extends State<PetsPage> {
           ),
         ),
         actions: [
-          // Search button
-          IconButton(
-            icon: Stack(
-              children: [
-                const FaIcon(FontAwesomeIcons.magnifyingGlass),
-                if (_searchQuery.isNotEmpty)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Colors.orange,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            onPressed: _showSearchDialog,
-            tooltip: 'Tìm kiếm',
-          ),
           // Filter and sort menu
           PopupMenuButton<String>(
             icon: Stack(
@@ -934,26 +618,11 @@ class _PetsPageState extends State<PetsPage> {
               ),
             ],
           ),
-          // Add pet button
-          IconButton(
-            icon: const FaIcon(FontAwesomeIcons.plus),
-            onPressed: () async {
-              final result = await Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const AddPetPage(),
-                ),
-              );
-              if (result == true) {
-                _load();
-              }
-            },
-            tooltip: 'Thêm thú cưng',
-          ),
-          // Refresh button
-          IconButton(
-            icon: const FaIcon(FontAwesomeIcons.arrowsRotate),
-            onPressed: _load,
-            tooltip: 'Làm mới',
+          // Avatar Menu
+          AvatarMenu(
+            userName: _username,
+            userId: _userId,
+            token: _token,
           ),
         ],
       ),
@@ -1462,6 +1131,100 @@ class _PetsPageState extends State<PetsPage> {
       default:
         return '🐾';
     }
+  }
+
+  Widget _buildShimmerBody() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Search & Filter Bar Shimmer
+        Row(
+          children: [
+            Expanded(
+              child: ShimmerInputField(width: double.infinity, height: 56),
+            ),
+            const SizedBox(width: 12),
+            ShimmerButton(width: 56, height: 56, borderRadius: 16),
+            const SizedBox(width: 8),
+            ShimmerButton(width: 56, height: 56, borderRadius: 16),
+          ],
+        ),
+        const SizedBox(height: 20),
+        
+        // Stats Cards Shimmer
+        Row(
+          children: [
+            Expanded(
+              child: ShimmerCard(
+                width: double.infinity,
+                height: 100,
+                borderRadius: 16,
+                margin: const EdgeInsets.only(right: 8),
+              ),
+            ),
+            Expanded(
+              child: ShimmerCard(
+                width: double.infinity,
+                height: 100,
+                borderRadius: 16,
+                margin: const EdgeInsets.only(left: 8),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        
+        // Section Title Shimmer
+        ShimmerText(width: 150, height: 24, margin: const EdgeInsets.only(bottom: 16)),
+        
+        // Pet Cards Shimmer
+        ...List.generate(3, (index) => Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Container(
+            height: 140,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 4,
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                ShimmerAvatar(size: 100),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ShimmerText(width: 120, height: 20),
+                      const SizedBox(height: 8),
+                      ShimmerText(width: 80, height: 16),
+                      const SizedBox(height: 8),
+                      ShimmerText(width: 100, height: 16),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          ShimmerButton(width: 40, height: 32, borderRadius: 8),
+                          const SizedBox(width: 8),
+                          ShimmerButton(width: 40, height: 32, borderRadius: 8),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        )),
+      ],
+    );
   }
 }
 

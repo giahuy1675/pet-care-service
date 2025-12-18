@@ -6,6 +6,7 @@ import 'package:lottie/lottie.dart';
 import 'package:pet_flutter/services/auth_service.dart';
 import 'package:pet_flutter/services/secure_storage.dart';
 import 'package:pet_flutter/services/onesignal_service.dart';
+import 'package:pet_flutter/services/biometric_auth_service.dart';
 import 'package:pet_flutter/pages/register_page.dart';
 import 'package:pet_flutter/pages/root_nav.dart';
 import 'package:pet_flutter/pages/staff_navigation.dart';
@@ -24,6 +25,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   final _authService = AuthService();
   final _storage = SecureStorageService();
+  final _biometricAuth = BiometricAuthService();
   bool _loading = false;
   bool _isInitialLoading = true;
   String? _error;
@@ -31,10 +33,16 @@ class _LoginPageState extends State<LoginPage> {
   bool _rememberMe = false;
   bool _isUsernameFocused = false;
   bool _isPasswordFocused = false;
+  
+  // Biometric states
+  bool _biometricAvailable = false;
+  String _biometricType = 'Sinh trắc học';
+  String? _savedBiometricEmail;
 
   @override
   void initState() {
     super.initState();
+    _checkBiometricAvailability();
     // Simulate initial loading - giảm thời gian để test nhanh hơn
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
@@ -43,6 +51,31 @@ class _LoginPageState extends State<LoginPage> {
         });
       }
     });
+  }
+
+  Future<void> _checkBiometricAvailability() async {
+    try {
+      final supported = await _biometricAuth.isDeviceSupported();
+      final canCheck = await _biometricAuth.canCheckBiometrics();
+      final enabled = await _storage.isBiometricEnabled();
+      final typeName = await _biometricAuth.getBiometricTypeName();
+      final savedEmail = await _storage.getBiometricEmail();
+      
+      if (mounted) {
+        setState(() {
+          _biometricAvailable = supported && canCheck && enabled && savedEmail != null;
+          _biometricType = typeName;
+          _savedBiometricEmail = savedEmail;
+          
+          // Tự động điền email vào ô username
+          if (savedEmail != null && _usernameOrEmailController.text.isEmpty) {
+            _usernameOrEmailController.text = savedEmail;
+          }
+        });
+      }
+    } catch (e) {
+      // Ignore errors
+    }
   }
 
   @override
@@ -106,6 +139,9 @@ class _LoginPageState extends State<LoginPage> {
         // Show success animation
         await _showSuccessAnimation();
         
+        // Đảm bảo dialog đã đóng hoàn toàn
+        if (!mounted) return;
+        
         // Navigate to appropriate page based on user role
         final role = user['role']?.toString();
         Widget nextPage;
@@ -116,7 +152,7 @@ class _LoginPageState extends State<LoginPage> {
         }
         
         // Replace the entire navigation stack with the new page
-        Navigator.of(context).pushAndRemoveUntil(
+        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => nextPage),
           (route) => false,
         );
@@ -588,6 +624,14 @@ class _LoginPageState extends State<LoginPage> {
           _buildRememberMeAndForgotPassword(),
           const SizedBox(height: 24),
           
+          // Biometric Login Button (if available)
+          if (_biometricAvailable) ...[
+            _buildBiometricButton(),
+            const SizedBox(height: 12),
+            _buildDividerSmall(),
+            const SizedBox(height: 12),
+          ],
+          
           // Login Button
           _buildLoginButton(),
           
@@ -977,6 +1021,168 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  Widget _buildBiometricButton() {
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            spreadRadius: 0,
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _loading ? null : _handleBiometricLogin,
+          borderRadius: BorderRadius.circular(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.fingerprint, color: Colors.white, size: 28),
+              const SizedBox(width: 12),
+              Text(
+                'Đăng nhập bằng vân tay',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _confirmRemoveBiometric() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            SizedBox(width: 8),
+            Text('Xóa tài khoản đã lưu?'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Bạn có chắc muốn xóa tài khoản:'),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.email, color: Colors.grey.shade600, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _savedBiometricEmail ?? '',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Bạn sẽ cần đăng nhập lại và thiết lập vân tay mới.',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await _removeBiometric();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Xóa'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _removeBiometric() async {
+    try {
+      await _storage.clearBiometricCredentials();
+      setState(() {
+        _biometricAvailable = false;
+        _savedBiometricEmail = null;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã xóa tài khoản đã lưu'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildDividerSmall() {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 1,
+            color: Colors.grey.shade300,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'hoặc',
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 12,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            height: 1,
+            color: Colors.grey.shade300,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildLoginButton() {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -1030,6 +1236,111 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleBiometricLogin() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      // Xác thực sinh trắc học
+      final result = await _biometricAuth.authenticate(
+        localizedReason: 'Xác thực để đăng nhập',
+      );
+
+      if (!result.success) {
+        if (!result.isUserCanceled) {
+          setState(() {
+            _error = result.errorMessage ?? 'Xác thực thất bại';
+          });
+        }
+        return;
+      }
+
+      // Lấy thông tin đăng nhập đã lưu
+      final email = await _storage.getBiometricEmail();
+      final password = await _storage.getBiometricPassword();
+
+      if (email == null || password == null) {
+        setState(() {
+          _error = 'Không tìm thấy thông tin đăng nhập đã lưu';
+          _biometricAvailable = false;
+        });
+        return;
+      }
+
+      // Thực hiện đăng nhập
+      final res = await _authService.login(
+        usernameOrEmail: email,
+        password: password,
+      );
+
+      final token = res['token'] as String?;
+      final user = res['user'];
+
+      if (token != null) {
+        await _storage.saveToken(token);
+      }
+
+      if (user != null) {
+        await _storage.saveUser(jsonEncode(user));
+
+        // Set OneSignal External User ID
+        try {
+          final role = user['role']?.toString();
+          String? externalId;
+          if (role == 'Staff') {
+            externalId = user['staffId']?.toString();
+          }
+          externalId ??= user['userId']?.toString();
+
+          if (externalId != null) {
+            await OneSignalService().setExternalUserId(externalId);
+          }
+        } catch (e) {
+          // Ignore
+        }
+      }
+
+      if (mounted) {
+        // Show success animation
+        await _showSuccessAnimation();
+
+        // Đảm bảo dialog đã đóng hoàn toàn
+        if (!mounted) return;
+        
+        // Navigate to appropriate page
+        final role = user['role']?.toString();
+        Widget nextPage;
+        if (role == 'Staff' || role == 'Admin') {
+          nextPage = const StaffNavigation();
+        } else {
+          nextPage = const RootNav();
+        }
+
+        // Sử dụng Navigator.of(context) với rootNavigator để đảm bảo xóa toàn bộ stack
+        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => nextPage),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+      });
+
+      if (mounted) {
+        await _showErrorAnimation(e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
   }
 
   void _showForgotPasswordDialog() {

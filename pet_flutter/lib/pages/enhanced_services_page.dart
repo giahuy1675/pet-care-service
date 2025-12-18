@@ -3,9 +3,12 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:pet_flutter/services/service_service.dart';
+import 'package:pet_flutter/services/secure_storage.dart';
 import 'package:pet_flutter/widgets/shimmer_placeholders.dart';
 import 'package:pet_flutter/pages/appointment_booking_page.dart';
 import 'package:pet_flutter/pages/service_detail_page.dart';
+import 'package:pet_flutter/widgets/avatar_menu.dart';
+import 'dart:convert';
 
 class EnhancedServicesPage extends StatefulWidget {
   const EnhancedServicesPage({super.key});
@@ -26,6 +29,10 @@ class _EnhancedServicesPageState extends State<EnhancedServicesPage> {
   double _maxPrice = 1000000;
   String _selectedDuration = 'all';
   final TextEditingController _searchController = TextEditingController();
+  
+  String? _username;
+  int? _userId;
+  String? _token;
 
   final List<Map<String, String>> _categories = [
     {'id': 'all', 'name': 'Tất cả', 'icon': 'paw', 'emoji': '🐾'},
@@ -54,6 +61,19 @@ class _EnhancedServicesPageState extends State<EnhancedServicesPage> {
   void initState() {
     super.initState();
     _load();
+    _loadUserInfo();
+  }
+  
+  Future<void> _loadUserInfo() async {
+    _token = await SecureStorageService().readToken();
+    final userJson = await SecureStorageService().readUser();
+    if (userJson != null) {
+      final map = json.decode(userJson) as Map<String, dynamic>;
+      setState(() {
+        _username = (map['fullName'] as String?) ?? (map['username'] as String?);
+        _userId = (map['userId'] as num?)?.toInt();
+      });
+    }
   }
 
   @override
@@ -154,18 +174,57 @@ class _EnhancedServicesPageState extends State<EnhancedServicesPage> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Dịch vụ'),
+        title: Container(
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: TextField(
+            controller: _searchController,
+            onChanged: _onSearchChanged,
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: 'Tìm kiếm dịch vụ...',
+              hintStyle: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 14,
+              ),
+              prefixIcon: Icon(
+                Icons.search,
+                size: 20,
+                color: Colors.white.withOpacity(0.9),
+              ),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: Icon(
+                        Icons.clear,
+                        size: 18,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                      onPressed: () {
+                        _searchController.clear();
+                        _onSearchChanged('');
+                      },
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 10),
+            ),
+          ),
+        ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const FaIcon(FontAwesomeIcons.arrowsRotate),
-            onPressed: _load,
-          ),
-          IconButton(
             icon: const FaIcon(FontAwesomeIcons.sliders),
             onPressed: _showFilterDialog,
+          ),
+          AvatarMenu(
+            userName: _username,
+            userId: _userId,
+            token: _token,
           ),
         ],
       ),
@@ -268,81 +327,6 @@ class _EnhancedServicesPageState extends State<EnhancedServicesPage> {
           ),
           child: Column(
             children: [
-              // Enhanced Search bar
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: _onSearchChanged,
-                  decoration: InputDecoration(
-                    hintText: 'Tìm kiếm dịch vụ...',
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 16,
-                    ),
-                    prefixIcon: Container(
-                      padding: const EdgeInsets.all(12),
-                      child: FaIcon(
-                        FontAwesomeIcons.magnifyingGlass,
-                        size: 18,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? Container(
-                            margin: const EdgeInsets.only(right: 8),
-                            child: IconButton(
-                              icon: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade200,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: FaIcon(
-                                  FontAwesomeIcons.xmark,
-                                  size: 12,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                              onPressed: () {
-                                _searchController.clear();
-                                _onSearchChanged('');
-                              },
-                            ),
-                          )
-                        : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.primary,
-                        width: 2,
-                      ),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              
               // Enhanced Category filters
               SizedBox(
                 height: 60,

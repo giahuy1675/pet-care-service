@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../services/secure_storage.dart';
 import '../services/staff_service.dart';
 import '../models/appointment.dart';
+import '../widgets/avatar_menu.dart';
 import 'dart:convert';
 
 class StaffDashboardPage extends StatefulWidget {
@@ -160,6 +161,12 @@ class _StaffDashboardPageState extends State<StaffDashboardPage> {
                                 color: Colors.white,
                                 size: 20,
                               ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Avatar Menu
+                            AvatarMenu(
+                              userName: _staffName,
+                              userId: _staffId,
                             ),
                           ],
                         ),

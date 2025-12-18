@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/chat_models.dart';
 import '../services/firebase_chat_service.dart';
 import '../services/user_presence_service.dart';
+import '../widgets/shimmer_placeholders.dart';
 import 'chat_detail_page.dart';
 
 class ChatListPage extends StatefulWidget {
@@ -172,7 +173,7 @@ class _ChatListPageState extends State<ChatListPage> with TickerProviderStateMix
             : _chatService.getCustomerChatRooms(widget.userId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return _buildShimmerBody();
           }
 
           if (snapshot.hasError) {
@@ -373,5 +374,29 @@ class _ChatListPageState extends State<ChatListPage> with TickerProviderStateMix
     } else {
       return DateFormat('dd/MM/yyyy').format(time);
     }
+  }
+
+  Widget _buildShimmerBody() {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: 8,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              ShimmerAvatar(size: 56),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ShimmerCard(
+                  width: double.infinity,
+                  height: 80,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

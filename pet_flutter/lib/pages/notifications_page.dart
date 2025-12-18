@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/chat_models.dart';
 import '../services/firebase_chat_service.dart';
 import '../services/secure_storage.dart' show SecureStorageService;
-
+import '../widgets/shimmer_placeholders.dart';
 import 'chat_detail_page.dart';
 
 /// Trang thông báo - Hiển thị tất cả tin nhắn chưa đọc
@@ -334,9 +334,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
         ],
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
+          ? _buildShimmerBody()
           : _unreadRooms.isEmpty
               ? _buildEmptyState()
               : RefreshIndicator(
@@ -349,6 +347,20 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     },
                   ),
                 ),
+    );
+  }
+
+  Widget _buildShimmerBody() {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return ShimmerCard(
+          width: double.infinity,
+          height: 100,
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        );
+      },
     );
   }
 }

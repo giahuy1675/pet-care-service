@@ -8,6 +8,7 @@ import '../services/firebase_chat_service.dart';
 import '../services/secure_storage.dart';
 import '../widgets/review_dialog.dart';
 import '../widgets/time_progress_bar.dart';
+import '../widgets/shimmer_placeholders.dart';
 import 'appointment_detail_page.dart';
 import 'appointment_booking_page.dart';
 import 'chat_detail_page.dart';
@@ -318,7 +319,45 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Lịch hẹn của tôi'),
+        title: Container(
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: TextField(
+            controller: _searchController,
+            onChanged: _onSearchChanged,
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: 'Tìm kiếm lịch hẹn...',
+              hintStyle: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 14,
+              ),
+              prefixIcon: Icon(
+                Icons.search,
+                size: 20,
+                color: Colors.white.withOpacity(0.9),
+              ),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: Icon(
+                        Icons.clear,
+                        size: 18,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                      onPressed: () {
+                        _searchController.clear();
+                        _onSearchChanged('');
+                      },
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 10),
+            ),
+          ),
+        ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -383,7 +422,7 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
       ),
       body: Column(
         children: [
-          // Search và Filter
+          // Filter section
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -401,65 +440,10 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
                 ),
               ],
             ),
-            child: Column(
+            child: Row(
               children: [
-                // Search bar - simplified
-                TextField(
-                  controller: _searchController,
-                  onChanged: _onSearchChanged,
-                  decoration: InputDecoration(
-                    hintText: 'Tìm kiếm lịch hẹn...',
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 14,
-                    ),
-                    prefixIcon: FaIcon(
-                      FontAwesomeIcons.magnifyingGlass, 
-                      size: 16,
-                      color: Colors.grey.shade600,
-                    ),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: FaIcon(
-                              FontAwesomeIcons.xmark,
-                              size: 14,
-                              color: Colors.grey.shade500,
-                            ),
-                            onPressed: () {
-                              _searchController.clear();
-                              _onSearchChanged('');
-                            },
-                          )
-                        : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.primary,
-                        width: 1.5,
-                      ),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Filters row - simplified
-                Row(
-                  children: [
-                    // Status filter
-                    Expanded(
+                // Status filter
+                Expanded(
                       child: DropdownButtonFormField<String>(
                         value: selectedStatus,
                         onChanged: _onStatusChanged,
@@ -563,8 +547,6 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
                     ),
                   ],
                 ),
-              ],
-            ),
           ),
           // Content
           Expanded(
@@ -624,31 +606,29 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
   }
 
   Widget _buildLoadingWidget() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
-              strokeWidth: 3,
-            ),
+    return _buildShimmerBody();
+  }
+
+  Widget _buildShimmerBody() {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ShimmerText(width: 150, height: 20, margin: const EdgeInsets.only(bottom: 8)),
+              ShimmerCard(
+                width: double.infinity,
+                height: 120,
+                margin: const EdgeInsets.only(bottom: 8),
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-          Text(
-            'Đang tải lịch hẹn...',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -689,20 +669,6 @@ class _AppointmentListPageState extends State<AppointmentListPage> with TickerPr
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Colors.grey.shade600,
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _fetchAppointments,
-              icon: const FaIcon(FontAwesomeIcons.arrowsRotate, size: 16),
-              label: const Text('Thử lại'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
               ),
             ),
           ],

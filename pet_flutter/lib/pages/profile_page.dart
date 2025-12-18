@@ -5,8 +5,10 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:pet_flutter/services/secure_storage.dart';
 import 'package:pet_flutter/services/user_service.dart';
-import 'package:pet_flutter/services/signalr_service.dart';
+import 'package:pet_flutter/services/biometric_auth_service.dart';
 import 'package:pet_flutter/widgets/change_password_dialog.dart';
+import 'package:pet_flutter/widgets/shimmer_placeholders.dart';
+import 'package:pet_flutter/utils/logout_helper.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key, this.initialToken, this.initialUserId});
@@ -28,12 +30,18 @@ class _ProfilePageState extends State<ProfilePage> {
   final _avatarController = TextEditingController();
   final _userService = UserService();
   final _storage = SecureStorageService();
+  final _biometricAuth = BiometricAuthService();
 
   int? _userId;
   String? _token;
   bool _loading = true;
   bool _saving = false;
   String? _error;
+  
+  // Biometric states
+  bool _biometricSupported = false;
+  bool _biometricEnabled = false;
+  String _biometricType = 'Sinh trắc học';
 
   @override
   void initState() {
@@ -41,7 +49,13 @@ class _ProfilePageState extends State<ProfilePage> {
     _bootstrap();
   }
 
-  Future<void> _bootstrap() async {
+  Future<void> _bootstrap({bool showLoading = true}) async {
+    if (showLoading) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     try {
       // Prefer values passed from caller
       String? token = widget.initialToken;
@@ -75,14 +89,60 @@ class _ProfilePageState extends State<ProfilePage> {
       _addressController.text = profile['address'] as String? ?? '';
       _roleController.text = profile['role'] as String? ?? 'Customer';
       _avatarController.text = profile['avatar'] as String? ?? '';
-      setState(() {
-        _loading = false;
-      });
+      
+      // Load biometric settings
+      await _loadBiometricSettings();
+      
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _refresh() async {
+    await _bootstrap(showLoading: false);
+  }
+
+  Future<void> _loadBiometricSettings() async {
+    try {
+      final supported = await _biometricAuth.isDeviceSupported();
+      final canCheck = await _biometricAuth.canCheckBiometrics();
+      final enabled = await _storage.isBiometricEnabled();
+      final typeName = await _biometricAuth.getBiometricTypeName();
+      
+      // Kiểm tra xem email đã lưu có khớp với email hiện tại không
+      final savedEmail = await _storage.getBiometricEmail();
+      final currentEmail = _emailController.text.trim();
+      
+      bool shouldEnable = enabled;
+      
+      // Nếu có email đã lưu nhưng KHÔNG KHỚP với email hiện tại
+      if (enabled && savedEmail != null && savedEmail.isNotEmpty) {
+        if (savedEmail.toLowerCase() != currentEmail.toLowerCase()) {
+          // Email không khớp → Tự động TẮT biometric cho tài khoản này
+          shouldEnable = false;
+          // Không xóa thông tin cũ, giữ lại cho tài khoản cũ
+        }
+      }
+      
+      if (mounted) {
+        setState(() {
+          _biometricSupported = supported && canCheck;
+          _biometricEnabled = shouldEnable;
+          _biometricType = typeName;
+        });
+      }
+    } catch (e) {
+      // Ignore errors loading biometric settings
     }
   }
 
@@ -183,31 +243,9 @@ class _ProfilePageState extends State<ProfilePage> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const FaIcon(FontAwesomeIcons.arrowsRotate),
-            onPressed: _bootstrap,
-          ),
-        ],
       ),
       body: _loading
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Đang tải thông tin...',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
-              ),
-            )
+          ? _buildShimmerBody()
           : _error != null
               ? Center(
               child: SingleChildScrollView(
@@ -259,8 +297,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 )
-              : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+              : RefreshIndicator(
+                  onRefresh: _refresh,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
                       // Profile Header
@@ -361,6 +401,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ],
                   ),
                 ),
+              ),
     );
   }
 
@@ -728,7 +769,7 @@ class _ProfilePageState extends State<ProfilePage> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () => _showLogoutDialog(context),
+          onTap: () => LogoutHelper.showLogoutDialog(context),
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
@@ -1401,18 +1442,615 @@ class _ProfilePageState extends State<ProfilePage> {
   void _showSecurityDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (ctx) => ChangePasswordDialog(
-        userId: _userId!,
-        token: _token!,
-        onPasswordChanged: () {
-          // Có thể thêm logic refresh user data nếu cần
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          elevation: 10,
+          child: Container(
+            width: double.maxFinite,
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white,
+                  Colors.grey.shade50,
+                ],
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header với gradient
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Theme.of(context).colorScheme.primary,
+                        Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                      ],
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const FaIcon(
+                          FontAwesomeIcons.shield,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Bảo mật',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Quản lý bảo mật tài khoản',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        icon: const FaIcon(
+                          FontAwesomeIcons.xmark,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Content
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        // Change Password Section
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.shade200,
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            leading: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const FaIcon(
+                                FontAwesomeIcons.lock,
+                                color: Colors.orange,
+                                size: 20,
+                              ),
+                            ),
+                            title: const Text(
+                              'Đổi mật khẩu',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                            subtitle: const Text(
+                              'Cập nhật mật khẩu mới',
+                              style: TextStyle(fontSize: 13),
+                            ),
+                            trailing: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const FaIcon(
+                                FontAwesomeIcons.chevronRight,
+                                size: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              showDialog(
+                                context: context,
+                                builder: (changeCtx) => ChangePasswordDialog(
+                                  userId: _userId!,
+                                  token: _token!,
+                                  onPasswordChanged: () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Đổi mật khẩu thành công!'),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Biometric Authentication Section
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.shade200,
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                leading: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: _biometricSupported
+                                        ? Colors.blue.withOpacity(0.1)
+                                        : Colors.grey.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: FaIcon(
+                                    FontAwesomeIcons.fingerprint,
+                                    color: _biometricSupported ? Colors.blue : Colors.grey,
+                                    size: 20,
+                                  ),
+                                ),
+                                title: Text(
+                                  'Đăng nhập bằng $_biometricType',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                    color: _biometricSupported ? null : Colors.grey,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  _biometricSupported
+                                      ? 'Sử dụng $_biometricType để đăng nhập nhanh'
+                                      : 'Thiết bị không hỗ trợ sinh trắc học',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: _biometricSupported ? null : Colors.grey,
+                                  ),
+                                ),
+                                trailing: Switch(
+                                  value: _biometricEnabled,
+                                  activeColor: Theme.of(context).colorScheme.primary,
+                                  onChanged: _biometricSupported
+                                      ? (value) async {
+                                          if (value) {
+                                            // Bật biometric
+                                            await _enableBiometric(context, setDialogState);
+                                          } else {
+                                            // Tắt biometric
+                                            await _disableBiometric(setDialogState);
+                                          }
+                                        }
+                                      : null,
+                                ),
+                              ),
+                              if (!_biometricSupported)
+                                Container(
+                                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Colors.amber.shade200,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      FaIcon(
+                                        FontAwesomeIcons.circleInfo,
+                                        size: 14,
+                                        color: Colors.amber.shade700,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Vui lòng thiết lập vân tay hoặc Face ID trong Cài đặt thiết bị',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.amber.shade900,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _enableBiometric(BuildContext context, StateSetter setDialogState) async {
+    // Kiểm tra xem đã lưu thông tin đăng nhập chưa
+    final savedEmail = await _storage.getBiometricEmail();
+    final currentEmail = _emailController.text.trim();
+    
+    // Kiểm tra xem có thông tin của TÀI KHOẢN KHÁC không
+    if (savedEmail != null && savedEmail.isNotEmpty && 
+        savedEmail.toLowerCase() != currentEmail.toLowerCase()) {
+      // Có thông tin của tài khoản khác, hỏi xem có muốn thay thế không
+      if (!context.mounted) return;
+      
+      final shouldReplace = await _showReplaceAccountDialog(context, savedEmail, currentEmail);
+      if (shouldReplace != true) return;
+      
+      // User đồng ý thay thế, tiếp tục thiết lập
+    }
+    
+    if (savedEmail == null || savedEmail.isEmpty || 
+        savedEmail.toLowerCase() != currentEmail.toLowerCase()) {
+      // Chưa có thông tin hoặc thông tin của tài khoản khác, hiển thị dialog để nhập
+      if (!context.mounted) return;
+      
+      final credentials = await _showBiometricSetupDialog(context);
+      if (credentials == null) return;
+      
+      // Xác thực sinh trắc học để bật
+      final result = await _biometricAuth.authenticate(
+        localizedReason: 'Xác thực để bật đăng nhập bằng sinh trắc học',
+      );
+      
+      if (result.success) {
+        // Lưu thông tin đăng nhập
+        await _storage.saveBiometricCredentials(
+          credentials['email']!,
+          credentials['password']!,
+        );
+        await _storage.saveBiometricEnabled(true);
+        
+        setDialogState(() {
+          _biometricEnabled = true;
+        });
+        setState(() {
+          _biometricEnabled = true;
+        });
+        
+        if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đổi mật khẩu thành công!'),
+            SnackBar(
+              content: Text('Đã bật đăng nhập bằng $_biometricType'),
               backgroundColor: Colors.green,
             ),
           );
-        },
+        }
+      } else if (!result.isUserCanceled && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.errorMessage ?? 'Xác thực thất bại'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } else {
+      // Đã có thông tin, chỉ cần xác thực để bật
+      final result = await _biometricAuth.authenticate(
+        localizedReason: 'Xác thực để bật đăng nhập bằng sinh trắc học',
+      );
+      
+      if (result.success) {
+        await _storage.saveBiometricEnabled(true);
+        
+        setDialogState(() {
+          _biometricEnabled = true;
+        });
+        setState(() {
+          _biometricEnabled = true;
+        });
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Đã bật đăng nhập bằng $_biometricType'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else if (!result.isUserCanceled && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.errorMessage ?? 'Xác thực thất bại'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _disableBiometric(StateSetter setDialogState) async {
+    await _storage.saveBiometricEnabled(false);
+    
+    setDialogState(() {
+      _biometricEnabled = false;
+    });
+    setState(() {
+      _biometricEnabled = false;
+    });
+  }
+
+  Future<Map<String, String>?> _showBiometricSetupDialog(BuildContext context) async {
+    final emailController = TextEditingController(text: _emailController.text);
+    final passwordController = TextEditingController();
+    bool obscurePassword = true;
+    
+    return showDialog<Map<String, String>>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Thiết lập đăng nhập sinh trắc học'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Nhập thông tin đăng nhập của bạn để lưu trữ an toàn',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email),
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: passwordController,
+                  obscureText: obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Mật khẩu',
+                    prefixIcon: const Icon(Icons.lock),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setDialogState(() {
+                          obscurePassword = !obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Hủy'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Vui lòng nhập đầy đủ thông tin'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
+                Navigator.pop(ctx, {
+                  'email': emailController.text,
+                  'password': passwordController.text,
+                });
+              },
+              child: const Text('Xác nhận'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<bool?> _showReplaceAccountDialog(BuildContext context, String oldEmail, String newEmail) async {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
+            const SizedBox(width: 8),
+            const Expanded(child: Text('Thay đổi tài khoản?')),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Đã có tài khoản khác đang sử dụng đăng nhập vân tay:',
+                style: TextStyle(color: Colors.grey.shade700),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.person_off, color: Colors.red.shade600, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Tài khoản cũ:',
+                            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                          ),
+                          Text(
+                            oldEmail,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.red.shade800,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.person, color: Colors.green.shade600, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Tài khoản mới:',
+                            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                          ),
+                          Text(
+                            newEmail,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.green.shade800,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.orange.shade700, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Nếu tiếp tục, tài khoản cũ sẽ KHÔNG thể đăng nhập bằng vân tay nữa.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.orange.shade900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Thay thế'),
+          ),
+        ],
       ),
     );
   }
@@ -1529,83 +2167,94 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Đăng xuất'),
-        content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await _performLogout();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+  Widget _buildShimmerBody() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Profile Header Shimmer
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            child: const Text('Đăng xuất'),
+            child: Column(
+              children: [
+                const ShimmerAvatar(size: 120),
+                const SizedBox(height: 16),
+                Center(
+                  child: ShimmerText(width: 150, height: 24),
+                ),
+                const SizedBox(height: 8),
+                Center(
+                  child: ShimmerText(width: 120, height: 16),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Quick Stats Shimmer
+          Row(
+            children: [
+              Expanded(
+                child: ShimmerCard(
+                  width: double.infinity,
+                  height: 100,
+                  borderRadius: 16,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ShimmerCard(
+                  width: double.infinity,
+                  height: 100,
+                  borderRadius: 16,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ShimmerCard(
+                  width: double.infinity,
+                  height: 100,
+                  borderRadius: 16,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          
+          // Menu Section Shimmer
+          ShimmerCard(
+            width: double.infinity,
+            height: 180,
+            borderRadius: 20,
+          ),
+          const SizedBox(height: 16),
+          
+          ShimmerCard(
+            width: double.infinity,
+            height: 240,
+            borderRadius: 20,
+          ),
+          const SizedBox(height: 16),
+          
+          ShimmerCard(
+            width: double.infinity,
+            height: 120,
+            borderRadius: 20,
           ),
         ],
       ),
     );
-  }
-
-  Future<void> _performLogout() async {
-    try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-
-      // Clear all stored data
-      await _storage.clear();
-      
-      // Disconnect SignalR if connected
-      try {
-        final signalRService = SignalRService();
-        await signalRService.disconnect();
-      } catch (e) {
-      }
-
-      // Close loading dialog
-      if (mounted) Navigator.of(context).pop();
-
-      // Navigate to login page and clear navigation stack
-      if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/login',
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      // Close loading dialog if still showing
-      if (mounted) Navigator.of(context).pop();
-      
-      // Show error message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi đăng xuất: ${e.toString()}'),
-            backgroundColor: Colors.red.shade600,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        );
-      }
-    }
   }
 }
 
