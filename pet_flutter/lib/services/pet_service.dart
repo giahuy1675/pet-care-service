@@ -68,7 +68,7 @@ class PetService {
     if (gender != null) request.fields['gender'] = gender;
     if (color != null) request.fields['color'] = color;
     if (birthDate != null) request.fields['dateOfBirth'] = birthDate.toIso8601String();
-    if (weight != null) request.fields['weight'] = weight.toString();
+    if (weight != null) request.fields['weight'] = weight.toStringAsFixed(2).replaceAll(',', '.');
     if (description != null && description.isNotEmpty) request.fields['description'] = description;
     if (photo != null) {
       request.files.add(await http.MultipartFile.fromPath('photo', photo.path, contentType: MediaType('image', 'jpeg')));
@@ -110,7 +110,7 @@ class PetService {
     if (gender != null) request.fields['gender'] = gender;
     if (color != null) request.fields['color'] = color;
     if (birthDate != null) request.fields['dateOfBirth'] = birthDate.toIso8601String();
-    if (weight != null) request.fields['weight'] = weight.toString();
+    if (weight != null) request.fields['weight'] = weight.toStringAsFixed(2).replaceAll(',', '.');
     if (description != null && description.isNotEmpty) request.fields['description'] = description;
     if (photo != null) {
       request.files.add(await http.MultipartFile.fromPath('photo', photo.path, contentType: MediaType('image', 'jpeg')));

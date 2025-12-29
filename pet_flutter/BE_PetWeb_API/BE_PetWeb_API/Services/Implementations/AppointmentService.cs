@@ -345,20 +345,25 @@ namespace BE_PetWeb_API.Services.Implementations
                     var appointmentDay = appointmentDate.Date;
                     var nextDay = appointmentDay.AddDays(1);
 
+                    // ✅ FIX: Include Service để tính EndTime chính xác khi EndTime null
                     // Kiểm tra xem thú cưng đã có lịch hẹn vào thời gian này chưa
-                    var petConflicts = await _context.Appointments
+                    var petExistingAppointments = await _context.Appointments
+                        .Include(a => a.Service)
                         .Where(a => a.PetId == createAppointmentDto.PetId)
                         .Where(a => a.AppointmentDate >= appointmentDay && a.AppointmentDate < nextDay)
                         .Where(a => a.Status != "Cancelled" && a.Status != "No-Show" && a.Status != "Completed")
-                        .Where(a =>
-                            // Kiểm tra xem thời gian bắt đầu của lịch hẹn mới nằm trong khoảng thời gian của lịch hẹn cũ
-                            (appointmentDate >= a.AppointmentDate && appointmentDate < a.EndTime) ||
-                            // Kiểm tra xem thời gian kết thúc (bao gồm buffer) của lịch hẹn mới có xung đột với lịch hẹn cũ
-                            (bufferEndTime > a.AppointmentDate && bufferEndTime <= a.EndTime) ||
-                            // Kiểm tra xem lịch hẹn mới bao trùm lịch hẹn cũ
-                            (appointmentDate <= a.AppointmentDate && bufferEndTime >= a.EndTime)
-                        )
                         .ToListAsync();
+
+                    // ✅ FIX: Kiểm tra conflict trong C# để xử lý EndTime null đúng cách
+                    var petConflicts = petExistingAppointments.Where(a =>
+                    {
+                        var existingEndTime = a.EndTime ?? a.AppointmentDate.AddMinutes(a.Service?.Duration ?? DEFAULT_SERVICE_DURATION_MINUTES);
+                        var existingBufferEndTime = existingEndTime.AddMinutes(BUFFER_TIME_MINUTES);
+
+                        return (appointmentDate >= a.AppointmentDate && appointmentDate < existingEndTime) ||
+                               (bufferEndTime > a.AppointmentDate && bufferEndTime <= existingBufferEndTime) ||
+                               (appointmentDate <= a.AppointmentDate && bufferEndTime >= existingBufferEndTime);
+                    }).ToList();
 
                     if (petConflicts.Count > 0)
                     {
@@ -368,22 +373,24 @@ namespace BE_PetWeb_API.Services.Implementations
                     // Chỉ kiểm tra xung đột staff khi có staff được chỉ định
                     if (createAppointmentDto.StaffId.HasValue)
                     {
-                        var staffQuery = _context.Appointments
+                        // ✅ FIX: Include Service để tính EndTime chính xác
+                        var staffExistingAppointments = await _context.Appointments
+                            .Include(a => a.Service)
                             .Where(a => a.AppointmentDate >= appointmentDay && a.AppointmentDate < nextDay)
                             .Where(a => a.Status != "Cancelled" && a.Status != "No-Show" && a.Status != "Completed")
-                            .Where(a => a.StaffId == createAppointmentDto.StaffId.Value);
-
-                        // Kiểm tra xung đột với staff được chỉ định
-                        var staffConflictingAppointments = await staffQuery
-                            .Where(a =>
-                                // Kiểm tra xem thời gian bắt đầu của lịch hẹn mới nằm trong khoảng thời gian của lịch hẹn cũ
-                                (appointmentDate >= a.AppointmentDate && appointmentDate < a.EndTime) ||
-                                // Kiểm tra xem thời gian kết thúc (bao gồm buffer) của lịch hẹn mới có xung đột với lịch hẹn cũ
-                                (bufferEndTime > a.AppointmentDate && bufferEndTime <= a.EndTime) ||
-                                // Kiểm tra xem lịch hẹn mới bao trùm lịch hẹn cũ
-                                (appointmentDate <= a.AppointmentDate && bufferEndTime >= a.EndTime)
-                            )
+                            .Where(a => a.StaffId == createAppointmentDto.StaffId.Value)
                             .ToListAsync();
+
+                        // ✅ FIX: Kiểm tra conflict trong C# để xử lý EndTime null đúng cách
+                        var staffConflictingAppointments = staffExistingAppointments.Where(a =>
+                        {
+                            var existingEndTime = a.EndTime ?? a.AppointmentDate.AddMinutes(a.Service?.Duration ?? DEFAULT_SERVICE_DURATION_MINUTES);
+                            var existingBufferEndTime = existingEndTime.AddMinutes(BUFFER_TIME_MINUTES);
+
+                            return (appointmentDate >= a.AppointmentDate && appointmentDate < existingEndTime) ||
+                                   (bufferEndTime > a.AppointmentDate && bufferEndTime <= existingBufferEndTime) ||
+                                   (appointmentDate <= a.AppointmentDate && bufferEndTime >= existingBufferEndTime);
+                        }).ToList();
 
                         if (staffConflictingAppointments.Count > 0)
                         {
@@ -584,22 +591,27 @@ namespace BE_PetWeb_API.Services.Implementations
                         var appointmentDay = appointmentDate.Date;
                         var nextDay = appointmentDay.AddDays(1);
 
+                        // ✅ FIX: Include Service để tính EndTime chính xác khi EndTime null
                         // Kiểm tra xem thú cưng đã có lịch hẹn khác vào thời gian này chưa (ngoại trừ lịch hẹn hiện tại)
                         var bufferEndTime = endTime.Value.AddMinutes(BUFFER_TIME_MINUTES);
-                        var petConflicts = await _context.Appointments
+                        var petExistingAppointments = await _context.Appointments
+                            .Include(a => a.Service)
                             .Where(a => a.AppointmentId != id) // Loại trừ lịch hẹn hiện tại
                             .Where(a => a.PetId == appointment.PetId)
                             .Where(a => a.AppointmentDate >= appointmentDay && a.AppointmentDate < nextDay)
                             .Where(a => a.Status != "Cancelled" && a.Status != "No-Show" && a.Status != "Completed")
-                            .Where(a =>
-                                // Kiểm tra xem thời gian bắt đầu của lịch hẹn mới nằm trong khoảng thời gian của lịch hẹn cũ
-                                (appointmentDate >= a.AppointmentDate && appointmentDate < a.EndTime) ||
-                                // Kiểm tra xem thời gian kết thúc (bao gồm buffer) của lịch hẹn mới có xung đột với lịch hẹn cũ
-                                (bufferEndTime > a.AppointmentDate && bufferEndTime <= a.EndTime) ||
-                                // Kiểm tra xem lịch hẹn mới bao trùm lịch hẹn cũ
-                                (appointmentDate <= a.AppointmentDate && bufferEndTime >= a.EndTime)
-                            )
                             .ToListAsync();
+
+                        // ✅ FIX: Kiểm tra conflict trong C# để xử lý EndTime null đúng cách
+                        var petConflicts = petExistingAppointments.Where(a =>
+                        {
+                            var existingEndTime = a.EndTime ?? a.AppointmentDate.AddMinutes(a.Service?.Duration ?? DEFAULT_SERVICE_DURATION_MINUTES);
+                            var existingBufferEndTime = existingEndTime.AddMinutes(BUFFER_TIME_MINUTES);
+
+                            return (appointmentDate >= a.AppointmentDate && appointmentDate < existingEndTime) ||
+                                   (bufferEndTime > a.AppointmentDate && bufferEndTime <= existingBufferEndTime) ||
+                                   (appointmentDate <= a.AppointmentDate && bufferEndTime >= existingBufferEndTime);
+                        }).ToList();
 
                         if (petConflicts.Count > 0)
                         {
@@ -609,23 +621,25 @@ namespace BE_PetWeb_API.Services.Implementations
                         // Chỉ kiểm tra xung đột staff khi có staff được chỉ định
                         if (staffId.HasValue)
                         {
-                            var staffQuery = _context.Appointments
+                            // ✅ FIX: Include Service để tính EndTime chính xác
+                            var staffExistingAppointments = await _context.Appointments
+                                .Include(a => a.Service)
                                 .Where(a => a.AppointmentId != id)
                                 .Where(a => a.AppointmentDate >= appointmentDay && a.AppointmentDate < nextDay)
                                 .Where(a => a.Status != "Cancelled" && a.Status != "No-Show" && a.Status != "Completed")
-                                .Where(a => a.StaffId == staffId.Value);
-
-                            // Tính buffer time vào việc kiểm tra xung đột
-                            var staffConflictingAppointments = await staffQuery
-                                .Where(a =>
-                                    // Kiểm tra xem thời gian bắt đầu của lịch hẹn mới nằm trong khoảng thời gian của lịch hẹn cũ
-                                    (appointmentDate >= a.AppointmentDate && appointmentDate < a.EndTime) ||
-                                    // Kiểm tra xem thời gian kết thúc (bao gồm buffer) của lịch hẹn mới có xung đột với lịch hẹn cũ
-                                    (bufferEndTime > a.AppointmentDate && bufferEndTime <= a.EndTime) ||
-                                    // Kiểm tra xem lịch hẹn mới bao trùm lịch hẹn cũ
-                                    (appointmentDate <= a.AppointmentDate && bufferEndTime >= a.EndTime)
-                                )
+                                .Where(a => a.StaffId == staffId.Value)
                                 .ToListAsync();
+
+                            // ✅ FIX: Kiểm tra conflict trong C# để xử lý EndTime null đúng cách
+                            var staffConflictingAppointments = staffExistingAppointments.Where(a =>
+                            {
+                                var existingEndTime = a.EndTime ?? a.AppointmentDate.AddMinutes(a.Service?.Duration ?? DEFAULT_SERVICE_DURATION_MINUTES);
+                                var existingBufferEndTime = existingEndTime.AddMinutes(BUFFER_TIME_MINUTES);
+
+                                return (appointmentDate >= a.AppointmentDate && appointmentDate < existingEndTime) ||
+                                       (bufferEndTime > a.AppointmentDate && bufferEndTime <= existingBufferEndTime) ||
+                                       (appointmentDate <= a.AppointmentDate && bufferEndTime >= existingBufferEndTime);
+                            }).ToList();
 
                             if (staffConflictingAppointments.Count > 0)
                             {
@@ -863,21 +877,24 @@ namespace BE_PetWeb_API.Services.Implementations
             // Chỉ kiểm tra xung đột khi có staff được chỉ định
             if (staffId.HasValue)
             {
-                var staffQuery = _context.Appointments
+                // ✅ FIX: Include Service để tính EndTime chính xác khi null
+                var staffExistingAppointments = await _context.Appointments
+                    .Include(a => a.Service)
                     .Where(a => a.AppointmentDate >= appointmentDay && a.AppointmentDate < nextDay)
-                    .Where(a => a.Status != "Cancelled" && a.Status != "No-Show")
-                    .Where(a => a.StaffId == staffId.Value);
-
-                var conflictingAppointments = await staffQuery
-                    .Where(a =>
-                        // Kiểm tra xem thời gian bắt đầu của lịch hẹn mới nằm trong khoảng thời gian của lịch hẹn cũ
-                        (appointmentDate >= a.AppointmentDate && appointmentDate < a.EndTime) ||
-                        // Kiểm tra xem thời gian kết thúc (bao gồm buffer) của lịch hẹn mới có xung đột với lịch hẹn cũ
-                        (bufferEndTime > a.AppointmentDate && bufferEndTime <= a.EndTime) ||
-                        // Kiểm tra xem lịch hẹn mới bao trùm lịch hẹn cũ
-                        (appointmentDate <= a.AppointmentDate && bufferEndTime >= a.EndTime)
-                    )
+                    .Where(a => a.Status != "Cancelled" && a.Status != "No-Show" && a.Status != "Completed") // ✅ FIX: Thêm "Completed"
+                    .Where(a => a.StaffId == staffId.Value)
                     .ToListAsync();
+
+                // ✅ FIX: Kiểm tra conflict trong C# để xử lý EndTime null đúng cách
+                var conflictingAppointments = staffExistingAppointments.Where(a =>
+                {
+                    var existingEndTime = a.EndTime ?? a.AppointmentDate.AddMinutes(a.Service?.Duration ?? DEFAULT_SERVICE_DURATION_MINUTES);
+                    var existingBufferEndTime = existingEndTime.AddMinutes(BUFFER_TIME_MINUTES);
+
+                    return (appointmentDate >= a.AppointmentDate && appointmentDate < existingEndTime) ||
+                           (bufferEndTime > a.AppointmentDate && bufferEndTime <= existingBufferEndTime) ||
+                           (appointmentDate <= a.AppointmentDate && bufferEndTime >= existingBufferEndTime);
+                }).ToList();
 
                 return conflictingAppointments.Count == 0;
             }
@@ -941,7 +958,7 @@ namespace BE_PetWeb_API.Services.Implementations
             var allAppointments = await _context.Appointments
                 .Include(a => a.Service)
                 .Where(a => a.AppointmentDate >= appointmentDay && a.AppointmentDate < nextDay)
-                .Where(a => a.Status != "Cancelled" && a.Status != "No-Show")
+                .Where(a => a.Status != "Cancelled" && a.Status != "No-Show" && a.Status != "Completed") // ✅ FIX: Thêm "Completed"
                 .Select(a => new
                 {
                     a.AppointmentId,
@@ -996,6 +1013,25 @@ namespace BE_PetWeb_API.Services.Implementations
                 }
             }
 
+            // ✅ PERFORMANCE FIX: Query pet appointments 1 LẦN DUY NHẤT trước vòng lặp
+            // Tránh N+1 query problem (27 slots × 1 query = 27 queries!)
+            var petAppointments = new List<dynamic>();
+            if (petId.HasValue)
+            {
+                petAppointments = await _context.Appointments
+                    .Include(a => a.Service) // Include Service để lấy duration chính xác
+                    .Where(a => a.AppointmentDate.Date == appointmentDay)
+                    .Where(a => a.PetId == petId.Value)
+                    .Where(a => a.Status != "Cancelled" && a.Status != "No-Show" && a.Status != "Completed")
+                    .Select(a => new
+                    {
+                        a.AppointmentDate,
+                        a.EndTime,
+                        ServiceDuration = a.Service.Duration
+                    })
+                    .ToListAsync<dynamic>();
+            }
+
             // Tạo các time slots dựa trên service duration + buffer
             TimeSpan openingTime = new TimeSpan(8, 0, 0);
             TimeSpan closingTime = new TimeSpan(21, 30, 0);
@@ -1031,10 +1067,10 @@ namespace BE_PetWeb_API.Services.Implementations
                             var appointmentEndTime = appointment.EndTime ?? appointment.AppointmentDate.AddMinutes(appointment.ServiceDuration);
                             var appointmentBufferEndTime = appointmentEndTime.AddMinutes(BUFFER_TIME_MINUTES);
 
-                            // Kiểm tra xung đột
+                            // ✅ CRITICAL FIX: Sử dụng bufferEndTime cho slot mới để NHẤT QUÁN với CreateAppointmentAsync
                             if ((slotStartTime >= appointment.AppointmentDate && slotStartTime < appointmentEndTime) ||
-                                (slotEndTime > appointment.AppointmentDate && slotEndTime <= appointmentBufferEndTime) ||
-                                (slotStartTime <= appointment.AppointmentDate && slotEndTime >= appointmentBufferEndTime))
+                                (bufferEndTime > appointment.AppointmentDate && bufferEndTime <= appointmentBufferEndTime) ||
+                                (slotStartTime <= appointment.AppointmentDate && bufferEndTime >= appointmentBufferEndTime))
                             {
                                 staffBusy = true;
                                 break;
@@ -1074,10 +1110,10 @@ namespace BE_PetWeb_API.Services.Implementations
                         var appointmentEndTime = appointment.EndTime ?? appointment.AppointmentDate.AddMinutes(appointment.ServiceDuration);
                         var appointmentBufferEndTime = appointmentEndTime.AddMinutes(BUFFER_TIME_MINUTES);
 
-                        // Kiểm tra xung đột
+                        // ✅ CRITICAL FIX: Sử dụng bufferEndTime cho slot mới để NHẤT QUÁN với CreateAppointmentAsync
                         if ((slotStartTime >= appointment.AppointmentDate && slotStartTime < appointmentEndTime) ||
-                            (slotEndTime > appointment.AppointmentDate && slotEndTime <= appointmentBufferEndTime) ||
-                            (slotStartTime <= appointment.AppointmentDate && slotEndTime >= appointmentBufferEndTime))
+                            (bufferEndTime > appointment.AppointmentDate && bufferEndTime <= appointmentBufferEndTime) ||
+                            (slotStartTime <= appointment.AppointmentDate && bufferEndTime >= appointmentBufferEndTime))
                         {
                             isStaffBusy = true;
                             break;
@@ -1086,31 +1122,22 @@ namespace BE_PetWeb_API.Services.Implementations
                 }
                 // ✅ QUAN TRỌNG: Khi không có staffId, KHÔNG kiểm tra staff busy để tránh hiển thị lịch bận của các staff khác
 
-                // ✅ KIỂM TRA PET BUSY - Kiểm tra có conflict với lịch hẹn của thú cưng không
+                // ✅ KIỂM TRA PET BUSY - Tái sử dụng petAppointments đã query ở trên (KHÔNG query lại!)
                 bool isPetBusy = false;
-                if (petId.HasValue)
+                if (petId.HasValue && petAppointments.Any())
                 {
-                    var petAppointments = await _context.Appointments
-                        .Where(a => a.AppointmentDate.Date == appointmentDay)
-                        .Where(a => a.PetId == petId.Value)
-                        .Where(a => a.Status != "Cancelled" && a.Status != "No-Show")
-                        .Select(a => new
-                        {
-                            a.AppointmentDate,
-                            a.EndTime,
-                            a.ServiceId
-                        })
-                        .ToListAsync();
-
                     foreach (var appointment in petAppointments)
                     {
-                        var appointmentEndTime = appointment.EndTime ?? appointment.AppointmentDate.AddMinutes(service.Duration);
+                        // ✅ Lấy duration từ Service đã include
+                        var appointmentEndTime = appointment.EndTime 
+                            ?? appointment.AppointmentDate.AddMinutes(appointment.ServiceDuration);
                         var appointmentBufferEndTime = appointmentEndTime.AddMinutes(BUFFER_TIME_MINUTES);
 
-                        // Kiểm tra xung đột
+                        // ✅ CRITICAL FIX: Sử dụng bufferEndTime cho slot mới để NHẤT QUÁN với CreateAppointmentAsync
+                        // Kiểm tra xung đột CHÍNH XÁC như logic tạo appointment
                         if ((slotStartTime >= appointment.AppointmentDate && slotStartTime < appointmentEndTime) ||
-                            (slotEndTime > appointment.AppointmentDate && slotEndTime <= appointmentBufferEndTime) ||
-                            (slotStartTime <= appointment.AppointmentDate && slotEndTime >= appointmentBufferEndTime))
+                            (bufferEndTime > appointment.AppointmentDate && bufferEndTime <= appointmentBufferEndTime) ||
+                            (slotStartTime <= appointment.AppointmentDate && bufferEndTime >= appointmentBufferEndTime))
                         {
                             isPetBusy = true;
                             break;
@@ -1292,7 +1319,7 @@ namespace BE_PetWeb_API.Services.Implementations
 
                 var appointmentsQuery = _context.Appointments
                     .Where(a => a.AppointmentDate >= appointmentDay && a.AppointmentDate < nextDay)
-                    .Where(a => a.Status != "Cancelled" && a.Status != "No-Show");
+                    .Where(a => a.Status != "Cancelled" && a.Status != "No-Show" && a.Status != "Completed"); // ✅ FIX: Thêm "Completed"
 
                 if (staffId.HasValue)
                 {
@@ -1356,7 +1383,7 @@ namespace BE_PetWeb_API.Services.Implementations
             {
                 var startTime = appointment.AppointmentDate;
                 var endTime = appointment.EndTime ?? startTime.AddMinutes(DEFAULT_SERVICE_DURATION_MINUTES);
-                var duration = (int)(endTime - startTime).TotalMinutes;                // Thêm tất cả các khung giờ display (30 phút) bị ảnh hưởng
+                var duration = (int)(endTime - startTime).TotalMinutes;                
                 for (DateTime time = startTime; time < endTime; time = time.AddMinutes(DEFAULT_SLOT_INTERVAL_MINUTES))
                 {
                     busyTimeSlots.Add(time.ToString("HH:mm"));

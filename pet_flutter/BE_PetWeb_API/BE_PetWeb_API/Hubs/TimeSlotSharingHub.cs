@@ -172,7 +172,7 @@ namespace BE_PetWeb_API.Hubs
                 {
                     timeSlot = request.TimeSlot,
                     userId = userId,
-                    userName = userName, // Thêm userName để hiển thị "User X đang chọn (Xs)"
+                    userName = userName,
                     roomKey = request.RoomKey,
                     serviceId = request.ServiceId,
                     staffId = request.StaffId,

@@ -1125,7 +1125,6 @@ class _DateTimeStepState extends State<DateTimeStep> {
                 Color borderColor;
                 Color backgroundColor;
                 String statusText;
-                String statusIcon = '';
                 bool isEnabled = false;
                         
                 // Kiểm tra thời gian đã qua
@@ -1145,7 +1144,6 @@ class _DateTimeStepState extends State<DateTimeStep> {
                   borderColor = Colors.grey;
                   backgroundColor = Colors.grey.shade50;
                   statusText = 'Đã qua';
-                  statusIcon = '⏰';
                 } else if (isBeingSelectedByOthers) {
                   // Ưu tiên cao: người khác đang chọn (màu tím như web)
                   // Tính remaining seconds
@@ -1157,7 +1155,6 @@ class _DateTimeStepState extends State<DateTimeStep> {
                   statusText = remainingSeconds > 0 
                       ? '${otherUserSelection.userName} (${remainingSeconds}s)'
                       : 'Hết hạn';
-                  statusIcon = '⏱️';
                 } else if (isSelectedByMe) {
                   // Mình đang chọn - hiển thị countdown
                   final selectionTime = _mySelectionTimestamp ?? DateTime.now();
@@ -1169,32 +1166,27 @@ class _DateTimeStepState extends State<DateTimeStep> {
                   statusText = remainingSeconds > 0 
                       ? 'Bạn đang chọn (${remainingSeconds}s)'
                       : 'Khả dụng';
-                  statusIcon = '⏱️';
                   isEnabled = true;
                 } else if (slot.isPetBusy) {
                   // Ưu tiên cao nhất: thú cưng bận (màu đỏ như web)
                   borderColor = Colors.red;
                   backgroundColor = Colors.red.shade50;
                   statusText = 'Thú cưng bận';
-                  statusIcon = '🐕';
                 } else if (slot.isStaffBusy) {
                   // Ưu tiên thứ hai: nhân viên bận (màu cam như web)
                   borderColor = Colors.orange;
                   backgroundColor = Colors.orange.shade50;
                   statusText = 'Nhân viên bận';
-                  statusIcon = '👤';
                 } else if (!slot.isAvailable) {
                   // Không khả dụng vì lý do khác
                   borderColor = Colors.grey;
                   backgroundColor = Colors.grey.shade50;
                   statusText = 'Không khả dụng';
-                  statusIcon = '❌';
                 } else {
                   // Khả dụng (màu xanh như web)
                   borderColor = Colors.green;
                   backgroundColor = Colors.green.shade50;
                   statusText = 'Khả dụng';
-                  statusIcon = '✅';
                   isEnabled = true;
                 }
                         
@@ -1288,16 +1280,6 @@ class _DateTimeStepState extends State<DateTimeStep> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      if (statusIcon.isNotEmpty) ...[
-                                        Text(
-                                          statusIcon,
-                                          style: TextStyle(
-                                            fontSize: 9,
-                                            color: isSelected ? Colors.white : borderColor,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 2),
-                                      ],
                                       Flexible(
                                         child: Text(
                                           slot.formattedTime,

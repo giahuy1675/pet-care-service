@@ -630,3 +630,13 @@ D:\Dowloads_D\dacn_10_10_2025\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE
 D:\Dowloads_D\dacn_10_10_2025\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\obj\Debug\net8.0\BE_PetWeb_API.pdb
 D:\Dowloads_D\dacn_10_10_2025\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\obj\Debug\net8.0\BE_PetWeb_API.genruntimeconfig.cache
 D:\Dowloads_D\dacn_10_10_2025\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\obj\Debug\net8.0\ref\BE_PetWeb_API.dll
+D:\Dowloads_D\dacn_10_10_2025\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\Microsoft.Extensions.Caching.Memory.dll
+D:\Dowloads_D\dacn_10_10_2025\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.dll
+D:\Dowloads_D\dacn_10_10_2025\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+D:\Dowloads_D\dacn_10_10_2025\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\Microsoft.Extensions.Diagnostics.Abstractions.dll
+D:\Dowloads_D\dacn_10_10_2025\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\Microsoft.Extensions.Hosting.Abstractions.dll
+D:\Dowloads_D\dacn_10_10_2025\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\Microsoft.Extensions.Logging.dll
+D:\Dowloads_D\dacn_10_10_2025\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
+D:\Dowloads_D\dacn_10_10_2025\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\Microsoft.Extensions.ObjectPool.dll
+D:\Dowloads_D\dacn_10_10_2025\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\Microsoft.Extensions.Options.dll
+D:\Dowloads_D\dacn_10_10_2025\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\bin\Debug\net8.0\System.Net.WebSockets.WebSocketProtocol.dll

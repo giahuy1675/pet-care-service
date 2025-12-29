@@ -38,7 +38,6 @@ namespace BE_PetWeb_API.Services.Implementations
                         Species = p.Species,
                         Breed = p.Breed,
                         Gender = p.Gender,
-                        // Chuyển đổi từ DateOnly? sang DateTime?
                         DateOfBirth = p.DateOfBirth != null ? new DateTime?(new DateTime(p.DateOfBirth.Value.Year, p.DateOfBirth.Value.Month, p.DateOfBirth.Value.Day)) : null,
                         Weight = p.Weight,
                         Color = p.Color,
@@ -72,7 +71,6 @@ namespace BE_PetWeb_API.Services.Implementations
                         Species = p.Species,
                         Breed = p.Breed,
                         Gender = p.Gender,
-                        // Chuyển đổi từ DateOnly? sang DateTime?
                         DateOfBirth = p.DateOfBirth != null ? new DateTime?(new DateTime(p.DateOfBirth.Value.Year, p.DateOfBirth.Value.Month, p.DateOfBirth.Value.Day)) : null,
                         Weight = p.Weight,
                         Color = p.Color,
@@ -106,7 +104,6 @@ namespace BE_PetWeb_API.Services.Implementations
                         Species = p.Species,
                         Breed = p.Breed,
                         Gender = p.Gender,
-                        // Chuyển đổi từ DateOnly? sang DateTime?
                         DateOfBirth = p.DateOfBirth != null ? new DateTime?(new DateTime(p.DateOfBirth.Value.Year, p.DateOfBirth.Value.Month, p.DateOfBirth.Value.Day)) : null,
                         Weight = p.Weight,
                         Color = p.Color,
@@ -294,6 +291,9 @@ namespace BE_PetWeb_API.Services.Implementations
                     }
                 }
 
+                // Log weight để debug
+                _logger.LogInformation($"Received weight value: {updatePetDto.Weight}");
+                
                 // Cập nhật thông tin cơ bản
                 pet.Name = updatePetDto.Name;
                 pet.Species = updatePetDto.Species;

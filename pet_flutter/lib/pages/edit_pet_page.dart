@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:lottie/lottie.dart';
 import 'package:pet_flutter/services/pet_service.dart';
 import 'package:pet_flutter/services/secure_storage.dart';
 import 'package:pet_flutter/utils/format_utils.dart';
-import 'package:pet_flutter/utils/onesignal_notification_helper.dart';
 
 class EditPetPage extends StatefulWidget {
   const EditPetPage({super.key, required this.pet});
@@ -97,6 +97,64 @@ class _EditPetPageState extends State<EditPetPage> {
     if (picked != null) { setState(() { _birthDate = picked; }); }
   }
 
+  Future<void> _showSuccessDialog() async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (BuildContext context) {
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
+        });
+
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Lottie.asset(
+                  'assets/animations/check_mark_success.json',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.contain,
+                  repeat: false,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Cập nhật thành công!',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Thông tin thú cưng đã được cập nhật',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _saving = true; _error = null; });
@@ -118,16 +176,11 @@ class _EditPetPageState extends State<EditPetPage> {
         photo: _photo,
       );
       
-      // 🔔 Gửi OneSignal notification khi cập nhật thành công
-      await OneSignalNotificationHelper.sendPetUpdateNotification(
-        petName: _nameController.text.trim(),
-      );
-      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Đã cập nhật thú cưng và gửi thông báo!')),
-        );
-        Navigator.of(context).pop(true);
+        await _showSuccessDialog();
+        if (mounted) {
+          Navigator.of(context).pop(true);
+        }
       }
     } catch (e) {
       setState(() { _error = e.toString(); });

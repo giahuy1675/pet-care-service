@@ -9,6 +9,7 @@ import 'package:pet_flutter/pages/appointment_booking_page.dart';
 import 'package:pet_flutter/pages/pets_page.dart';
 import 'package:pet_flutter/pages/enhanced_services_page.dart';
 import 'package:pet_flutter/pages/appointment_list_page.dart';
+import 'package:pet_flutter/pages/today_appointments_page.dart';
 import 'package:pet_flutter/widgets/banner_carousel.dart';
 import 'package:pet_flutter/widgets/shimmer_placeholders.dart';
 import 'package:pet_flutter/widgets/avatar_menu.dart';
@@ -317,9 +318,11 @@ class _HomePageState extends State<HomePage> {
                       child: IconButton(
                         padding: EdgeInsets.zero,
                         onPressed: () {
-                          // TODO: Navigate to notifications page
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Tính năng thông báo đang được phát triển')),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const TodayAppointmentsPage(),
+                            ),
                           );
                         },
                         icon: Lottie.asset(
@@ -328,7 +331,7 @@ class _HomePageState extends State<HomePage> {
                           height: 32,
                           fit: BoxFit.contain,
                         ),
-                        tooltip: 'Thông báo',
+                        tooltip: 'Lịch hẹn hôm nay',
                       ),
                     ),
                     const SizedBox(width: 8),

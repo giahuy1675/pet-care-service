@@ -365,7 +365,7 @@ namespace BE_PetWeb_API.Services.Implementations
                         BufferEndTime = bufferEndTime,
                         Available = true,
                         IsAvailable = true,
-                        IsStaffBusy = false, // ✅ SET TRƯỜNG MỚI
+                        IsStaffBusy = false, //SET TRƯỜNG MỚI
                         StaffId = null,
                         StaffName = null,
                         Duration = serviceDuration,

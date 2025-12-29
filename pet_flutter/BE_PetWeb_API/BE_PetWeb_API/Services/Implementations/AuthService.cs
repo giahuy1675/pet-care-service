@@ -45,7 +45,6 @@ namespace BE_PetWeb_API.Services.Implementations
                 FullName = registerDto.FullName,
                 Phone = registerDto.Phone,
                 Address = registerDto.Address,
-                // Sử dụng HMACSHA256 thay vì HMACSHA512 để giảm kích thước
                 Password = Convert.ToBase64String(passwordHash) + ":" + Convert.ToBase64String(passwordSalt),
                 Role = "Customer",
                 CreatedAt = _dateTimeService.Now,
