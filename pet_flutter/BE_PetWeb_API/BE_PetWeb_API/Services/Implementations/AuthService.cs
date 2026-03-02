@@ -12,6 +12,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using BCrypt.Net;
 
 namespace BE_PetWeb_API.Services.Implementations
 {
@@ -36,7 +37,7 @@ namespace BE_PetWeb_API.Services.Implementations
             if (await EmailExists(registerDto.Email))
                 throw new Exception("Email already exists");
 
-            CreatePasswordHash(registerDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerDto.Password, workFactor: 12);
 
             var user = new User
             {
@@ -45,8 +46,7 @@ namespace BE_PetWeb_API.Services.Implementations
                 FullName = registerDto.FullName,
                 Phone = registerDto.Phone,
                 Address = registerDto.Address,
-                // Sử dụng HMACSHA256 thay vì HMACSHA512 để giảm kích thước
-                Password = Convert.ToBase64String(passwordHash) + ":" + Convert.ToBase64String(passwordSalt),
+                Password = hashedPassword,
                 Role = "Customer",
                 CreatedAt = _dateTimeService.Now,
                 UpdatedAt = _dateTimeService.Now,
@@ -94,34 +94,37 @@ namespace BE_PetWeb_API.Services.Implementations
 
             bool passwordValid = false;
 
-            // Trường hợp đặc biệt cho tài khoản admin
-            if (user.Username == "admin")
-            {
-                // Kiểm tra nếu mật khẩu chưa được mã hóa (không có dấu ":")
-                if (!user.Password.Contains(":"))
-                {
-                    // So sánh trực tiếp mật khẩu
-                    passwordValid = user.Password == loginDto.Password;
+            // Xác thực mật khẩu
+            passwordValid = VerifyPassword(loginDto.Password, user.Password);
 
-                    // Nếu đăng nhập thành công với mật khẩu chưa mã hóa, tiến hành mã hóa lại
-                    if (passwordValid)
-                    {
-                        CreatePasswordHash(loginDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
-                        user.Password = Convert.ToBase64String(passwordHash) + ":" + Convert.ToBase64String(passwordSalt);
-                        user.UpdatedAt = _dateTimeService.Now;
-                        await _context.SaveChangesAsync();
-                    }
-                }
-                else
+            // Nếu mật khẩu cũ dùng HMAC format (migration sang BCrypt)
+            if (!passwordValid && user.Password.Contains(":"))
+            {
+                passwordValid = VerifyPasswordHashLegacy(loginDto.Password, user.Password);
+                if (passwordValid)
                 {
-                    // Trường hợp mật khẩu đã được mã hóa, sử dụng phương thức kiểm tra thông thường
-                    passwordValid = VerifyPasswordHash(loginDto.Password, user.Password);
+                    // Upgrade to BCrypt
+                    user.Password = BCrypt.Net.BCrypt.HashPassword(loginDto.Password, workFactor: 12);
+                    user.UpdatedAt = _dateTimeService.Now;
+                    await _context.SaveChangesAsync();
                 }
             }
-            else
+
+            // Nếu mật khẩu chưa được mã hóa (plain text) - cho phép đăng nhập lần đầu
+            if (!passwordValid && !IsHashedPassword(user.Password))
             {
-                // Các tài khoản khác vẫn sử dụng phương thức kiểm tra thông thường
-                passwordValid = VerifyPasswordHash(loginDto.Password, user.Password);
+                // So sánh trực tiếp với plain text (trim để loại bỏ khoảng trắng thừa)
+                var storedPassword = user.Password?.Trim() ?? string.Empty;
+                var inputPassword = loginDto.Password?.Trim() ?? string.Empty;
+                passwordValid = string.Equals(storedPassword, inputPassword, StringComparison.Ordinal);
+                
+                if (passwordValid)
+                {
+                    // Tự động mã hóa và lưu lại
+                    user.Password = BCrypt.Net.BCrypt.HashPassword(loginDto.Password, workFactor: 12);
+                    user.UpdatedAt = _dateTimeService.Now;
+                    await _context.SaveChangesAsync();
+                }
             }
 
             if (!passwordValid)
@@ -151,11 +154,12 @@ namespace BE_PetWeb_API.Services.Implementations
 
         public async Task<AuthResponseDto> ExternalLogin(ExternalAuthDto externalAuth)
         {
-            // Xác thực token từ Google (trong thực tế cần xác thực token này với Google API)
+            // Xác thực token từ Google
             if (externalAuth.Provider.ToLower() == "google")
             {
-                // Log thông tin đăng nhập từ Google
-                Console.WriteLine($"Google login attempt - Email: {externalAuth.Email}, Name: {externalAuth.Name}");
+                // TODO: Validate Google ID token with Google API in production
+                // var payload = await Google.Apis.Auth.GoogleJsonWebSignature.ValidateAsync(externalAuth.IdToken);
+                // if (payload.Email != externalAuth.Email) throw new Exception("Invalid token");
 
                 // Tìm user theo email
                 var user = await _context.Users.FirstOrDefaultAsync(u =>
@@ -174,16 +178,16 @@ namespace BE_PetWeb_API.Services.Implementations
                         counter++;
                     }
 
-                    // Tạo mật khẩu ngẫu nhiên
-                    var randomPassword = GenerateRandomPassword(12);
-                    CreatePasswordHash(randomPassword, out byte[] passwordHash, out byte[] passwordSalt);
+                    // Tạo mật khẩu ngẫu nhiên và hash bằng BCrypt
+                    var randomPassword = GenerateRandomPassword(16);
+                    var hashedPassword = BCrypt.Net.BCrypt.HashPassword(randomPassword, workFactor: 12);
 
                     user = new User
                     {
                         Username = newUsername,
                         Email = externalAuth.Email,
                         FullName = externalAuth.Name ?? externalAuth.Email.Split('@')[0],
-                        Password = Convert.ToBase64String(passwordHash) + ":" + Convert.ToBase64String(passwordSalt),
+                        Password = hashedPassword,
                         Role = "Customer",
                         CreatedAt = _dateTimeService.Now,
                         UpdatedAt = _dateTimeService.Now,
@@ -194,13 +198,9 @@ namespace BE_PetWeb_API.Services.Implementations
 
                     _context.Users.Add(user);
                     await _context.SaveChangesAsync();
-
-                    Console.WriteLine($"Created new user from Google login - Username: {user.Username}, Email: {user.Email}");
                 }
                 else
                 {
-                    Console.WriteLine($"Found existing user for Google login - Username: {user.Username}, Email: {user.Email}");
-                    
                     // Kiểm tra tài khoản có bị vô hiệu hóa không
                     if (user.IsActive == false)
                         throw new Exception("Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.");
@@ -248,10 +248,12 @@ namespace BE_PetWeb_API.Services.Implementations
             // Thay đổi từ HmacSha512Signature sang HmacSha256Signature để phù hợp với kích thước khóa
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
 
+            var durationInMinutes = int.TryParse(_configuration["JWT:DurationInMinutes"], out var minutes) ? minutes : 60;
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = _dateTimeService.Now.AddDays(1),
+                Expires = _dateTimeService.Now.AddMinutes(durationInMinutes),
                 SigningCredentials = creds,
                 Issuer = _configuration["JWT:Issuer"],
                 Audience = _configuration["JWT:Audience"]
@@ -270,13 +272,17 @@ namespace BE_PetWeb_API.Services.Implementations
                 throw new Exception("User not found");
 
             // Kiểm tra mật khẩu hiện tại
-            bool passwordValid = VerifyPasswordHash(currentPassword, user.Password);
+            bool passwordValid = VerifyPassword(currentPassword, user.Password);
+            if (!passwordValid)
+            {
+                // Fallback: check legacy HMAC format
+                passwordValid = user.Password.Contains(":") && VerifyPasswordHashLegacy(currentPassword, user.Password);
+            }
             if (!passwordValid)
                 throw new Exception("Current password is incorrect");
 
-            // Tạo mật khẩu mới
-            CreatePasswordHash(newPassword, out byte[] passwordHash, out byte[] passwordSalt);
-            user.Password = Convert.ToBase64String(passwordHash) + ":" + Convert.ToBase64String(passwordSalt);
+            // Tạo mật khẩu mới bằng BCrypt
+            user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 12);
             user.UpdatedAt = _dateTimeService.Now;
 
             _context.Entry(user).State = EntityState.Modified;
@@ -295,46 +301,80 @@ namespace BE_PetWeb_API.Services.Implementations
             return await _context.Users.AnyAsync(x => x.Email.ToLower() == email.ToLower());
         }
 
-        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+        /// <summary>
+        /// Verify password using BCrypt
+        /// </summary>
+        private bool VerifyPassword(string password, string storedHash)
         {
-            // Sử dụng HMACSHA256 thay vì HMACSHA512 để giảm kích thước
-            using (var hmac = new HMACSHA256())
+            try
             {
-                passwordSalt = hmac.Key;
-                passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return BCrypt.Net.BCrypt.Verify(password, storedHash);
+            }
+            catch
+            {
+                return false;
             }
         }
 
-        private bool VerifyPasswordHash(string password, string storedPassword)
+        /// <summary>
+        /// Legacy: Verify password using old HMAC format (for migration)
+        /// </summary>
+        private bool VerifyPasswordHashLegacy(string password, string storedPassword)
         {
             var parts = storedPassword.Split(':');
             if (parts.Length != 2)
                 return false;
 
-            var passwordHash = Convert.FromBase64String(parts[0]);
-            var passwordSalt = Convert.FromBase64String(parts[1]);
-
-            // Sử dụng HMACSHA256 thay vì HMACSHA512 để phù hợp với hàm CreatePasswordHash
-            using (var hmac = new HMACSHA256(passwordSalt))
+            try
             {
-                var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-                for (int i = 0; i < computedHash.Length; i++)
+                var passwordHash = Convert.FromBase64String(parts[0]);
+                var passwordSalt = Convert.FromBase64String(parts[1]);
+
+                using (var hmac = new HMACSHA256(passwordSalt))
                 {
-                    if (computedHash[i] != passwordHash[i])
-                        return false;
+                    var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+                    return CryptographicOperations.FixedTimeEquals(computedHash, passwordHash);
                 }
             }
-
-            return true;
+            catch
+            {
+                return false;
+            }
         }
 
-        // Hàm tạo mật khẩu ngẫu nhiên
+        /// <summary>
+        /// Check if password is already hashed (BCrypt or legacy format)
+        /// </summary>
+        private bool IsHashedPassword(string password)
+        {
+            if (string.IsNullOrEmpty(password))
+                return false;
+
+            // BCrypt hash starts with $2a$, $2b$, or $2y$
+            if (password.StartsWith("$2a$") || password.StartsWith("$2b$") || password.StartsWith("$2y$"))
+                return true;
+
+            // Legacy HMAC format contains ":"
+            if (password.Contains(":"))
+                return true;
+
+            // Otherwise, it's plain text
+            return false;
+        }
+
+        /// <summary>
+        /// Generate cryptographically secure random password
+        /// </summary>
         private string GenerateRandomPassword(int length)
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
-            var random = new Random();
-            return new string(Enumerable.Repeat(chars, length)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
+            var bytes = RandomNumberGenerator.GetBytes(length);
+            var result = new char[length];
+            for (int i = 0; i < length; i++)
+            {
+                result[i] = chars[bytes[i] % chars.Length];
+            }
+            return new string(result);
         }
     }
 }

@@ -1,4 +1,4 @@
-// Cập nhật imports
+﻿// Cập nhật imports
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import dayjs from '../../utils/dayjs'; // Using configured dayjs with plugins
 import { zonedTimeToUtc, utcToZonedTime } from 'date-fns-tz'; // Thêm dòng này
@@ -40,7 +40,8 @@ import {
   Tag, 
   Modal,
   Spin,
-  Alert
+  Alert,
+  Result
 } from 'antd';
 import { theme } from 'antd';
 import { 
@@ -85,6 +86,7 @@ import useAuth from '../../hooks/useAuth';
 import TimeSlotGrid from './TimeSlotGridWrapper'; // Thêm import
 import { motion, AnimatePresence } from 'framer-motion';
 import appointmentSyncManager from '../../utils/appointmentSync'; // Add sync manager
+import { getPetImageUrl } from '../../utils/imageUtils';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -578,21 +580,6 @@ const validateTimeInBusinessHours = (time) => {
   return totalMinutes >= openingTime && totalMinutes <= closingTime;
 };
 
-// Add this utility function at the top of the AppointmentForm.js file (after imports)
-const getImageUrl = (photoPath) => {
-  if (!photoPath) return 'https://via.placeholder.com/300?text=No+Image';
-  
-  if (photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
-    return photoPath;
-  }
-  
-  // Lấy phần baseURL từ axiosClient và loại bỏ phần "/api"
-  const baseUrl = process.env.REACT_APP_API_URL || 'https://localhost:7164';
-  const formattedPath = photoPath.startsWith('/') ? photoPath : '/' + photoPath;
-  
-  return `${baseUrl}${formattedPath}`;
-};
-
 // Cập nhật hàm kiểm tra khả năng hủy lịch hẹn
 const canCancelAppointment = (appointment) => {
   // Nếu lịch hẹn không phải trạng thái cho phép hủy
@@ -731,6 +718,8 @@ const AppointmentForm = ({
   console.log("propsUserId:", propsUserId);
   console.log("id:", id);
   console.log("user:", user);
+
+  const [bookingSuccess, setBookingSuccess] = useState(null);
   
   // Active step for the form process
   const [activeStep, setActiveStep] = useState(0);
@@ -1283,8 +1272,13 @@ const AppointmentForm = ({
             console.log('🔄 [ADMIN MODE] Gọi callback onSuccess');
             onSuccess(response);
           } else {
-            console.log('🔄 Chuyển hướng về danh sách lịch hẹn');
-            navigate('/appointments');
+            console.log('🔄 Hiển thị màn hình kết quả đặt lịch thành công');
+            setBookingSuccess({
+              id: response.id || response.appointmentId,
+              petName: selectedPet?.name,
+              serviceName: selectedService?.name,
+              date: formData.appointmentDate
+            });
           }
         } else {
           console.warn('⚠️ Server trả về response không mong đợi:', response);
@@ -2886,7 +2880,7 @@ const AppointmentForm = ({
                                 <div style={{ display: 'flex', alignItems: 'center' }}>
                                   {pet.photo ? (
                                     <Avatar
-                                      src={getImageUrl(pet.photo)}
+                                      src={getPetImageUrl(pet.photo)}
                                       alt={pet.name}
                                       size={56}
                                       style={{ marginRight: 12 }}
@@ -3489,35 +3483,104 @@ const AppointmentForm = ({
                           />
                         )}
                         
-                        <Button
+                        <AnimatedButton
                           type="primary"
-                          htmlType="submit"
+                          onClick={handleNext}
                           disabled={isEditing && !canEdit}
                           loading={loading}
+                          icon={<RightOutlined />}
+                          shape="round"
                         >
-                          {isEditing ? 'Cập nhật lịch hẹn' : 'Đặt lịch hẹn'}
-                        </Button>
+                          Tiếp theo
+                        </AnimatedButton>
                       </div>
                     </StepContent>
                   )}
                   
-                  {/* Step 4: Xác nhận */}
+                  {/* Step 4: Xác nhận / Kết quả */}
                   {activeStep === 3 && (
                     <StepContent>
-                      <StyledCardHeader 
-                        icon={<InfoCircleOutlined />} 
-                        title="Xác nhận thông tin" 
-                        color="warning"
-                      />
+                      {bookingSuccess ? (
+                        <Result
+                          status="success"
+                          title="Đặt lịch hẹn thành công!"
+                          subTitle={
+                            <>
+                              Mã lịch hẹn:{' '}
+                              <strong>{bookingSuccess.id}</strong>
+                              <br />
+                              Thú cưng:{' '}
+                              <strong>{bookingSuccess.petName || 'Không xác định'}</strong>
+                              {' · '}Dịch vụ:{' '}
+                              <strong>{bookingSuccess.serviceName || 'Không xác định'}</strong>
+                              <br />
+                              Thời gian:{' '}
+                              <strong>
+                                {bookingSuccess.date
+                                  ? dayjs(bookingSuccess.date).format('DD/MM/YYYY HH:mm')
+                                  : 'Không xác định'}
+                              </strong>
+                            </>
+                          }
+                          styles={{
+                            root: {
+                              borderWidth: 2,
+                              borderStyle: 'dashed',
+                              padding: 24,
+                              borderRadius: 16,
+                              backgroundColor: '#f6ffed',
+                              borderColor: '#52c41a',
+                            },
+                            title: {
+                              fontStyle: 'italic',
+                              color: '#52c41a',
+                            },
+                          }}
+                          extra={[
+                            <Button
+                              type="primary"
+                              key="list"
+                              onClick={() => navigate('/appointments')}
+                            >
+                              Xem danh sách lịch hẹn
+                            </Button>,
+                            <Button
+                              key="new"
+                              onClick={() => {
+                                setBookingSuccess(null);
+                                setActiveStep(0);
+                                setFormData(prev => ({
+                                  ...prev,
+                                  petId: '',
+                                  serviceId: '',
+                                  staffId: '',
+                                  notes: '',
+                                }));
+                                setSelectedPet(null);
+                                setSelectedService(null);
+                                setSelectedStaff(null);
+                              }}
+                            >
+                              Đặt lịch mới
+                            </Button>,
+                          ]}
+                        />
+                      ) : (
+                        <>
+                          <StyledCardHeader 
+                            icon={<InfoCircleOutlined />} 
+                            title="Xác nhận thông tin" 
+                            color="warning"
+                          />
                       
-                      <Row gutter={[16, 16]}>
+                          <Row gutter={[16, 16]}>
                         <Col xs={24} md={12}>
                           <Card title="Thông tin thú cưng" variant="outlined" style={{ height: '100%' }}>
                             {selectedPet && (
                               <div style={{ display: 'flex', alignItems: 'center' }}>
                                 {selectedPet.photo ? (
                                   <Avatar
-                                    src={getImageUrl(selectedPet.photo)}
+                                    src={getPetImageUrl(selectedPet.photo)}
                                     alt={selectedPet.name}
                                     size={64}
                                     style={{ marginRight: 16 }}
@@ -3730,6 +3793,8 @@ const AppointmentForm = ({
                           {isEditing ? 'Cập nhật lịch hẹn' : 'Đặt lịch hẹn'}
                         </Button>
                       </div>
+                        </>
+                      )}
                     </StepContent>
                   )}
                 </Col>
@@ -3776,7 +3841,7 @@ const AppointmentForm = ({
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
                           {selectedPet.photo ? (
                             <Avatar
-                              src={getImageUrl(selectedPet.photo)}
+                              src={getPetImageUrl(selectedPet.photo)}
                               alt={selectedPet.name}
                               size={64}
                               style={{ marginRight: 16 }}

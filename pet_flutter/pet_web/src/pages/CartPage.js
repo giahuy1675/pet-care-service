@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import cartService from '../services/cartService';
 import { getProductImageUrl } from '../utils/imageUtils';
@@ -454,7 +454,7 @@ const CartPage = () => {
       
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`https://localhost:7164/api/Cart/items/${cartItemId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Cart/items/${cartItemId}`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json',
@@ -496,7 +496,7 @@ const CartPage = () => {
       
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`https://localhost:7164/api/Cart/clear`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Cart/clear`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json',

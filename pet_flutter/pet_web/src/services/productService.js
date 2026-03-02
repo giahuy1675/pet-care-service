@@ -1,4 +1,4 @@
-import axiosClient from '../utils/axiosClient';
+﻿import axiosClient from '../utils/axiosClient';
 import axios from 'axios';
 
 const BASE_URL = '/Products';
@@ -42,7 +42,7 @@ const productService = {
        brand: product.brand,
        stock: product.stockQuantity, // Ánh xạ từ stockQuantity sang stock
        imageUrl: product.photo 
-         ? `https://localhost:7164${product.photo.startsWith('/') ? product.photo : '/' + product.photo}` 
+         ? `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${product.photo.startsWith('/') ? product.photo : '/' + product.photo}` 
          : null
      }));
      
@@ -73,7 +73,7 @@ const productService = {
        brand: product.brand,
        stock: product.stockQuantity, // Ánh xạ từ stockQuantity sang stock
        imageUrl: product.photo 
-         ? `https://localhost:7164${product.photo.startsWith('/') ? product.photo : '/' + product.photo}` 
+         ? `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${product.photo.startsWith('/') ? product.photo : '/' + product.photo}` 
          : null,
        createdAt: product.createdAt,
        updatedAt: product.updatedAt,
@@ -173,7 +173,7 @@ const productService = {
      const token = localStorage.getItem('token');
      
      // Cách 1: Dùng fetch API thay vì axios (bypass các vấn đề CORS của axios)
-     const response = await fetch(`https://localhost:7164/api/Products/${id}`, {
+     const response = await fetch(`${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Products/${id}`, {
        method: 'DELETE',
        headers: {
          'Accept': 'application/json',
@@ -210,7 +210,7 @@ const productService = {
        brand: product.brand,
        stock: product.stockQuantity, // Ánh xạ từ stockQuantity sang stock
        imageUrl: product.photo 
-         ? `https://localhost:7164${product.photo.startsWith('/') ? product.photo : '/' + product.photo}` 
+         ? `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${product.photo.startsWith('/') ? product.photo : '/' + product.photo}` 
          : null // Đường dẫn uploads/products
      }));
      
@@ -236,7 +236,7 @@ const productService = {
      // Lấy token từ localStorage
      const token = localStorage.getItem('token');
      
-     const response = await fetch(`https://localhost:7164/api/Products/${productId}/images`, {
+     const response = await fetch(`${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Products/${productId}/images`, {
        method: 'POST',
        headers: {
          'Authorization': `Bearer ${token}`
@@ -257,7 +257,7 @@ const productService = {
          ...img,
          id: img.imageId, // Map ImageId to id for frontend consistency
          imageUrl: img.imageUrl 
-           ? `https://localhost:7164${img.imageUrl.startsWith('/') ? img.imageUrl : '/' + img.imageUrl}`
+           ? `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${img.imageUrl.startsWith('/') ? img.imageUrl : '/' + img.imageUrl}`
            : null
        }));
      }
@@ -279,7 +279,7 @@ const productService = {
        ...img,
        id: img.imageId, // Map ImageId to id for frontend consistency
        imageUrl: img.imageUrl 
-         ? `https://localhost:7164${img.imageUrl.startsWith('/') ? img.imageUrl : '/' + img.imageUrl}`
+         ? `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${img.imageUrl.startsWith('/') ? img.imageUrl : '/' + img.imageUrl}`
          : null
      }));
      
@@ -295,7 +295,7 @@ const productService = {
    try {
      const token = localStorage.getItem('token');
      
-     const response = await fetch(`https://localhost:7164/api/Products/${productId}/images/${imageId}`, {
+     const response = await fetch(`${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Products/${productId}/images/${imageId}`, {
        method: 'DELETE',
        headers: {
          'Authorization': `Bearer ${token}`
@@ -319,7 +319,7 @@ const productService = {
    try {
      const token = localStorage.getItem('token');
      
-     const response = await fetch(`https://localhost:7164/api/Products/${productId}/images/${imageId}/primary`, {
+     const response = await fetch(`${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Products/${productId}/images/${imageId}/primary`, {
        method: 'PUT',
        headers: {
          'Authorization': `Bearer ${token}`

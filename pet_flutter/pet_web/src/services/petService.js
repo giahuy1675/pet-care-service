@@ -1,4 +1,4 @@
-import axiosClient from '../utils/axiosClient';
+﻿import axiosClient from '../utils/axiosClient';
 
 // Helper function để xử lý lỗi API
 const handleApiError = (error) => {
@@ -103,9 +103,9 @@ const petService = {
         
         if (!photoPath.startsWith('http')) {
           if (photoPath.startsWith('/uploads/pets/')) {
-            processedData.photoUrl = `https://localhost:7164${photoPath}`;
+            processedData.photoUrl = `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${photoPath}`;
           } else {
-            processedData.photoUrl = `https://localhost:7164/uploads/pets/${photoPath.replace(/^\//, '')}`;
+            processedData.photoUrl = `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}/uploads/pets/${photoPath.replace(/^\//, '')}`;
           }
         }
       }
@@ -195,9 +195,9 @@ const petService = {
       if (responseData && responseData.photo) {
         if (!responseData.photo.startsWith('http')) {
           if (responseData.photo.startsWith('/uploads/pets/')) {
-            responseData.photo = `https://localhost:7164${responseData.photo}`;
+            responseData.photo = `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${responseData.photo}`;
           } else if (!responseData.photo.includes('/uploads/pets/')) {
-            responseData.photo = `https://localhost:7164/uploads/pets/${responseData.photo.replace(/^\//, '')}`;
+            responseData.photo = `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}/uploads/pets/${responseData.photo.replace(/^\//, '')}`;
           }
         }
         responseData.photoUrl = responseData.photo;
@@ -298,9 +298,9 @@ const petService = {
       if (responseData && responseData.photo) {
         if (!responseData.photo.startsWith('http')) {
           if (responseData.photo.startsWith('/uploads/pets/')) {
-            responseData.photo = `https://localhost:7164${responseData.photo}`;
+            responseData.photo = `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${responseData.photo}`;
           } else if (!responseData.photo.includes('/uploads/pets/')) {
-            responseData.photo = `https://localhost:7164/uploads/pets/${responseData.photo.replace(/^\//, '')}`;
+            responseData.photo = `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}/uploads/pets/${responseData.photo.replace(/^\//, '')}`;
           }
         }
         responseData.photoUrl = responseData.photo;

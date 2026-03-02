@@ -388,117 +388,67 @@ const PetList = ({ pets, error, onDelete }) => {
           const petSpecies = getPetValue(pet, 'species', 'Species');
           const petBreed = getPetValue(pet, 'breed', 'Breed');
           const petPhoto = getPetValue(pet, 'photo', 'Photo');
-          const petDescription = getPetValue(pet, 'description', 'Description');
           const petAge = getPetValue(pet, 'age', 'Age');
 
-          const genderInfo = getGenderInfo(petGender);
+          // Build description giống style Ant Design Card demo
+          const descriptionParts = [];
+          if (petSpecies) descriptionParts.push(petSpecies);
+          if (petBreed) descriptionParts.push(petBreed);
+          if (petGender || petAge) {
+            const genderAge = `${petGender || 'Không rõ giới tính'}${petAge ? `, ${petAge}` : ''}`;
+            descriptionParts.push(genderAge);
+          }
+          const description = descriptionParts.join(' • ');
           
           return (
             <Col xs={24} sm={12} md={8} lg={6} key={pet.petId}>
-              <StyledCard
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.4 }}
                 layout
               >
-                <PetCard
+                <Card
+                  hoverable
+                  style={{ width: '100%', maxWidth: 320, margin: '0 auto' }}
                   cover={
-                    <div style={{ position: 'relative' }}>
-                      <img 
-                        alt={petName} 
-                        src={getImageUrl(petPhoto)} 
-                      />
-                      <PetImageOverlay>
-                        <PetName>{petName}</PetName>
-                        <TagsWrapper>
-                          <InfoTag color="#108ee9">{petSpecies}</InfoTag>
-                          {petBreed && (
-                            <InfoTag color="#87d068">{petBreed}</InfoTag>
-                          )}
-                          <GenderTag $gender={petGender}>
-                            {genderInfo.icon}
-                            {petGender}
-                          </GenderTag>
-                        </TagsWrapper>
-                      </PetImageOverlay>
-                      
-                      <PetBadge className={pet.isFeatured ? 'featured' : ''}>
-                        {pet.isFeatured && (
-                          <RoundBadge $bg="#ff7a45" $color="#fff">
-                            <FireOutlined />
-                          </RoundBadge>
-                        )}
-                        {pet.hasNewHealthRecord && (
-                          <RoundBadge $bg="#52c41a" $color="#fff">
-                            <ThunderboltOutlined />
-                          </RoundBadge>
-                        )}
-                        {pet.isPopular && (
-                          <RoundBadge $bg="#faad14" $color="#fff">
-                            <StarOutlined />
-                          </RoundBadge>
-                        )}
-                      </PetBadge>
-                      
-                      {pet.isFeatured && (
-                        <FeaturedBadge>
-                          <FireOutlined style={{ marginRight: 4 }} /> Yêu thích
-                        </FeaturedBadge>
-                      )}
-                    </div>
+                    <img
+                      draggable={false}
+                      alt={petName}
+                      src={getImageUrl(petPhoto)}
+                    />
                   }
                   actions={[
-                    <Tooltip title="Xem chi tiết">
+                    <Tooltip title="Xem chi tiết" key="view">
                       <Link to={`/pets/${pet.petId}`}>
-                        <ActionIconButton type="primary" icon={<EyeOutlined />} />
+                        <EyeOutlined />
                       </Link>
                     </Tooltip>,
-                    <Tooltip title="Chỉnh sửa">
+                    <Tooltip title="Chỉnh sửa" key="edit">
                       <Link to={`/pets/edit/${pet.petId}`}>
-                        <ActionIconButton icon={<EditOutlined />} />
+                        <EditOutlined />
                       </Link>
                     </Tooltip>,
-                    <Tooltip title="Xóa">
-                      <ActionIconButton 
-                        danger 
-                        icon={<DeleteOutlined />} 
+                    <Tooltip title="Xóa" key="delete">
+                      <DeleteOutlined
+                        style={{ color: '#ff4d4f' }}
                         onClick={() => handleDelete(pet)}
                       />
                     </Tooltip>
                   ]}
                 >
-                  <Space align="center">
-                    <Avatar size={48} style={{ background: 'rgba(24, 144, 255, 0.1)', fontSize: 24 }}>
-                      {getSpeciesIcon(petSpecies)}
-                    </Avatar>
-                    <div>
-                      <Title level={5} style={{ margin: 0 }}>
-                        {petName}
-                      </Title>
-                      <PetAge>
-                        <CalendarOutlined />
-                        {petAge || 'Không rõ tuổi'}
-                      </PetAge>
-                    </div>
-                  </Space>
-                  
-                  <HoverContent className="hover-content">
-                    <Text type="secondary" ellipsis={{ rows: 2 }}>
-                      {petDescription || 'Không có mô tả chi tiết cho thú cưng này.'}
-                    </Text>
-                    <Link to={`/pets/${pet.petId}`}>
-                      <DetailButton 
-                        type="primary" 
-                        block
-                        icon={<InfoCircleOutlined />}
-                      >
-                        Xem chi tiết
-                      </DetailButton>
-                    </Link>
-                  </HoverContent>
-                </PetCard>
-              </StyledCard>
+                  <Card.Meta
+                    avatar={
+                      <Avatar>
+                        {petName ? petName.charAt(0).toUpperCase() : 'P'}
+                      </Avatar>
+                    }
+                    title={petName}
+                    description={description || 'Chưa có mô tả'}
+                  />
+                </Card>
+              </motion.div>
             </Col>
           );
         })}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -9,7 +9,6 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ServicesPage from './pages/ServicesPage';
-import MedicalRecordsPage from './pages/MedicalRecordsPage';
 import ProfilePage from './pages/ProfilePage';
 import ContactPage from './pages/ContactPage';
 import ProductsPage from './pages/ProductsPage';
@@ -83,7 +82,7 @@ const AppContent = () => {
       const decoded = jwtDecode(credentialResponse.credential);
       
       // Gọi API với URL đầy đủ và format giống như đã test trong Postman
-      const response = await axios.post('https://localhost:7164/api/Auth/external-login', {
+      const response = await axios.post('${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Auth/external-login', {
         provider: 'Google',
         idToken: credentialResponse.credential, // Token từ Google
         email: decoded.email,
@@ -275,15 +274,8 @@ const AppContent = () => {
               }
             />
             
-            {/* Protected routes - Quản lý hồ sơ y tế */}
-            <Route 
-              path="/medical-records" 
-              element={
-                <ProtectedRoute>
-                  <MedicalRecordsPage />
-                </ProtectedRoute>
-              }
-            />
+            {/* Route tạm thời đóng: hồ sơ y tế */}
+            <Route path="/medical-records" element={<Navigate to="/" replace />} />
 
             <Route path="/staff" element={<StaffPage />} />
 
@@ -324,7 +316,7 @@ function App() {
       const decoded = jwtDecode(credentialResponse.credential);
       
       // Gọi API với URL đầy đủ
-      const response = await axios.post('https://localhost:7164/api/Auth/external-login', {
+      const response = await axios.post('${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Auth/external-login', {
         provider: 'Google',
         idToken: credentialResponse.credential,
         email: decoded.email,
@@ -358,14 +350,11 @@ function App() {
 
   // ===== KHỞI TẠO SYNCMANAGER =====
   useEffect(() => {
-    console.log('🚀 App: Initializing SyncManager for global real-time synchronization');
-    
     // SyncManager đã được khởi tạo tự động khi import
     // Chúng ta chỉ cần log để biết nó đã hoạt động
     
     // Cleanup khi app unmount
     return () => {
-      console.log('🛑 App: Cleaning up SyncManager');
       syncManager.destroy();
     };
   }, []);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled, { keyframes, css, ThemeProvider } from 'styled-components';
 import { 
@@ -856,14 +856,14 @@ const ProfilePage = () => {
     };
   }, [user?.userId]);
 
-  // Thêm useEffect mới để lấy dữ liệu từ các API
+  // Thêm useEffect mới để lấy dữ liệu từ các API (thú cưng, đơn hàng, lịch hẹn)
+  // Chỉ chạy lại khi userId thay đổi để tránh vòng lặp request vô hạn
   useEffect(() => {
     let isMounted = true;
     
     const fetchUserStats = async () => {
       try {
-        // Nếu chưa đăng nhập thì không fetch dữ liệu
-        if (!user) return;
+        if (!user?.userId) return;
         
         // Lấy dữ liệu thú cưng
         const petsData = await petService.getUserPets();
@@ -893,7 +893,7 @@ const ProfilePage = () => {
     return () => {
       isMounted = false;
     };
-  }, [user]);
+  }, [user?.userId]);
 
   // Intersection observer for stats section
   useEffect(() => {
@@ -1002,9 +1002,14 @@ const ProfilePage = () => {
     }
   };
 
+  // Merge profile from API with user from token/localStorage
+  const mergedProfile = userProfile
+    ? { ...user, ...userProfile }
+    : user;
+
   // Get user's name
   const getUserName = () => {
-    return userProfile?.fullName || user?.fullName || user?.username || 'Người dùng';
+    return mergedProfile?.fullName || mergedProfile?.username || 'Người dùng';
   };
 
   // Get avatar URL
@@ -1012,7 +1017,7 @@ const ProfilePage = () => {
     if (!avatarPath) return null;
     return avatarPath.startsWith('http') 
       ? avatarPath 
-      : `https://localhost:7164${avatarPath.startsWith('/') ? avatarPath : '/' + avatarPath}`;
+      : `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${avatarPath.startsWith('/') ? avatarPath : '/' + avatarPath}`;
   };
 
   if (loading) {
@@ -1180,126 +1185,35 @@ const ProfilePage = () => {
                 
                 <ProfileSection>
                   <StatsContainer ref={statsRef} $light={true}>
-                    <Row gutter={[20, 20]}>
+                    <Row gutter={[24, 24]}>
                       <Col xs={24} sm={12} md={6}>
-                        <StatCard
-                          variants={itemVariants}
-                          whileHover={{ y: -10 }}
-                          $theme={token}
-                          $color={token.colorSuccess}
-                        >
-                          <div className="stat-icon">
-                            <HeartOutlined />
-                          </div>
-                          <div className="stat-title">Thú cưng</div>
-                          <div className="stat-value">{userStats.petCount}</div>
-                        </StatCard>
+                        <Statistic
+                          title="Thú cưng"
+                          value={userStats.petCount}
+                        />
                       </Col>
-                      
                       <Col xs={24} sm={12} md={6}>
-                        <StatCard
-                          variants={itemVariants}
-                          whileHover={{ y: -10 }}
-                          $theme={token}
-                          $color={token.colorWarning}
-                        >
-                          <div className="stat-icon">
-                            <ShoppingOutlined />
-                          </div>
-                          <div className="stat-title">Đơn hàng</div>
-                          <div className="stat-value">{userStats.ordersCount}</div>
-                        </StatCard>
+                        <Statistic
+                          title="Đơn hàng"
+                          value={userStats.ordersCount}
+                        />
                       </Col>
-                      
                       <Col xs={24} sm={12} md={6}>
-                        <StatCard
-                          variants={itemVariants}
-                          whileHover={{ y: -10 }}
-                          $theme={token}
-                          $color={token.colorInfo}
-                        >
-                          <div className="stat-icon">
-                            <CalendarOutlined />
-                          </div>
-                          <div className="stat-title">Lịch hẹn</div>
-                          <div className="stat-value">{userStats.appointmentsCount}</div>
-                        </StatCard>
+                        <Statistic
+                          title="Lịch hẹn"
+                          value={userStats.appointmentsCount}
+                        />
                       </Col>
-                      
                       <Col xs={24} sm={12} md={6}>
-                        <StatCard
-                          variants={itemVariants}
-                          whileHover={{ y: -10 }}
-                          $theme={token}
-                          $color={token.colorError}
-                        >
-                          <div className="stat-icon">
-                            <GiftOutlined />
-                          </div>
-                          <div className="stat-title">Ưa thích</div>
-                          <div className="stat-value">{userStats.favorites}</div>
-                        </StatCard>
+                        <Statistic
+                          title="Ưa thích"
+                          value={userStats.favorites}
+                        />
                       </Col>
                     </Row>
                   </StatsContainer>
                   
-                  <AchievementSection
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.6 }}
-                  >
-                    <SectionHeading $theme={token}>
-                      <h3>🏆 Thành tựu của bạn</h3>
-                      <p>Tiếp tục sử dụng dịch vụ để mở khóa thêm nhiều phần thưởng</p>
-                    </SectionHeading>
-                    
-                    <Row gutter={[30, 40]} justify="center">
-                      {achievements.map((achievement, index) => (
-                        <Col key={index} xs={12} sm={6}>
-                          <AchievementBadge
-                            $theme={token}
-                            $color={achievement.color}
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: 0.5 + index * 0.1 }}
-                            whileHover={{ y: -10 }}
-                          >
-                            <div className="badge-icon">
-                              {achievement.icon}
-                            </div>
-                            <div className="badge-name">{achievement.name}</div>
-                          </AchievementBadge>
-                        </Col>
-                      ))}
-                    </Row>
-                    
-                    <ProgressContainer>
-                      <div className="progress-label">
-                        <span>Tiến trình</span>
-                        <span className="progress-percent">65%</span>
-                      </div>
-                      <Progress 
-                        percent={65} 
-                        strokeWidth={16}
-                        strokeColor={{
-                          '0%': token.colorPrimary,
-                          '100%': token.colorPrimaryActive,
-                        }}
-                        status="active"
-                        showInfo={false}
-                      />
-                      <div style={{ 
-                        textAlign: 'center', 
-                        marginTop: 15, 
-                        color: 'rgba(0, 0, 0, 0.6)',
-                        fontSize: 15,
-                        fontWeight: 500
-                      }}>
-                        <Badge status="processing" /> Bạn đã đạt được 65% thành tựu
-                      </div>
-                    </ProgressContainer>
-                  </AchievementSection>
-                  
+                  {/* Achievement section removed per user request */}
                   <TabContainer>
                     <CustomTabs
                       activeKey={activeTab}
@@ -1451,9 +1365,9 @@ const ProfilePage = () => {
         destroyOnClose
         centered
       >
-        {userProfile && (
+        {mergedProfile && (
           <ProfileForm 
-            userProfile={userProfile || user} 
+            userProfile={mergedProfile} 
             onSubmit={handleProfileUpdate}
           />
         )}

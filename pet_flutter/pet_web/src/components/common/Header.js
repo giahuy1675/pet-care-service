@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import cartService from '../../services/cartService';
@@ -112,9 +112,7 @@ const jiggle = keyframes`
 // Styled components
 const LogoWrapper = styled.div`
   background: linear-gradient(135deg, ${props => props.theme.colorPrimary}, ${props => props.theme.colorPrimaryActive});
-  background-size: 200% 200%;
-  animation: ${gradientShift} 8s ease infinite, ${morphBackground} 15s ease-in-out infinite, ${floatWithRotate} 6s ease-in-out infinite;
-  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+  border-radius: 16px;
   width: 45px;
   height: 45px;
   display: flex;
@@ -124,35 +122,6 @@ const LogoWrapper = styled.div`
   box-shadow: 0 6px 20px ${props => props.theme.colorPrimary}60;
   position: relative;
   z-index: 1;
-  
-  &::before, &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 3px;
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.8),
-      rgba(255, 255, 255, 0.1),
-      rgba(255, 255, 255, 0)
-    );
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    opacity: 0.6;
-    z-index: -1;
-  }
-  
-  &::after {
-    filter: blur(20px);
-    opacity: 0.3;
-  }
-  
-  &:hover {
-    animation-play-state: paused;
-    transform: scale(1.1);
-  }
 `;
 
 const LogoTitle = styled(Title)`
@@ -160,7 +129,6 @@ const LogoTitle = styled(Title)`
   font-weight: 800 !important;
   background: linear-gradient(45deg, ${props => props.theme.colorPrimary}, ${props => props.theme.colorPrimaryActive}, #4096ff, ${props => props.theme.colorPrimary}) !important;
   background-size: 300% !important;
-  animation: ${shine} 4s linear infinite !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   letter-spacing: 0.5px !important;
@@ -182,7 +150,7 @@ const LogoTitle = styled(Title)`
   }
   
   &:hover::after {
-    transform: scaleX(1);
+    transform: scaleX(0.6);
   }
 `;
 
@@ -195,48 +163,17 @@ const StyledBadge = styled(Badge)`
     font-weight: 700;
     font-size: 12px;
     background: linear-gradient(45deg, #ff4d4f, #ff7875);
-    animation: ${pulse} 2.5s infinite;
-  }
-  
-  &:hover .ant-badge-count {
-    transform: scale(1.1);
-    animation: ${glowPulse} 1.5s infinite;
   }
 `;
 
 const GlowButton = styled(Button)`
   &.ant-btn-primary {
     background: linear-gradient(45deg, ${props => props.theme.colorPrimary}, ${props => props.theme.colorPrimaryActive}) !important;
-    background-size: 200% 200% !important;
-    animation: ${gradientShift} 5s ease infinite !important;
     border: none !important;
     box-shadow: 0 8px 20px ${props => props.theme.colorPrimary}30 !important;
     position: relative !important;
     overflow: hidden !important;
     z-index: 1 !important;
-    
-    &::before {
-      content: '';
-      position: absolute;
-      top: -2px;
-      left: -2px;
-      right: -2px;
-      bottom: -2px;
-      background: linear-gradient(45deg, 
-        ${props => props.theme.colorPrimary}, 
-        ${props => props.theme.colorPrimaryActive},
-        ${props => props.theme.colorPrimary});
-      background-size: 400%;
-      z-index: -1;
-      filter: blur(10px);
-      opacity: 0;
-      transition: opacity 0.4s;
-    }
-    
-    &:hover::before {
-      opacity: 0.8;
-      animation: ${gradientShift} 2s infinite;
-    }
     
     &:hover {
       transform: translateY(-5px) !important;
@@ -245,26 +182,6 @@ const GlowButton = styled(Button)`
     
     &:active {
       transform: translateY(-2px) !important;
-    }
-    
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.3),
-        transparent
-      );
-      transition: all 0.6s;
-    }
-    
-    &:hover::after {
-      left: 100%;
     }
   }
 `;
@@ -381,20 +298,6 @@ const GlobalStyle = styled.div`
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
     animation: ${scaleIn} 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-  
-  .drawer-logo-wrapper {
-    animation: ${floatWithRotate} 6s ease-in-out infinite;
-  }
-  
-  @keyframes cartPulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.15); }
-    100% { transform: scale(1); }
-  }
-  
-  .ant-badge-count-sm {
-    animation: cartPulse 2s infinite;
   }
   
   /* Các styles khác */
@@ -601,7 +504,6 @@ const Header = () => {
     { key: 'pets', label: 'Thú cưng', path: '/pets', icon: <PetIcon style={{ color: token.colorSuccess }} /> },
     { key: 'orders', label: 'Đơn hàng', path: '/orders', icon: <ShoppingOutlined style={{ color: token.colorWarning }} /> },
     { key: 'appointments', label: 'Lịch hẹn', path: '/appointments', icon: <CalendarOutlined style={{ color: token.colorInfo }} /> },
-    { key: 'medical', label: 'Hồ sơ y tế', path: '/medical-records', icon: <FileTextOutlined style={{ color: token.colorError }} /> },
     { 
       key: 'divider', 
       type: 'divider' 
@@ -672,7 +574,7 @@ const Header = () => {
     }
     
     // URL tương đối (từ server)
-    return `${process.env.REACT_APP_API_URL || 'https://localhost:7164'}${avatarPath.startsWith('/') ? avatarPath : '/' + avatarPath}`;
+    return `${process.env.REACT_APP_API_URL || '${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}'}${avatarPath.startsWith('/') ? avatarPath : '/' + avatarPath}`;
   };
 
   return (

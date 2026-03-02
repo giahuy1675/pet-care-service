@@ -31,8 +31,10 @@ import {
   ToolOutlined,
   SettingOutlined,
   PlusOutlined,
-  FileTextOutlined
+  FileTextOutlined,
+  DownOutlined
 } from '@ant-design/icons';
+import { Alert, Badge, Dropdown, Space, Table as AntTable, Pagination as AntPagination, Tag, Modal, Button as AntButton, Descriptions, Tabs, Statistic } from 'antd';
 import dayjs from '../../utils/dayjs'; // Using configured dayjs with plugins
 
 // Thêm import appointmentService
@@ -62,6 +64,8 @@ import { isPetBusySlot } from '../appointment/isPetBusySlot';
 // Thêm constants cho buffer time và min duration
 const BUFFER_TIME_MINUTES = 10; // 10 phút giữa các lịch hẹn
 const DEFAULT_SERVICE_DURATION = 30; // Thời lượng dịch vụ mặc định nếu không có thông tin
+
+const { TabPane } = Tabs;
 
 // Thêm các styled components
 const AppointmentContainer = styled.div`
@@ -758,6 +762,16 @@ const ToastMessage = styled(motion.div)`
   }
 `;
 
+// Toast giống UserManagement (Alert của AntD)
+const ToastContainer = styled.div`
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 1100;
+  max-width: 420px;
+  width: calc(100vw - 40px);
+`;
+
 const DetailModalOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -945,13 +959,24 @@ const Toast = ({ show, message, type, onClose }) => {
   if (!show) return null;
 
   return (
-    <ToastMessage className={type} initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
-      <span className="toast-icon">
-        {type === 'success' ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />}
-      </span>
-      <div className="toast-content">{message}</div>
-      <button className="toast-close" onClick={onClose}><CloseOutlined /></button>
-    </ToastMessage>
+    <ToastContainer>
+      <motion.div
+        initial={{ x: 100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+      >
+        <Alert
+          type={type === 'success' ? 'success' : type === 'error' ? 'error' : 'info'}
+          message={
+            type === 'success' ? 'Thành công' : type === 'error' ? 'Lỗi' : 'Thông báo'
+          }
+          description={message}
+          showIcon
+          closable
+          onClose={onClose}
+        />
+      </motion.div>
+    </ToastContainer>
   );
 };
 
@@ -1144,6 +1169,16 @@ const AppointmentManagement = () => {
     type: 'info'
   });
 
+  // Modal cập nhật trạng thái lịch hẹn (AntD Modal + loading như snippet user gửi)
+  const [statusModal, setStatusModal] = useState({
+    open: false,
+    loading: false,
+    appointmentId: null,
+    newStatus: '',
+    englishStatus: '',
+    content: '',
+  });
+
   // Thêm state cho phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -1192,6 +1227,7 @@ const AppointmentManagement = () => {
 
   // ===== STATE CHO TẠO LỊCH HẸN MỚI =====
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createModalLoading, setCreateModalLoading] = useState(false);
   const [createFormData, setCreateFormData] = useState({
     userId: '',
     petId: '',
@@ -1221,6 +1257,37 @@ const AppointmentManagement = () => {
     'Cancelled': 'Đã hủy',
     'Scheduled': 'Đã đặt lịch',
     'No-Show': 'Không đến'
+  };
+
+  const staffTagStyle = {
+    borderRadius: 999,
+    padding: '4px 12px',
+    fontWeight: 500,
+  };
+
+  const getStatusTagProps = (status) => {
+    const lowerStatus = (status || '').toLowerCase();
+
+    if (lowerStatus === 'pending' || lowerStatus === 'đang chờ') {
+      return { color: 'default', icon: <ClockCircleOutlined />, text: statusEnToVi['Pending'] };
+    }
+    if (lowerStatus === 'scheduled' || lowerStatus === 'đã đặt lịch' || lowerStatus === 'đã lên lịch') {
+      return { color: 'processing', icon: <ScheduleOutlined />, text: statusEnToVi['Scheduled'] };
+    }
+    if (lowerStatus === 'confirmed' || lowerStatus === 'đã xác nhận') {
+      return { color: 'processing', icon: <InfoCircleOutlined />, text: statusEnToVi['Confirmed'] };
+    }
+    if (lowerStatus === 'completed' || lowerStatus === 'đã hoàn thành') {
+      return { color: 'success', icon: <CheckCircleOutlined />, text: statusEnToVi['Completed'] };
+    }
+    if (lowerStatus === 'cancelled' || lowerStatus === 'đã hủy') {
+      return { color: 'error', icon: <CloseCircleOutlined />, text: statusEnToVi['Cancelled'] };
+    }
+    if (lowerStatus === 'no-show' || lowerStatus === 'không đến') {
+      return { color: 'warning', icon: <WarningOutlined />, text: statusEnToVi['No-Show'] };
+    }
+
+    return { color: 'default', icon: <ClockCircleOutlined />, text: status || 'Không xác định' };
   };
 
   // Chuyển đổi tiếng Việt -> tiếng Anh
@@ -2386,154 +2453,112 @@ const AppointmentManagement = () => {
 
   // 1. Sửa lại hàm updateAppointmentStatus
   const updateAppointmentStatus = async (appointmentId, newStatus) => {
+    console.log(`Cập nhật trạng thái lịch hẹn ${appointmentId} thành ${newStatus}`);
+
+    // Chuyển đổi trạng thái sang tiếng Anh (nếu đang là tiếng Việt)
+    const englishStatus = statusViToEn[newStatus] || newStatus;
+
+    // Nội dung xác nhận
+    let confirmContent = `Bạn có chắc muốn cập nhật trạng thái lịch hẹn #${appointmentId} thành "${newStatus}"?`;
+    if (englishStatus === 'Completed') {
+      confirmContent += ' Khung giờ này sẽ được mở lại cho người khác đặt nếu còn trong tương lai.';
+    } else if (englishStatus === 'Cancelled') {
+      confirmContent += ' Khung giờ này sẽ được mở lại cho người khác đặt.';
+    } else if (englishStatus === 'No-Show') {
+      confirmContent += ' Khung giờ này sẽ không được mở lại cho người khác đặt nếu thời gian đã qua.';
+    }
+
+    // Mở AntD Modal (thay ConfirmDialog hiện tại)
+    setStatusModal({
+      open: true,
+      loading: false,
+      appointmentId,
+      newStatus,
+      englishStatus,
+      content: confirmContent,
+    });
+  };
+
+  const handleConfirmUpdateStatus = async () => {
+    const { appointmentId, newStatus, englishStatus } = statusModal;
+    if (!appointmentId || !englishStatus) return;
+
+    setStatusModal(prev => ({ ...prev, loading: true }));
+
     try {
-      setLoading(true);
-      console.log(`Cập nhật trạng thái lịch hẹn ${appointmentId} thành ${newStatus}`);
-      
-      // Chuyển đổi trạng thái sang tiếng Anh (nếu đang là tiếng Việt)
-      const englishStatus = statusViToEn[newStatus] || newStatus;
-      
-      // Hiển thị dialog xác nhận với thông điệp phù hợp
-      let confirmContent = `Bạn có chắc muốn cập nhật trạng thái lịch hẹn #${appointmentId} thành "${newStatus}"?`;
-      
-      // Thêm thông tin bổ sung dựa trên trạng thái
-      if (englishStatus === 'Completed') {
-        confirmContent += ' Khung giờ này sẽ được mở lại cho người khác đặt nếu còn trong tương lai.';
-      } else if (englishStatus === 'Cancelled') {
-        confirmContent += ' Khung giờ này sẽ được mở lại cho người khác đặt.';
-      } else if (englishStatus === 'No-Show') {
-        confirmContent += ' Khung giờ này sẽ không được mở lại cho người khác đặt nếu thời gian đã qua.';
-      }
-      
-      setConfirmDialog({
-        isOpen: true,
-        title: `Cập nhật trạng thái thành ${newStatus}`,
-        content: confirmContent,
-        onConfirm: async () => {
+      const appointmentToUpdate = appointments.find(a => a.appointmentId === appointmentId);
+      if (!appointmentToUpdate) throw new Error('Không tìm thấy thông tin lịch hẹn');
+
+      let success = false;
+      try {
+        await appointmentService.updateAppointmentStatus(appointmentId, englishStatus);
+        success = true;
+      } catch (serviceError) {
+        console.error('Lỗi khi sử dụng appointmentService:', serviceError);
+        const statusOnly = { status: englishStatus };
+        try {
+          await axiosClient.patch(`/Appointments/${appointmentId}/status`, statusOnly);
+          success = true;
+        } catch (e1) {
           try {
-            // Tìm thông tin chi tiết của lịch hẹn để cập nhật lịch bận
-            const appointmentToUpdate = appointments.find(a => a.appointmentId === appointmentId);
-            if (!appointmentToUpdate) {
-              throw new Error("Không tìm thấy thông tin lịch hẹn");
-            }
-            
-            // Sử dụng appointmentService
-            let success = false;
-            
-            try {
-              // Ưu tiên sử dụng appointmentService
-              await appointmentService.updateAppointmentStatus(appointmentId, englishStatus);
-              success = true;
-            } catch (serviceError) {
-              console.error('Lỗi khi sử dụng appointmentService:', serviceError);
-              
-              // Fallback nếu service gặp lỗi
-              try {
-                // Đảm bảo payload đúng định dạng
-                const statusOnly = {
-                  status: englishStatus
-                };
-                console.log("Sending status payload:", statusOnly);
-                
-                await axiosClient.patch(`/Appointments/${appointmentId}/status`, statusOnly);
-                success = true;
-              } catch (e1) {
-                console.log("First attempt failed:", e1);
-                try {
-                  // Thử cách khác - dùng PUT thay vì PATCH
-                  await axiosClient.put(`/Appointments/${appointmentId}/status`, { 
-                    status: englishStatus 
-                  });
-                  success = true;
-                } catch (e2) {
-                  console.log("Second attempt failed:", e2);
-                  // Thử cách thứ ba - cập nhật toàn bộ đối tượng
-                  const appointment = appointments.find(a => a.appointmentId === appointmentId);
-                  if (appointment) {
-                    appointment.status = englishStatus;
-                    await axiosClient.put(`/Appointments/${appointmentId}`, appointment);
-                    success = true;
-                  } else {
-                    throw new Error("Không tìm thấy lịch hẹn");
-                  }
-                }
-              }
-            }
-            
-            if (success) {
-              // Cập nhật lịch bận của thú cưng và nhân viên
-              if (englishStatus === 'Cancelled' || englishStatus === 'Completed') {
-                try {
-                  // Cập nhật lịch bận của thú cưng
-                  if (appointmentToUpdate.petId) {
-                    console.log(`Cập nhật lịch bận cho thú cưng ${appointmentToUpdate.petId}`);
-                    // Gửi sự kiện cập nhật lịch bận của thú cưng
-                    const updatePetBusyEvent = new CustomEvent('pet-busy-slots-updated', {
-                      detail: {
-                        petId: appointmentToUpdate.petId,
-                        date: dayjs(appointmentToUpdate.appointmentDate).format('YYYY-MM-DD')
-                      }
-                    });
-                    window.dispatchEvent(updatePetBusyEvent);
-                  }
-                  
-                  // Cập nhật lịch bận của nhân viên
-                  if (appointmentToUpdate.staffId) {
-                    console.log(`Cập nhật lịch bận cho nhân viên ${appointmentToUpdate.staffId}`);
-                    // Gửi sự kiện cập nhật lịch bận của nhân viên
-                    const updateStaffBusyEvent = new CustomEvent('staff-busy-slots-updated', {
-                      detail: {
-                        staffId: appointmentToUpdate.staffId,
-                        date: dayjs(appointmentToUpdate.appointmentDate).format('YYYY-MM-DD')
-                      }
-                    });
-                    window.dispatchEvent(updateStaffBusyEvent);
-                  }
-                } catch (updateError) {
-                  console.error("Lỗi khi cập nhật lịch bận:", updateError);
-                  // Không dừng luồng xử lý nếu việc cập nhật lịch bận gặp lỗi
-                }
-              }
-              
-              // Hiển thị thông báo phù hợp với trạng thái
-              let successMessage = '';
-              switch(englishStatus) {
-                case 'Completed':
-                  successMessage = `Lịch hẹn đã được đánh dấu là hoàn thành. Khung giờ đã được mở lại.`;
-                  break;
-                case 'Cancelled':
-                  successMessage = `Lịch hẹn đã được hủy. Khung giờ đã được mở lại cho người khác đặt.`;
-                  break;
-                case 'No-Show':
-                  successMessage = `Lịch hẹn đã được đánh dấu là không đến.`;
-                  break;
-                default:
-                  successMessage = `Trạng thái lịch hẹn đã được cập nhật thành ${newStatus}`;
-              }
-              
-              setToast({
-                show: true,
-                message: successMessage,
-                type: 'success'
-              });
-              
-              await fetchAppointments(); // Tải lại danh sách
-            }
-          } catch (err) {
-            console.error('Lỗi khi cập nhật trạng thái lịch hẹn:', err);
-            setToast({
-              show: true,
-              message: `Không thể cập nhật trạng thái lịch hẹn: ${err.response?.data?.message || err.message || 'Lỗi không xác định'}`,
-              type: 'error'
-            });
-          } finally {
-            setLoading(false);
+            await axiosClient.put(`/Appointments/${appointmentId}/status`, { status: englishStatus });
+            success = true;
+          } catch (e2) {
+            const appointment = appointments.find(a => a.appointmentId === appointmentId);
+            if (!appointment) throw new Error('Không tìm thấy lịch hẹn');
+            appointment.status = englishStatus;
+            await axiosClient.put(`/Appointments/${appointmentId}`, appointment);
+            success = true;
           }
         }
-      });
+      }
+
+      if (success) {
+        if (englishStatus === 'Cancelled' || englishStatus === 'Completed') {
+          try {
+            if (appointmentToUpdate.petId) {
+              window.dispatchEvent(new CustomEvent('pet-busy-slots-updated', {
+                detail: { petId: appointmentToUpdate.petId, date: dayjs(appointmentToUpdate.appointmentDate).format('YYYY-MM-DD') }
+              }));
+            }
+            if (appointmentToUpdate.staffId) {
+              window.dispatchEvent(new CustomEvent('staff-busy-slots-updated', {
+                detail: { staffId: appointmentToUpdate.staffId, date: dayjs(appointmentToUpdate.appointmentDate).format('YYYY-MM-DD') }
+              }));
+            }
+          } catch (updateError) {
+            console.error('Lỗi khi cập nhật lịch bận:', updateError);
+          }
+        }
+
+        let successMessage = '';
+        switch (englishStatus) {
+          case 'Completed':
+            successMessage = `Lịch hẹn đã được đánh dấu là hoàn thành. Khung giờ đã được mở lại.`;
+            break;
+          case 'Cancelled':
+            successMessage = `Lịch hẹn đã được hủy. Khung giờ đã được mở lại cho người khác đặt.`;
+            break;
+          case 'No-Show':
+            successMessage = `Lịch hẹn đã được đánh dấu là không đến.`;
+            break;
+          default:
+            successMessage = `Trạng thái lịch hẹn đã được cập nhật thành ${newStatus}`;
+        }
+
+        setToast({ show: true, message: successMessage, type: 'success' });
+        await fetchAppointments();
+        setStatusModal(prev => ({ ...prev, open: false }));
+      }
     } catch (err) {
-      console.error('Lỗi khi xử lý cập nhật trạng thái:', err);
-      setLoading(false);
+      console.error('Lỗi khi cập nhật trạng thái lịch hẹn:', err);
+      setToast({
+        show: true,
+        message: `Không thể cập nhật trạng thái lịch hẹn: ${err.response?.data?.message || err.message || 'Lỗi không xác định'}`,
+        type: 'error'
+      });
+    } finally {
+      setStatusModal(prev => ({ ...prev, loading: false }));
     }
   };
 
@@ -3352,97 +3377,130 @@ const AppointmentManagement = () => {
 
   // ===== KẾT THÚC CÁC HÀM THIẾU =====
 
+  const todayAppointments = appointments.filter(apt =>
+    apt.appointmentDate && dayjs(apt.appointmentDate).isSame(dayjs(), 'day')
+  );
+  const completedCount = appointments.filter(apt => apt.status === 'Completed').length;
+  const cancelledCount = appointments.filter(apt => apt.status === 'Cancelled').length;
+  
   return (
     <AppointmentContainer>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1 style={{ margin: 0 }}><CalendarOutlined /> Quản lý lịch hẹn</h1>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            onClick={async () => {
-              setLoading(true);
-              await Promise.all([
-                fetchAppointments(),
-                fetchUsers(),
-                fetchPets(),
-                fetchServices()
-              ]);
-              setLoading(false);
-              setToast({
-                show: true,
-                message: 'Đã tải lại dữ liệu!',
-                type: 'success'
-              });
-            }}
-            disabled={loading}
-            style={{
-              padding: '10px 20px',
-              background: loading ? '#f0f0f0' : 'linear-gradient(135deg, #05CD99 0%, #00B894 100%)',
-              color: loading ? '#999' : 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: '14px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.3s ease',
-              boxShadow: loading ? 'none' : '0 4px 15px rgba(5, 205, 153, 0.4)'
-            }}
-            onMouseEnter={(e) => {
-              if (!loading) {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(5, 205, 153, 0.6)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!loading) {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(5, 205, 153, 0.4)';
-              }
-            }}
-          >
-            <SyncOutlined spin={loading} /> {loading ? 'Đang tải...' : 'Tải lại'}
-          </button>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            style={{
-              padding: '10px 20px',
-              background: 'linear-gradient(135deg, #304FFE 0%, #304FFE 100%)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.3s ease',
-              boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
-            }}
-          >
-            <PlusOutlined /> Tạo lịch hẹn mới
-          </button>
+      {/* Header kiểu PageHeader */}
+      <div
+        style={{
+          border: '1px solid #ebedf0',
+          borderRadius: 16,
+          padding: 16,
+          background: '#fff',
+          marginBottom: 24,
+        }}
+      >
+        {/* Title + extra buttons */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: 12,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                fontSize: 20,
+                fontWeight: 700,
+                marginBottom: 4,
+              }}
+            >
+              <CalendarOutlined />
+              <span>Quản lý lịch hẹn</span>
+            </div>
+            <div style={{ color: '#64748b', fontSize: 13 }}>
+              Theo dõi và xử lý các lịch hẹn của khách hàng
+            </div>
+          </div>
+
+          <Space>
+            <AntButton
+              icon={<SyncOutlined />}
+              loading={loading}
+              onClick={async () => {
+                setLoading(true);
+                await Promise.all([
+                  fetchAppointments(),
+                  fetchUsers(),
+                  fetchPets(),
+                  fetchServices()
+                ]);
+                setLoading(false);
+                setToast({
+                  show: true,
+                  message: 'Đã tải lại dữ liệu!',
+                  type: 'success'
+                });
+              }}
+            >
+              Tải lại
+            </AntButton>
+            <AntButton
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setShowCreateModal(true)}
+            >
+              Tạo lịch hẹn mới
+            </AntButton>
+          </Space>
         </div>
+
+        {/* Nội dung chính + extra (giống Content trong ví dụ) */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: 24,
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 260 }}>
+            <Descriptions size="small" column={3}>
+              <Descriptions.Item label="Tổng lịch hẹn">{appointments.length}</Descriptions.Item>
+              <Descriptions.Item label="Hôm nay">{todayAppointments.length}</Descriptions.Item>
+              <Descriptions.Item label="Đã hủy">{cancelledCount}</Descriptions.Item>
+              <Descriptions.Item label="Đã hoàn thành">{completedCount}</Descriptions.Item>
+            </Descriptions>
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              minWidth: 220,
+            }}
+          >
+            <Statistic
+              title="Lịch hôm nay"
+              value={todayAppointments.length}
+              style={{ marginRight: 32 }}
+            />
+            <Statistic title="Đã hoàn thành" value={completedCount} />
+          </div>
+        </div>
+
+        {/* Tabs footer giống ví dụ PageHeader */}
+        <Tabs defaultActiveKey="all" size="small" style={{ marginTop: 16 }}>
+          <TabPane tab="Tất cả lịch hẹn" key="all" />
+          <TabPane tab="Lịch hôm nay" key="today" />
+        </Tabs>
       </div>
-      
+
       {error && (
         <div style={{ margin: '0 0 20px', padding: '15px', background: 'rgba(255, 82, 82, 0.1)', borderRadius: '16px', color: '#FF5252', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <ExclamationCircleOutlined />
           {error}
         </div>
       )}
-      
-      <AppointmentStats appointments={appointments} />
       
       <FilterContainer>
         <SearchBox>
@@ -3482,8 +3540,19 @@ const AppointmentManagement = () => {
       </FilterContainer>
 
       {editMode && currentAppointment && (
-        <EditForm>
-          <h2>Chỉnh sửa lịch hẹn #{currentAppointment.appointmentId}</h2>
+        <Modal
+          title={
+            <p style={{ margin: 0 }}>
+              Chỉnh sửa lịch hẹn #{currentAppointment.appointmentId}
+            </p>
+          }
+          open={editMode}
+          onCancel={handleCancel}
+          footer={null}
+          width={1200}
+          destroyOnClose
+        >
+          <EditForm>
           <FormGrid>
             <FormGroup>
               <label>Khách hàng:</label>
@@ -3705,6 +3774,7 @@ const AppointmentManagement = () => {
             </button>
           </FormActions>
         </EditForm>
+        </Modal>
       )}
 
       <TableContainer>
@@ -3779,95 +3849,157 @@ const AppointmentManagement = () => {
                   </td>
                   <td>
                     {isUnassignedAppointment(appointment) ? (
-                      <UnassignedBadge onClick={() => handleUnassignedAppointmentClick(appointment)}>
-                        <WarningOutlined className="warning-icon" />
-                        <span className="text">Chưa có nhân viên</span>
-                        <TeamOutlined className="team-icon" />
-                      </UnassignedBadge>
+                      <Tag
+                        color="warning"
+                        icon={<WarningOutlined />}
+                        style={staffTagStyle}
+                        onClick={() => handleUnassignedAppointmentClick(appointment)}
+                      >
+                        Chưa có nhân viên
+                      </Tag>
                     ) : (
-                      <AssignedBadge>
-                        <TeamOutlined className="team-icon" />
-                        <span className="text">Đã gán nhân viên</span>
-                      </AssignedBadge>
+                      <Tag
+                        color="success"
+                        icon={<TeamOutlined />}
+                        style={staffTagStyle}
+                      >
+                        Đã gán nhân viên
+                      </Tag>
                     )}
                   </td>
                   <td>
-                    <StatusBadge className={getStatusBadgeClass(appointment.status)}>
-                      {getStatusIcon(appointment.status)}
-                      {statusEnToVi[appointment.status] || appointment.status}
-                    </StatusBadge>
+                    {(() => {
+                      const { color, icon, text } = getStatusTagProps(
+                        statusEnToVi[appointment.status] || appointment.status,
+                      );
+                      return (
+                        <Tag
+                          color={color}
+                          icon={icon}
+                          style={{ borderRadius: 999, padding: '4px 12px', fontWeight: 500 }}
+                        >
+                          {text}
+                        </Tag>
+                      );
+                    })()}
                   </td>
                   <td onClick={(e) => e.stopPropagation()}>
-                    <ActionButtons>
-                      {/* Nút gán nhân viên cho lịch hẹn chưa có nhân viên */}
-                      {isUnassignedAppointment(appointment) && (
-                        <StaffAssignButton onClick={() => handleUnassignedAppointmentClick(appointment)} disabled={loading}>
-                          <TeamOutlined /> Gán nhân viên
-                        </StaffAssignButton>
-                      )}
-                      
-                      {/* Nút sửa đã có */}
-                      {canEditAppointment(appointment) ? (
-                        <button 
-                          className="edit" 
-                          onClick={() => handleEdit(appointment)}
-                          disabled={loading}
-                        >
-                          <EditOutlined /> Sửa
-                        </button>
-                      ) : (
-                        <button 
-                          className="edit" 
-                          disabled={true}
-                          style={{ opacity: 0.5, cursor: 'not-allowed' }}
-                          title="Không thể sửa lịch hẹn đã hoàn thành, đã hủy hoặc không đến"
-                        >
-                          <EditOutlined /> Sửa
-                        </button>
-                      )}
-                      
-                      {/* Thêm các nút thay đổi trạng thái */}
-                      {(appointment.status === 'Pending' || appointment.status === 'Scheduled') && (
-                        <button 
-                          className="confirm" 
-                          onClick={() => updateAppointmentStatus(appointment.appointmentId, 'Đã xác nhận')}
-                          disabled={loading}
-                        >
-                          <CheckOutlined /> Xác nhận
-                        </button>
-                      )}
-                      
-                      {appointment.status === 'Confirmed' && (
-                        <>
-                          <button 
-                            className="complete" 
-                            onClick={() => updateAppointmentStatus(appointment.appointmentId, 'Đã hoàn thành')}
-                            disabled={loading}
-                          >
-                            <CheckCircleOutlined /> Hoàn thành
-                          </button>
-                          
-                          <button 
-                            className="cancel-appointment"
-                            onClick={() => updateAppointmentStatus(appointment.appointmentId, 'Không đến')}
-                            disabled={loading}
-                          >
-                            <WarningOutlined /> Không đến
-                          </button>
-                        </>
-                      )}
-                      
-                      {canCancelAppointment(appointment) && 
-                      (appointment.status === 'Scheduled' || appointment.status === 'Confirmed' || appointment.status === 'Pending') && (
-                        <button 
-                          className="cancel-appointment" 
-                          onClick={() => updateAppointmentStatus(appointment.appointmentId, 'Đã hủy')}
-                          disabled={loading}
-                        >
-                          <CloseOutlined /> Hủy
-                        </button>
-                      )}
-                    </ActionButtons>
+                    <Dropdown
+                      menu={{
+                        items: (() => {
+                          const items = [];
+
+                          if (isUnassignedAppointment(appointment)) {
+                            items.push({
+                              key: 'assign',
+                              label: (
+                                <span onClick={() => handleUnassignedAppointmentClick(appointment)}>
+                                  <TeamOutlined style={{ marginRight: 8 }} />
+                                  Gán nhân viên
+                                </span>
+                              ),
+                            });
+                          }
+
+                          if (canEditAppointment(appointment)) {
+                            items.push({
+                              key: 'edit',
+                              label: (
+                                <span onClick={() => handleEdit(appointment)}>
+                                  <EditOutlined style={{ marginRight: 8 }} />
+                                  Sửa
+                                </span>
+                              ),
+                            });
+                          }
+
+                          if (appointment.status === 'Pending' || appointment.status === 'Scheduled') {
+                            items.push({
+                              key: 'confirm',
+                              label: (
+                                <span
+                                  onClick={() =>
+                                    updateAppointmentStatus(appointment.appointmentId, 'Đã xác nhận')
+                                  }
+                                >
+                                  <CheckOutlined style={{ marginRight: 8 }} />
+                                  Xác nhận
+                                </span>
+                              ),
+                            });
+                          }
+
+                          if (appointment.status === 'Confirmed') {
+                            items.push(
+                              {
+                                key: 'complete',
+                                label: (
+                                  <span
+                                    onClick={() =>
+                                      updateAppointmentStatus(
+                                        appointment.appointmentId,
+                                        'Đã hoàn thành',
+                                      )
+                                    }
+                                  >
+                                    <CheckCircleOutlined style={{ marginRight: 8 }} />
+                                    Hoàn thành
+                                  </span>
+                                ),
+                              },
+                              {
+                                key: 'noShow',
+                                label: (
+                                  <span
+                                    onClick={() =>
+                                      updateAppointmentStatus(appointment.appointmentId, 'Không đến')
+                                    }
+                                  >
+                                    <WarningOutlined style={{ marginRight: 8 }} />
+                                    Không đến
+                                  </span>
+                                ),
+                              },
+                            );
+                          }
+
+                          if (
+                            canCancelAppointment(appointment) &&
+                            (appointment.status === 'Scheduled' ||
+                              appointment.status === 'Confirmed' ||
+                              appointment.status === 'Pending')
+                          ) {
+                            items.push({
+                              key: 'cancel',
+                              danger: true,
+                              label: (
+                                <span
+                                  onClick={() =>
+                                    updateAppointmentStatus(appointment.appointmentId, 'Đã hủy')
+                                  }
+                                >
+                                  <CloseOutlined style={{ marginRight: 8 }} />
+                                  Hủy
+                                </span>
+                              ),
+                            });
+                          }
+
+                          return items;
+                        })(),
+                      }}
+                    >
+                      <a
+                        href="#"
+                        onClick={(e) => e.preventDefault()}
+                        style={{ color: '#304FFE', fontWeight: 500 }}
+                      >
+                        <Space>
+                          Thao tác
+                          <DownOutlined />
+                        </Space>
+                      </a>
+                    </Dropdown>
                   </td>
                 </tr>
               ))
@@ -3892,68 +4024,25 @@ const AppointmentManagement = () => {
         </table>
       </TableContainer>
 
-      {/* Thêm phân trang ở đây */}
+      {/* Phân trang dùng Ant Design Pagination */}
       {filteredAppointments.length > 0 && (
-        <Pagination>
-          <button 
-            className="pagination-button" 
-            onClick={goToPreviousPage}
-            disabled={currentPage === 1}
-          >
-            <LeftOutlined />
-          </button>
-          
-          {/* Hiển thị các nút số trang */}
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            // Logic để hiển thị 5 nút trang gần trang hiện tại
-            let pageNum;
-            if (totalPages <= 5) {
-              // Nếu tổng số trang <= 5, hiển thị tất cả
-              pageNum = i + 1;
-            } else if (currentPage <= 3) {
-              // Nếu ở gần đầu, hiển thị 5 trang đầu
-              pageNum = i + 1;
-            } else if (currentPage >= totalPages - 2) {
-              // Nếu ở gần cuối, hiển thị 5 trang cuối
-              pageNum = totalPages - 4 + i;
-            } else {
-              // Ở giữa, hiển thị 2 trang trước, trang hiện tại, 2 trang sau
-              pageNum = currentPage - 2 + i;
-            }
-            
-            return (
-              <button
-                key={pageNum}
-                className={`pagination-button ${currentPage === pageNum ? 'active' : ''}`}
-                onClick={() => paginate(pageNum)}
-              >
-                {pageNum}
-              </button>
-            );
-          })}
-          
-          <button 
-            className="pagination-button" 
-            onClick={goToNextPage}
-            disabled={currentPage === totalPages}
-          >
-            <RightOutlined />
-          </button>
-          
+        <div style={{ marginTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="pagination-info">
             Hiển thị {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredAppointments.length)} / {filteredAppointments.length} lịch hẹn
           </span>
-          
-          <div className="per-page-select">
-            <label>Hiển thị:</label>
-            <select value={itemsPerPage} onChange={handleItemsPerPageChange}>
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-            </select>
-          </div>
-        </Pagination>
+          <AntPagination
+            showQuickJumper
+            current={currentPage}
+            total={filteredAppointments.length}
+            pageSize={itemsPerPage}
+            onChange={(page, pageSize) => {
+              paginate(page);
+              if (pageSize !== itemsPerPage) {
+                handleItemsPerPageChange({ target: { value: pageSize } });
+              }
+            }}
+          />
+        </div>
       )}
 
       <ConfirmDialog 
@@ -3961,6 +4050,23 @@ const AppointmentManagement = () => {
         setConfirmDialog={setConfirmDialog}
         confirmDialog={confirmDialog}
       />
+
+      {/* Modal cập nhật trạng thái (AntD Modal + loading) */}
+      <Modal
+        title={<p>Cập nhật trạng thái</p>}
+        footer={
+          <AntButton type="primary" onClick={handleConfirmUpdateStatus} disabled={statusModal.loading}>
+            {statusModal.loading ? 'Đang cập nhật...' : 'Xác nhận'}
+          </AntButton>
+        }
+        loading={statusModal.loading}
+        open={statusModal.open}
+        onCancel={() => {
+          if (!statusModal.loading) setStatusModal(prev => ({ ...prev, open: false }));
+        }}
+      >
+        <p>{statusModal.content}</p>
+      </Modal>
       
       <Toast
         show={toast.show}
@@ -4540,23 +4646,7 @@ const AppointmentManagement = () => {
       )}
 
       {/* Toast notification */}
-      <Toast 
-        show={toast.show} 
-        message={toast.message} 
-        type={toast.type} 
-        onClose={closeToast} 
-      />
-
-      {/* Confirm Dialog */}
-      <ConfirmDialog 
-        isOpen={confirmDialog.isOpen}
-        title={confirmDialog.title}
-        content={confirmDialog.content}
-        onConfirm={confirmDialog.onConfirm}
-        onCancel={confirmDialog.onCancel}
-        setConfirmDialog={setConfirmDialog}
-        confirmDialog={confirmDialog}
-      />
+      {/* (Đã render Toast + ConfirmDialog ở phía trên; tránh render trùng) */}
 
       {/* Modal hiển thị khung giờ của nhân viên với TimeSlotGrid */}
       {showTimeSlotView && selectedStaffForAssignment && selectedUnassignedAppointment && (
@@ -5134,84 +5224,50 @@ const AppointmentManagement = () => {
         </div>
       )}
 
-      {/* ===== MODAL TẠO LỊCH HẸN MỚI (SỬ DỤNG APPOINTMENTFORM) ===== */}
-      {showCreateModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000,
-          padding: '20px'
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '16px',
-            width: '100%',
-            maxWidth: '1200px',
-            height: '85vh',
-            overflow: 'auto',
-            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
-            position: 'relative',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            {/* Header */}
-            <div style={{
-              padding: '24px',
-              borderBottom: '1px solid #f0f0f0',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              position: 'sticky',
-              top: 0,
-              background: 'white',
-              zIndex: 1
-            }}>
-              <h2 style={{ margin: 0, color: '#304FFE' }}>
-                <PlusOutlined /> Tạo lịch hẹn cho khách hàng
-              </h2>
-              <button
-                onClick={() => {
-                  setShowCreateModal(false);
-                  setCreateFormData({
-                    userId: '',
-                    petId: '',
-                    serviceId: '',
-                    staffId: '',
-                    appointmentDate: '',
-                    appointmentTime: '',
-                    notes: ''
-                  });
-                  setSelectedCreateTimeSlot(null);
-                  setCreateTimeSlots([]);
-                  setCreatePetBusySlots([]);
-                  setCreatePetAppointments([]);
-                  setUserSearchTerm('');
-                  setShowUserDropdown(false);
-                  setUserPets([]);
-                  setAvailableStaffForCreate([]);
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '24px',
-                  cursor: 'pointer',
-                  color: '#999',
-                  lineHeight: 1
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Body */}
-            <div style={{ padding: '32px', flex: 1, overflowY: 'auto' }}>
+      {/* ===== MODAL TẠO LỊCH HẸN MỚI (SỬ DỤNG APPOINTMENTFORM) - DÙNG ANT DESIGN MODAL ===== */}
+      <Modal
+        title={<p style={{ margin: 0 }}><PlusOutlined /> Tạo lịch hẹn cho khách hàng</p>}
+        open={showCreateModal}
+        onCancel={() => {
+          setShowCreateModal(false);
+          setCreateFormData({
+            userId: '',
+            petId: '',
+            serviceId: '',
+            staffId: '',
+            appointmentDate: '',
+            appointmentTime: '',
+            notes: ''
+          });
+          setSelectedCreateTimeSlot(null);
+          setCreateTimeSlots([]);
+          setCreatePetBusySlots([]);
+          setCreatePetAppointments([]);
+          setUserSearchTerm('');
+          setShowUserDropdown(false);
+          setUserPets([]);
+          setAvailableStaffForCreate([]);
+        }}
+        footer={
+          <AntButton
+            type="primary"
+            loading={createModalLoading}
+            onClick={async () => {
+              setCreateModalLoading(true);
+              try {
+                await Promise.all([fetchUsers(), fetchServices()]);
+              } finally {
+                setCreateModalLoading(false);
+              }
+            }}
+          >
+            Tải lại dữ liệu
+          </AntButton>
+        }
+        width={1200}
+        bodyStyle={{ padding: 0, maxHeight: '80vh', overflowY: 'auto' }}
+      >
+        <div style={{ padding: '32px' }}>
               {!createFormData.userId ? (
                 // Bước 1: Chọn khách hàng
                 <div>
@@ -5461,10 +5517,8 @@ const AppointmentManagement = () => {
                   />
                 </div>
               )}
-            </div>
-          </div>
         </div>
-      )}
+      </Modal>
 
       {/* Modal xem chi tiết lịch hẹn */}
       {showDetailModal && detailAppointment && (

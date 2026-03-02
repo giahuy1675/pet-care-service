@@ -7,7 +7,6 @@ const orderService = {
   getAllOrders: async () => {
     try {
       const response = await axiosClient.get(ORDER_API_URL);
-      console.log('All Orders:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching all orders:', error.response?.data || error.message);
@@ -19,7 +18,6 @@ const orderService = {
   getOrderById: async (orderId) => {
     try {
       const response = await axiosClient.get(`${ORDER_API_URL}/${orderId}`);
-      console.log(`Order ${orderId} Details:`, response.data);
       return response.data;
     } catch (error) {
       console.error(`Error fetching order ${orderId}:`, error.response?.data || error.message);
@@ -31,7 +29,6 @@ const orderService = {
   getUserOrders: async () => {
     try {
       const response = await axiosClient.get(`${ORDER_API_URL}/User`);
-      console.log('User Orders:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching user orders:', error.response?.data || error.message);
@@ -45,7 +42,6 @@ const orderService = {
       const response = await axiosClient.get(
         `${ORDER_API_URL}/Date?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
       );
-      console.log('Orders by Date Range:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching orders by date range:', error.response?.data || error.message);
@@ -57,7 +53,6 @@ const orderService = {
   getOrdersByStatus: async (status) => {
     try {
       const response = await axiosClient.get(`${ORDER_API_URL}/Status/${status}`);
-      console.log(`Orders with status ${status}:`, response.data);
       return response.data;
     } catch (error) {
       console.error(`Error fetching orders with status ${status}:`, error.response?.data || error.message);
@@ -68,8 +63,6 @@ const orderService = {
   // Tạo đơn hàng mới
   createOrder: async (orderData) => {
     try {
-      console.log('Creating Order - Input Data:', orderData);
-      
       // Validate orderData trước khi gửi
       const validation = {
         hasRecipientName: !!orderData.recipientName,
@@ -82,23 +75,7 @@ const orderService = {
         )
       };
       
-      console.log('Order validation before API call:', validation);
-      
-      // Kiểm tra từng orderItem
-      if (orderData.orderItems) {
-        orderData.orderItems.forEach((item, index) => {
-          console.log(`OrderItem ${index}:`, {
-            productId: item.productId,
-            quantity: item.quantity,
-            price: item.price,
-            productOption: item.productOption
-          });
-        });
-      }
-      
       const response = await axiosClient.post(ORDER_API_URL, orderData);
-      
-      console.log('Order Creation Response:', response.data);
       
       // Kiểm tra và báo lỗi nếu không có orderId
       if (!response.data || !response.data.orderId) {
@@ -151,7 +128,6 @@ const orderService = {
   updateOrder: async (orderId, orderData) => {
     try {
       const response = await axiosClient.put(`${ORDER_API_URL}/${orderId}`, orderData);
-      console.log(`Updated Order ${orderId}:`, response.data);
       return response.data;
     } catch (error) {
       console.error(`Error updating order ${orderId}:`, error.response?.data || error.message);
@@ -163,7 +139,6 @@ const orderService = {
   updateOrderStatus: async (orderId, status) => {
     try {
       const response = await axiosClient.patch(`${ORDER_API_URL}/${orderId}/Status`, { status });
-      console.log(`Updated Order ${orderId} Status:`, response.data);
       return response.data;
     } catch (error) {
       console.error(`Error updating status for order ${orderId}:`, error.response?.data || error.message);
@@ -175,7 +150,6 @@ const orderService = {
   cancelOrder: async (orderId) => {
     try {
       await axiosClient.delete(`${ORDER_API_URL}/${orderId}/Cancel`);
-      console.log(`Cancelled Order ${orderId}`);
       return true;
     } catch (error) {
       console.error(`Error cancelling order ${orderId}:`, error.response?.data || error.message);

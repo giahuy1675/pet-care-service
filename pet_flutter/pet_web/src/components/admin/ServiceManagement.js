@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button, Space, Flex, Tag, Alert, Descriptions, Tabs, Statistic } from 'antd';
+import StatusTag from '../common/StatusTag';
 import axiosClient from '../../utils/axiosClient';
 import serviceService from '../../services/serviceService';
 import { 
@@ -21,7 +23,8 @@ import {
   TagsOutlined,
   FileTextOutlined,
   HomeOutlined,
-  CustomerServiceOutlined
+  CustomerServiceOutlined,
+  PoweroffOutlined
 } from '@ant-design/icons';
 
 // Styled Components
@@ -88,7 +91,7 @@ const ActionBar = styled.div`
   }
 `;
 
-const Button = styled.button`
+const LegacyButton = styled.button`
   display: flex;
   align-items: center;
   gap: 10px;
@@ -249,6 +252,13 @@ const EmptyState = styled.div`
     max-width: 500px;
     margin: 0 auto;
   }
+`;
+
+const FilterTagsWrapper = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
 `;
 
 const ServiceCategorySection = styled.div`
@@ -475,32 +485,7 @@ const ServiceInfo = styled.div`
   }
 `;
 
-const StatusBadge = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 500;
-  margin-bottom: 15px;
-  
-  &.active {
-    background-color: rgba(5, 205, 153, 0.1);
-    color: #05CD99;
-    box-shadow: 0 5px 15px rgba(5, 205, 153, 0.15);
-  }
-  
-  &.inactive {
-    background-color: rgba(255, 82, 82, 0.1);
-    color: #FF5252;
-    box-shadow: 0 5px 15px rgba(255, 82, 82, 0.15);
-  }
-  
-  .anticon {
-    font-size: 14px;
-  }
-`;
+// trạng thái dùng chung component StatusTag (giả lập variant như demo)
 
 const CardActions = styled.div`
   display: flex;
@@ -847,48 +832,12 @@ const ImageUpload = styled.div`
   }
 `;
 
-const Toast = styled(motion.div)`
+const ToastContainer = styled.div`
   position: fixed;
   bottom: 30px;
   right: 30px;
-  padding: 15px 25px;
-  border-radius: 16px;
-  background: white;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  min-width: 300px;
   z-index: 2000;
-  
-  &.success {
-    border-left: 5px solid #05CD99;
-    
-    .anticon {
-      color: #05CD99;
-      font-size: 20px;
-    }
-  }
-  
-  &.error {
-    border-left: 5px solid #FF5252;
-    
-    .anticon {
-      color: #FF5252;
-      font-size: 20px;
-    }
-  }
-  
-  span {
-    font-weight: 500;
-  }
-  
-  animation: slideIn 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
-  
-  @keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-  }
+  max-width: 420px;
 `;
 
 const Table = styled.table`
@@ -1098,6 +1047,7 @@ const ServiceManagement = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
   const fileInputRef = useRef(null);
   const [newImage, setNewImage] = useState(null);
+  const [buttonLoadings, setButtonLoadings] = useState({});
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -1147,7 +1097,7 @@ const ServiceManagement = () => {
           const photoPath = service.photo.startsWith('/') ? service.photo : `/${service.photo}`;
           return {
             ...service,
-            photo: `https://localhost:7164${photoPath}`
+            photo: `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${photoPath}`
           };
         }
         return service;
@@ -1235,7 +1185,7 @@ const ServiceManagement = () => {
         } else if (response.photo && !response.photo.startsWith('http') && !response.photo.startsWith('data:')) {
           // Đảm bảo URL ảnh trả về từ API có tiền tố đúng
           const photoPath = response.photo.startsWith('/') ? response.photo : `/${response.photo}`;
-          response.photo = `https://localhost:7164${photoPath}`;
+          response.photo = `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${photoPath}`;
         }
         
         // Update state
@@ -1252,7 +1202,7 @@ const ServiceManagement = () => {
         // Đảm bảo URL ảnh trả về từ API có tiền tố đúng
         if (response.photo && !response.photo.startsWith('http') && !response.photo.startsWith('data:')) {
           const photoPath = response.photo.startsWith('/') ? response.photo : `/${response.photo}`;
-          response.photo = `https://localhost:7164${photoPath}`;
+          response.photo = `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${photoPath}`;
         }
         
         // Add to state
@@ -1342,7 +1292,7 @@ const ServiceManagement = () => {
     const currentService = { ...service };
     if (currentService.photo && !currentService.photo.startsWith('http') && !currentService.photo.startsWith('data:')) {
       const photoPath = currentService.photo.startsWith('/') ? currentService.photo : `/${currentService.photo}`;
-      currentService.photo = `https://localhost:7164${photoPath}`;
+      currentService.photo = `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${photoPath}`;
     }
 
     setCurrentService(currentService);
@@ -1366,43 +1316,119 @@ const ServiceManagement = () => {
   // Cập nhật phần render của component
   return (
     <ServiceManagementContainer>
-      <h1><CustomerServiceOutlined /> Quản lý dịch vụ</h1>
-      
-      {/* Stats Cards */}
-      <StatsContainer>
-        <StatCard>
-          <div className="icon" style={{ background: 'linear-gradient(135deg, #304FFE 0%, #304FFE 100%)' }}>
-            <CustomerServiceOutlined />
+      {/* Header kiểu PageHeader cho quản lý dịch vụ */}
+      <div
+        style={{
+          border: '1px solid #ebedf0',
+          borderRadius: 16,
+          padding: 16,
+          background: '#fff',
+          marginBottom: 24,
+        }}
+      >
+        {/* Title + extra */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: 12,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                fontSize: 20,
+                fontWeight: 700,
+                marginBottom: 4,
+              }}
+            >
+              <CustomerServiceOutlined />
+              <span>Quản lý dịch vụ</span>
+            </div>
+            <div style={{ color: '#64748b', fontSize: 13 }}>
+              Quản lý danh sách dịch vụ, giá và trạng thái hoạt động
+            </div>
           </div>
-          <div className="content">
-            <h4>Tổng số dịch vụ</h4>
-            <p className="number">{stats.all}</p>
+
+          <Space>
+            <Button
+              icon={<SyncOutlined />}
+              loading={loading}
+              onClick={fetchServices}
+            >
+              Làm mới
+            </Button>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAddNew}
+            >
+              Thêm dịch vụ mới
+            </Button>
+          </Space>
+        </div>
+
+        {/* Nội dung mô tả + extra thống kê */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: 24,
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 260 }}>
+            <Descriptions size="small" column={3}>
+              <Descriptions.Item label="Tổng dịch vụ">{stats.all}</Descriptions.Item>
+              <Descriptions.Item label="Đang hoạt động">{stats.active}</Descriptions.Item>
+              <Descriptions.Item label="Ngừng hoạt động">{stats.inactive}</Descriptions.Item>
+            </Descriptions>
           </div>
-        </StatCard>
-        <StatCard>
-          <div className="icon" style={{ background: 'linear-gradient(135deg, #05CD99 0%, #00A3FF 100%)' }}>
-            <CheckCircleOutlined />
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              minWidth: 220,
+            }}
+          >
+            <Statistic
+              title="Đang hoạt động"
+              value={stats.active}
+              style={{ marginRight: 32 }}
+            />
+            <Statistic title="Ngừng hoạt động" value={stats.inactive} />
           </div>
-          <div className="content">
-            <h4>Đang hoạt động</h4>
-            <p className="number">{stats.active}</p>
-          </div>
-        </StatCard>
-        <StatCard>
-          <div className="icon" style={{ background: 'linear-gradient(135deg, #FF5252 0%, #FF7676 100%)' }}>
-            <CloseCircleOutlined />
-          </div>
-          <div className="content">
-            <h4>Ngừng hoạt động</h4>
-            <p className="number">{stats.inactive}</p>
-          </div>
-        </StatCard>
-      </StatsContainer>
+        </div>
+
+        {/* Tabs giống footer của PageHeader */}
+        <Tabs defaultActiveKey="all" size="small" style={{ marginTop: 16 }}>
+          <Tabs.TabPane tab="Tất cả dịch vụ" key="all" />
+          <Tabs.TabPane tab="Dịch vụ đang hoạt động" key="active" />
+        </Tabs>
+      </div>
       
       <ActionBar>
-        <Button className="primary" onClick={handleAddNew}>
-          <PlusOutlined /> Thêm dịch vụ mới
-        </Button>
+        <Flex gap="small" align="center" wrap>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleAddNew}
+          >
+            Thêm dịch vụ mới
+          </Button>
+          <Button
+            type="primary"
+            icon={<SyncOutlined />}
+            loading={loading}
+            onClick={fetchServices}
+          >
+            Làm mới
+          </Button>
+        </Flex>
         
         <SearchBox>
           <input
@@ -1413,45 +1439,85 @@ const ServiceManagement = () => {
           />
           <SearchOutlined className="search-icon" />
         </SearchBox>
-        
-        <Button className="refresh" onClick={fetchServices}>
-          <SyncOutlined spin={loading} /> Làm mới
-        </Button>
       </ActionBar>
       
-      {/* Filter Bar */}
-      <FilterBar>
-        <FilterButton 
-          active={filterCategory === 'All'} 
-          onClick={() => setFilterCategory('All')}
+      {/* Filter Tags */}
+      <FilterTagsWrapper>
+        <Tag.CheckableTag
+          checked={filterCategory === 'All'}
+          onChange={() => setFilterCategory('All')}
+          style={{
+            borderRadius: 999,
+            padding: '6px 18px',
+            fontWeight: 500,
+            background: filterCategory === 'All' ? 'linear-gradient(135deg,#305CFF,#4A8DFF)' : '#f5f7ff',
+            color: filterCategory === 'All' ? '#fff' : '#4b5c9a',
+            border: 'none',
+          }}
         >
           Tất cả
-        </FilterButton>
-        <FilterButton 
-          active={filterCategory === 'Grooming'} 
-          onClick={() => setFilterCategory('Grooming')}
+        </Tag.CheckableTag>
+
+        <Tag.CheckableTag
+          checked={filterCategory === 'Grooming'}
+          onChange={() => setFilterCategory('Grooming')}
+          style={{
+            borderRadius: 999,
+            padding: '6px 18px',
+            fontWeight: 500,
+            background: filterCategory === 'Grooming' ? '#f0f5ff' : '#f5f7ff',
+            color: filterCategory === 'Grooming' ? '#305CFF' : '#4b5c9a',
+            border: 'none',
+          }}
         >
           Chăm sóc & Làm đẹp
-        </FilterButton>
-        <FilterButton 
-          active={filterCategory === 'Healthcare'} 
-          onClick={() => setFilterCategory('Healthcare')}
+        </Tag.CheckableTag>
+
+        <Tag.CheckableTag
+          checked={filterCategory === 'Healthcare'}
+          onChange={() => setFilterCategory('Healthcare')}
+          style={{
+            borderRadius: 999,
+            padding: '6px 18px',
+            fontWeight: 500,
+            background: filterCategory === 'Healthcare' ? '#f0fff2' : '#f5f7ff',
+            color: filterCategory === 'Healthcare' ? '#52c41a' : '#4b5c9a',
+            border: 'none',
+          }}
         >
           Y tế & Sức khỏe
-        </FilterButton>
-        <FilterButton 
-          active={filterCategory === 'Training'} 
-          onClick={() => setFilterCategory('Training')}
+        </Tag.CheckableTag>
+
+        <Tag.CheckableTag
+          checked={filterCategory === 'Training'}
+          onChange={() => setFilterCategory('Training')}
+          style={{
+            borderRadius: 999,
+            padding: '6px 18px',
+            fontWeight: 500,
+            background: filterCategory === 'Training' ? '#fff7e6' : '#f5f7ff',
+            color: filterCategory === 'Training' ? '#fa8c16' : '#4b5c9a',
+            border: 'none',
+          }}
         >
           Huấn luyện
-        </FilterButton>
-        <FilterButton 
-          active={filterCategory === 'Boarding'} 
-          onClick={() => setFilterCategory('Boarding')}
+        </Tag.CheckableTag>
+
+        <Tag.CheckableTag
+          checked={filterCategory === 'Boarding'}
+          onChange={() => setFilterCategory('Boarding')}
+          style={{
+            borderRadius: 999,
+            padding: '6px 18px',
+            fontWeight: 500,
+            background: filterCategory === 'Boarding' ? '#fff0f6' : '#f5f7ff',
+            color: filterCategory === 'Boarding' ? '#eb2f96' : '#4b5c9a',
+            border: 'none',
+          }}
         >
           Trông giữ qua đêm
-        </FilterButton>
-      </FilterBar>
+        </Tag.CheckableTag>
+      </FilterTagsWrapper>
       
       {/* Loading và error states */}
       {loading && (
@@ -1513,21 +1579,46 @@ const ServiceManagement = () => {
                           <span>{service.duration} phút</span>
                         </span>
                       </div>
-                      <StatusBadge className={service.isActive ? 'active' : 'inactive'}>
-                        {service.isActive ? 
-                          <CheckCircleOutlined /> : 
-                          <CloseCircleOutlined />
-                        }
+                      <StatusTag
+                        color={service.isActive ? 'success' : 'error'}
+                        icon={service.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                        variant="solid"
+                        style={{ marginBottom: 15 }}
+                      >
                         {service.isActive ? 'Đang hoạt động' : 'Ngừng hoạt động'}
-                      </StatusBadge>
+                      </StatusTag>
                     </ServiceInfo>
                     <CardActions>
-                      <button className="button-edit" onClick={() => handleEdit(service)}>
-                        <EditOutlined /> Sửa
-                      </button>
-                      <button className="button-delete" onClick={() => handleDelete(service.serviceId)}>
-                        <DeleteOutlined /> Xóa
-                      </button>
+                      <Space size="small">
+                        <Button
+                          type="primary"
+                          icon={<EditOutlined />}
+                          loading={buttonLoadings[`edit-${service.serviceId}`]}
+                          onClick={() => {
+                            setButtonLoadings(prev => ({ ...prev, [`edit-${service.serviceId}`]: true }));
+                            handleEdit(service);
+                            setTimeout(() => {
+                              setButtonLoadings(prev => ({ ...prev, [`edit-${service.serviceId}`]: false }));
+                            }, 500);
+                          }}
+                        >
+                          Sửa
+                        </Button>
+                        <Button
+                          danger
+                          icon={<DeleteOutlined />}
+                          loading={buttonLoadings[`delete-${service.serviceId}`]}
+                          onClick={() => {
+                            setButtonLoadings(prev => ({ ...prev, [`delete-${service.serviceId}`]: true }));
+                            handleDelete(service.serviceId);
+                            setTimeout(() => {
+                              setButtonLoadings(prev => ({ ...prev, [`delete-${service.serviceId}`]: false }));
+                            }, 500);
+                          }}
+                        >
+                          Xóa
+                        </Button>
+                      </Space>
                     </CardActions>
                   </ServiceCard>
                 ))}
@@ -1684,13 +1775,19 @@ const ServiceManagement = () => {
                   </ImageUpload>
                 </FormGroup>
                 <FormActions>
-                  <Button type="button" className="cancel" onClick={() => setShowForm(false)}>
-                    Hủy
-                  </Button>
-                  <Button type="submit" className="primary" disabled={loading}>
-                    {loading ? <SyncOutlined spin /> : null}
-                    {editMode ? 'Cập nhật' : 'Thêm mới'}
-                  </Button>
+                  <Flex gap="small" justify="flex-end">
+                    <Button onClick={() => setShowForm(false)}>
+                      Hủy
+                    </Button>
+                    <Button
+                      type="primary"
+                      icon={loading ? <SyncOutlined spin /> : null}
+                      loading={loading}
+                      htmlType="submit"
+                    >
+                      {editMode ? 'Cập nhật' : 'Thêm mới'}
+                    </Button>
+                  </Flex>
                 </FormActions>
               </form>
             </ModalContent>
@@ -1725,35 +1822,51 @@ const ServiceManagement = () => {
                 Bạn có chắc chắn muốn xóa dịch vụ này? Hành động này không thể hoàn tác.
               </p>
               <FormActions>
-                <Button type="button" className="cancel" onClick={() => setConfirmDelete(null)}>
-                  Hủy
-                </Button>
-                <Button 
-                  type="button" 
-                  className="danger" 
-                  onClick={confirmDeleteService}
-                  disabled={loading}
-                >
-                  {loading ? <SyncOutlined spin /> : null}
-                  Xóa
-                </Button>
+                <Flex gap="small" justify="flex-end">
+                  <Button onClick={() => setConfirmDelete(null)}>
+                    Hủy
+                  </Button>
+                  <Button
+                    danger
+                    icon={loading ? <SyncOutlined spin /> : <DeleteOutlined />}
+                    loading={loading}
+                    onClick={confirmDeleteService}
+                  >
+                    Xóa
+                  </Button>
+                </Flex>
               </FormActions>
             </ModalContent>
           </Modal>
         </ModalOverlay>
       )}
 
-      {/* Toast notification */}
-      {toast.show && (
-        <Toast className={toast.type}>
-          {toast.type === 'success' ? (
-            <CheckCircleOutlined />
-          ) : (
-            <ExclamationCircleOutlined />
-          )}
-          <span>{toast.message}</span>
-        </Toast>
-      )}
+      {/* Toast notification - dùng Ant Design Alert giống UserManagement */}
+      <AnimatePresence>
+        {toast.show && (
+          <ToastContainer>
+            <motion.div
+              initial={{ x: 100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 100, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            >
+              <Alert
+                type={toast.type === 'success' ? 'success' : toast.type === 'error' ? 'error' : 'info'}
+                message={toast.type === 'success'
+                  ? 'Thành công'
+                  : toast.type === 'error'
+                    ? 'Lỗi'
+                    : 'Thông báo'}
+                description={toast.message}
+                showIcon
+                closable
+                onClose={() => setToast({ show: false, message: '', type: '' })}
+              />
+            </motion.div>
+          </ToastContainer>
+        )}
+      </AnimatePresence>
     </ServiceManagementContainer>
   );
 };

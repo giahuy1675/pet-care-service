@@ -11,17 +11,13 @@ build_property.EnforceExtendedAnalyzerRules =
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = BE_PetWeb_API
 build_property.RootNamespace = BE_PetWeb_API
-build_property.ProjectDir = D:\Dowloads_D\dacn_10_10_2025\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\
+build_property.ProjectDir = C:\Users\giahu\OneDrive\Desktop\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.RazorLangVersion = 8.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = D:\Dowloads_D\dacn_10_10_2025\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API
+build_property.MSBuildProjectDirectory = C:\Users\giahu\OneDrive\Desktop\do_an_chuyen_nganh_v1\pet_flutter\BE_PetWeb_API\BE_PetWeb_API
 build_property._RazorSourceGeneratorDebug = 
 build_property.EffectiveAnalysisLevelStyle = 8.0
 build_property.EnableCodeStyleSeverity = 
-
-[C:/Users/giahu/AppData/Roaming/SonarLint for Visual Studio/.global/csharp/SonarLint.xml]
-build_metadata.AdditionalFiles.TargetPath = 
-build_metadata.AdditionalFiles.CssScope = 

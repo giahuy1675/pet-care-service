@@ -410,8 +410,14 @@ const CheckoutPage = () => {
   const [cart, setCart] = useState({ cartItems: [], total: 0 });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [useSavedAddress, setUseSavedAddress] = useState(true);
   const navigate = useNavigate();
+
+  // Tạm tính từ danh sách sản phẩm (không phụ thuộc cart.total vì có thể = 0)
+  const subtotal = (cart.cartItems || []).reduce((sum, item) => {
+    const unitPrice = item.product?.Price || item.product?.price || item.Price || item.price || 0;
+    const qty = item.quantity || 0;
+    return sum + unitPrice * qty;
+  }, 0);
 
   // Phí vận chuyển cố định
   const shippingFee = cart.cartItems && cart.cartItems.length > 0 ? 30000 : 0;
@@ -455,8 +461,8 @@ const CheckoutPage = () => {
       return;
     }
     
-    // Set giá trị mặc định từ thông tin user
-    if (currentUser && useSavedAddress) {
+    // Tự động map thông tin user vào form
+    if (currentUser) {
       form.setFieldsValue({
         recipientName: currentUser?.fullName || '',
         recipientPhone: currentUser?.phone || '',
@@ -464,7 +470,7 @@ const CheckoutPage = () => {
         note: ''
       });
     }
-  }, [cart.cartItems, navigate, currentUser, form, useSavedAddress, loading]);
+  }, [cart.cartItems, navigate, currentUser, form, loading]);
 
   // Hàm xử lý khi người dùng submit form
   const handleSubmit = (values) => {
@@ -484,9 +490,9 @@ const CheckoutPage = () => {
       const orderData = {
         ...values,
         cartItems: cart.cartItems,
-        subtotal: cart.total,
+        subtotal: subtotal,
         shippingFee: shippingFee,
-        total: cart.total + shippingFee,
+        total: subtotal + shippingFee,
         estimatedDelivery: estimatedDelivery
       };
       
@@ -507,25 +513,6 @@ const CheckoutPage = () => {
     }
   };
   
-  const toggleSavedAddress = () => {
-    setUseSavedAddress(!useSavedAddress);
-    
-    if (!useSavedAddress && currentUser) {
-      // Nếu bật lại địa chỉ đã lưu, cập nhật form với dữ liệu người dùng
-      form.setFieldsValue({
-        recipientName: currentUser.fullName || '',
-        recipientPhone: currentUser.phone || '',
-        shippingAddress: currentUser.address || '',
-      });
-    } else if (useSavedAddress) {
-      // Nếu tắt địa chỉ đã lưu, xóa các trường địa chỉ
-      form.setFieldsValue({
-        recipientName: '',
-        recipientPhone: '',
-        shippingAddress: '',
-      });
-    }
-  };
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', { 
@@ -675,29 +662,6 @@ const CheckoutPage = () => {
                   <UserOutlined /> Thông tin giao hàng
                 </Title>
                 
-                {currentUser && (
-                  <Alert
-                    message={
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>
-                          {useSavedAddress 
-                            ? '✅ Đang sử dụng địa chỉ đã lưu' 
-                            : '📝 Đang nhập địa chỉ mới'
-                          }
-                        </span>
-                        <Button
-                          type="link"
-                          size="small"
-                          onClick={toggleSavedAddress}
-                        >
-                          {useSavedAddress ? 'Đổi địa chỉ' : 'Dùng địa chỉ đã lưu'}
-                        </Button>
-                      </div>
-                    }
-                    type="info"
-                    style={{ marginBottom: 24 }}
-                  />
-                )}
                 
                 <Form
                   form={form}
@@ -761,9 +725,9 @@ const CheckoutPage = () => {
                     message="Thông tin giao hàng"
                     description={
                       <div>
-                        <p>🚚 Thời gian giao hàng: {formatDate(estimatedDelivery)}</p>
-                        <p>📞 Hotline hỗ trợ: 1900-123-456</p>
-                        <p>🔒 Thanh toán an toàn với các phương thức đa dạng</p>
+                        <p>Thời gian giao hàng: {formatDate(estimatedDelivery)}</p>
+                        <p>Hotline hỗ trợ: 1900-123-456</p>
+                        <p>Thanh toán an toàn với các phương thức đa dạng</p>
                       </div>
                     }
                     type="info"
@@ -838,7 +802,7 @@ const CheckoutPage = () => {
                 
                 <div className="summary-row">
                   <Text>Tạm tính:</Text>
-                  <Text strong>{formatCurrency(cart.total)}</Text>
+                  <Text strong>{formatCurrency(subtotal)}</Text>
                 </div>
                 
                 <div className="summary-row">
@@ -848,17 +812,17 @@ const CheckoutPage = () => {
                 
                 <div className="summary-row total-row">
                   <Text className="total-label">Tổng cộng:</Text>
-                  <Text className="total-amount">{formatCurrency(cart.total + shippingFee)}</Text>
+                  <Text className="total-amount">{formatCurrency(subtotal + shippingFee)}</Text>
                 </div>
                 
                 <Alert
                   message="Cam kết của chúng tôi"
                   description={
                     <div>
-                      <p>✅ Sản phẩm chính hãng 100%</p>
-                      <p>🚚 Giao hàng nhanh trong 1-3 ngày</p>
-                      <p>💰 Hoàn tiền nếu không hài lòng</p>
-                      <p>📞 Hỗ trợ 24/7</p>
+                      <p>Sản phẩm chính hãng 100%</p>
+                      <p>Giao hàng nhanh trong 1-3 ngày</p>
+                      <p>Hoàn tiền nếu không hài lòng</p>
+                      <p>Hỗ trợ 24/7</p>
                     </div>
                   }
                   type="success"

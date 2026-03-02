@@ -134,14 +134,9 @@ class AppointmentSyncManager {
 // Create singleton instance
 const appointmentSyncManager = new AppointmentSyncManager();
 
-// Auto-start polling khi import
+// Không auto-poll toàn app nữa để tránh spam request.
+// Các màn hình cần realtime có thể tự gọi startPolling/stopPolling.
 if (typeof window !== 'undefined') {
-  // Start polling after a short delay để đảm bảo components đã mount
-  setTimeout(() => {
-    appointmentSyncManager.startPolling();
-  }, 2000);
-  
-  // Stop polling khi page unload
   window.addEventListener('beforeunload', () => {
     appointmentSyncManager.stopPolling();
   });

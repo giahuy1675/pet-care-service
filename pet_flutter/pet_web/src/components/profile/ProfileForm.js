@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled, { keyframes, css } from 'styled-components';
 import { 
@@ -442,21 +442,23 @@ const ProfileForm = ({ userProfile, onSubmit }) => {
       return avatarPath;
     }
     
-    const baseUrl = process.env.REACT_APP_API_URL || 'https://localhost:7164';
+    const baseUrl = process.env.REACT_APP_API_URL || '${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}';
     const formattedPath = avatarPath.startsWith('/') ? avatarPath : '/' + avatarPath;
     
     return `${baseUrl}${formattedPath}`;
   };
 
+  // Sync form values from userProfile
   useEffect(() => {
     if (userProfile) {
-      form.setFieldsValue({
+      const values = {
         fullName: userProfile.fullName || '',
         email: userProfile.email || '',
         phone: userProfile.phone || '',
         address: userProfile.address || ''
-      });
-      
+      };
+
+      form.setFieldsValue(values);
       setAvatarPreview(getAvatarUrl(userProfile.avatar));
     }
   }, [userProfile, form]);
@@ -496,13 +498,6 @@ const ProfileForm = ({ userProfile, onSubmit }) => {
       }
       
       const updatedUserData = await onSubmit(data) || {};
-      
-      const userInfo = userProfile || getUserFromToken(token);
-      const userToStore = {
-        ...userInfo,
-        role: userProfile?.role || userInfo.role
-      };
-      localStorage.setItem('user', JSON.stringify(userToStore));
       
       if (updatedUserData && updatedUserData.avatar) {
         setAvatarPreview(getAvatarUrl(updatedUserData.avatar));
@@ -592,6 +587,12 @@ const ProfileForm = ({ userProfile, onSubmit }) => {
             onFinish={handleSubmit}
             requiredMark={false}
             className="luxury-form"
+            initialValues={{
+              fullName: userProfile?.fullName || '',
+              email: userProfile?.email || '',
+              phone: userProfile?.phone || '',
+              address: userProfile?.address || ''
+            }}
           >
             <Row gutter={[30, 0]} justify="center">
               <Col xs={24} style={{ textAlign: 'center' }}>

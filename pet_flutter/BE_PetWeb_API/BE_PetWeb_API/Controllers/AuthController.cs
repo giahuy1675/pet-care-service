@@ -12,10 +12,12 @@ namespace BE_PetWeb_API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, ILogger<AuthController> logger)
         {
             _authService = authService;
+            _logger = logger;
         }
 
         [HttpPost("register")]
@@ -28,10 +30,8 @@ namespace BE_PetWeb_API.Controllers
             }
             catch (DbUpdateException ex)
             {
-                // Xử lý lỗi cơ sở dữ liệu
                 string errorMessage = ex.InnerException?.Message ?? ex.Message;
 
-                // Kiểm tra lỗi trùng lặp username hoặc email
                 if (errorMessage.Contains("UQ__Users__536C85E4") || errorMessage.Contains("Username"))
                 {
                     return BadRequest("Username đã tồn tại trong hệ thống");
@@ -41,12 +41,13 @@ namespace BE_PetWeb_API.Controllers
                     return BadRequest("Email đã tồn tại trong hệ thống");
                 }
 
-                return BadRequest($"Lỗi cơ sở dữ liệu: {errorMessage}");
+                _logger.LogError(ex, "Database error during registration");
+                return BadRequest("Đã xảy ra lỗi trong quá trình đăng ký. Vui lòng thử lại.");
             }
             catch (Exception ex)
             {
-                // Xử lý các lỗi khác
-                return BadRequest($"Lỗi: {ex.Message}");
+                _logger.LogError(ex, "Error during registration");
+                return BadRequest(ex.Message);
             }
         }
 
@@ -55,13 +56,7 @@ namespace BE_PetWeb_API.Controllers
         {
             try
             {
-                // Log thông tin đăng nhập
-                Console.WriteLine($"Thông tin đăng nhập - UsernameOrEmail: {loginDto.UsernameOrEmail}");
-
                 var result = await _authService.Login(loginDto);
-
-                // Log để kiểm tra
-                Console.WriteLine($"Login Result - Role: {result.Role}");
 
                 return Ok(new
                 {
@@ -72,14 +67,15 @@ namespace BE_PetWeb_API.Controllers
                         username = result.Username,
                         fullName = result.FullName,
                         email = result.Email,
-                        role = result.Role, // Quan trọng: trả về role
+                        role = result.Role,
                         isActive = true,
-                        staffId = result.StaffId // Thêm staffId
+                        staffId = result.StaffId
                     }
                 });
             }
             catch (Exception ex)
             {
+                _logger.LogWarning("Login failed for {UsernameOrEmail}", loginDto.UsernameOrEmail);
                 return BadRequest(ex.Message);
             }
         }
@@ -89,13 +85,7 @@ namespace BE_PetWeb_API.Controllers
         {
             try
             {
-                // Log thông tin đăng nhập từ bên ngoài
-                Console.WriteLine($"External Login - Provider: {externalAuth.Provider}, Email: {externalAuth.Email}");
-
                 var result = await _authService.ExternalLogin(externalAuth);
-
-                // Log để kiểm tra
-                Console.WriteLine($"External Login Result - Role: {result.Role}");
 
                 return Ok(new
                 {
@@ -113,7 +103,7 @@ namespace BE_PetWeb_API.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"External Login Error: {ex.Message}");
+                _logger.LogWarning(ex, "External login failed for provider {Provider}", externalAuth.Provider);
                 return BadRequest(ex.Message);
             }
         }

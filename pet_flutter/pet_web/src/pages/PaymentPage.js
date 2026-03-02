@@ -419,8 +419,6 @@ const PaymentPage = () => {
         )
       });
 
-      // Debug alert để xem data gửi đi
-      alert(`📤 SENDING ORDER DATA:\n${JSON.stringify(newOrder, null, 2)}`);
 
       // Gọi API để tạo đơn hàng
       const createdOrder = await orderService.createOrder(newOrder);
@@ -472,8 +470,6 @@ const PaymentPage = () => {
             : err.response.data?.message || 'Thông tin đơn hàng không hợp lệ';
           
           console.error('🚨 Backend 400 Error Details:', backendError);
-          alert(`❌ BACKEND ERROR 400:\n${backendError}`); // Temporary debug alert
-          
           errorMessage = backendError;
         } else if (err.response.status === 401) {
           errorMessage = 'Bạn chưa đăng nhập. Vui lòng đăng nhập lại.';
@@ -639,10 +635,10 @@ const PaymentPage = () => {
                 message="Thông tin thanh toán"
                 description={
                   <div>
-                    <p>🔒 Thanh toán an toàn với mã hóa SSL</p>
-                    <p>📞 Hỗ trợ 24/7: 1900-123-456</p>
-                    <p>💰 Hoàn tiền 100% nếu có vấn đề</p>
-                    <p>🚚 Miễn phí đổi trả trong 7 ngày</p>
+                    <p>Thanh toán an toàn với mã hóa SSL</p>
+                    <p>Hỗ trợ 24/7: 1900-123-456</p>
+                    <p>Hoàn tiền 100% nếu có vấn đề</p>
+                    <p>Miễn phí đổi trả trong 7 ngày</p>
                   </div>
                 }
                 type="info"

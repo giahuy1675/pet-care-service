@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { 
   Box, Typography, Paper, Grid, Button, Divider, Chip, Card, CardMedia, 
   Avatar, useTheme, alpha, IconButton, Tooltip, Fade, Grow, Container
@@ -21,6 +21,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import CakeIcon from '@mui/icons-material/Cake';
 import axiosClient from '../../utils/axiosClient';
+import { Badge, Space } from 'antd';
 
 const PetDetail = ({ pet, onDelete }) => {
   const theme = useTheme();
@@ -56,13 +57,13 @@ const PetDetail = ({ pet, onDelete }) => {
     try {
       // Nếu đường dẫn có dạng /uploads/pets/
       if (photoPath.includes('/uploads/pets/')) {
-        return `https://localhost:7164${photoPath}`;
+        return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${photoPath}`;
       }
       
       // Nếu chỉ là tên file
       const fileName = photoPath.split('/').pop();
       if (fileName === photoPath) {
-        return `https://localhost:7164/uploads/pets/${fileName}`;
+        return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}/uploads/pets/${fileName}`;
       }
       
       // Trường hợp khác, sử dụng baseURL của axiosClient
@@ -193,6 +194,15 @@ const PetDetail = ({ pet, onDelete }) => {
                 >
                   {petName}
                 </Typography>
+                {/* Badge row for pet attributes */}
+                <Box sx={{ mt: 1 }}>
+                  <Space size={[8, 8]} wrap>
+                    <Badge color="blue" text="Thú cưng" />
+                    {petSpecies && <Badge color="geekblue" text={petSpecies} />}
+                    {petGender && <Badge color="green" text={petGender} />}
+                    {petColor && <Badge color="purple" text={petColor} />}
+                  </Space>
+                </Box>
               </Box>
             </Box>
             
@@ -396,34 +406,6 @@ const PetDetail = ({ pet, onDelete }) => {
             {/* Pet Details Section */}
             <Grid item xs={12} md={7}>
               <Box sx={{ mt: { xs: 4, md: 0 } }}>
-                {/* Basic Info Section */}
-                <Box sx={{ mb: 4 }}>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    <Chip 
-                      label={petSpecies} 
-                      color="primary"
-                      sx={{ 
-                        borderRadius: 2,
-                        fontWeight: 500,
-                        px: 1,
-                        boxShadow: `0 2px 5px ${alpha(theme.palette.primary.main, 0.3)}`
-                      }} 
-                    />
-                    {petBreed && (
-                      <Chip 
-                        label={petBreed} 
-                        variant="outlined" 
-                        sx={{ 
-                          borderRadius: 2,
-                          fontWeight: 500,
-                          px: 1,
-                          boxShadow: `0 2px 5px ${alpha(theme.palette.grey[400], 0.2)}`
-                        }}
-                      />
-                    )}
-                  </Box>
-                </Box>
-                
                 {/* Pet Info Cards */}
                 <Grid container spacing={3} sx={{ mb: 4 }}>
                   <Grid item xs={12} sm={6}>

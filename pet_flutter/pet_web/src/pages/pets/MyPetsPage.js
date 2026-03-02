@@ -13,7 +13,7 @@ import {
   FireOutlined, ReloadOutlined, LoadingOutlined,
   CheckCircleOutlined, SearchOutlined, FilterOutlined,
   PlusCircleOutlined, ArrowRightOutlined, ClockCircleOutlined,
-  DashboardOutlined, SafetyOutlined, GoldOutlined
+  DashboardOutlined, SafetyOutlined, GoldOutlined,
 } from '@ant-design/icons';
 import { Link, useLocation } from 'react-router-dom';
 import styled, { keyframes, css } from 'styled-components';
@@ -23,7 +23,6 @@ import useAuth from '../../hooks/useAuth';
 import appointmentService from '../../services/appointmentService';
 
 const { Title, Text, Paragraph } = Typography;
-const { TabPane } = Tabs;
 const { Search } = Input;
 
 // Animations
@@ -241,66 +240,6 @@ const CreatePetButton = styled(Button)`
   }
 `;
 
-const StatsRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-top: 32px;
-`;
-
-const StatCard = styled.div`
-  padding: 24px;
-  border-radius: 20px;
-  background-color: white;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
-  flex: 1;
-  min-width: 200px;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(24, 144, 255, 0.03);
-  
-  &:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-    
-    .stat-icon {
-      transform: scale(1.1);
-    }
-  }
-  
-  .stat-icon {
-    font-size: 28px;
-    padding: 16px;
-    border-radius: 16px;
-    margin-bottom: 16px;
-    display: inline-flex;
-    background: ${props => props.iconbg || 'rgba(24, 144, 255, 0.1)'};
-    color: ${props => props.iconcolor || '#1890ff'};
-    transition: all 0.3s ease;
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: ${props => props.accentcolor || '#1890ff'};
-    opacity: 0.7;
-    transition: height 0.3s ease;
-  }
-  
-  &:hover::after {
-    height: 6px;
-  }
-  
-  @media (max-width: 768px) {
-    min-width: 160px;
-  }
-`;
-
 const ContentWrapper = styled.div`
   position: relative;
   z-index: 1;
@@ -441,25 +380,6 @@ const FloatingTag = styled(Tag)`
   }
 `;
 
-const StyledStatistic = styled(Statistic)`
-  .ant-statistic-title {
-    color: rgba(0, 0, 0, 0.65);
-    font-size: 15px;
-    margin-bottom: 10px;
-    font-weight: 500;
-  }
-  
-  .ant-statistic-content {
-    font-size: 32px;
-    font-weight: 700;
-    color: ${props => props.valuecolor || '#1890ff'};
-    
-    .ant-statistic-content-value {
-      display: flex;
-      align-items: baseline;
-    }
-  }
-`;
 
 const SuccessAlert = styled(Alert)`
   margin-bottom: 32px;
@@ -479,51 +399,39 @@ const SuccessAlert = styled(Alert)`
 `;
 
 const StyledSearch = styled(Search)`
-  .ant-input {
-    height: 48px;
+  width: 100%;
+  
+  .ant-input-wrapper {
+    display: flex;
     border-radius: 12px;
-    font-size: 15px;
-    padding-left: 16px;
+    overflow: hidden;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
     border: 1px solid #e8e8e8;
     transition: all 0.3s ease;
-    
-    &:hover, &:focus {
-      border-color: #1890ff;
-      box-shadow: 0 4px 12px rgba(24, 144, 255, 0.1);
-    }
+  }
+
+  .ant-input {
+    height: 48px;
+    border-radius: 0;
+    border: none;
+    border-right: 1px solid #e8e8e8;
+    font-size: 15px;
+    padding-left: 16px;
+    flex: 1;
   }
   
   .ant-input-search-button {
     height: 48px;
-    border-radius: 0 12px 12px 0 !important;
+    border-radius: 0;
+    border: none;
     width: 60px;
+    flex-shrink: 0;
   }
 `;
 
 const StyledTabs = styled(Tabs)`
-  .ant-tabs-tab {
-    padding: 12px 20px;
-    transition: all 0.3s ease;
-    border-radius: 30px;
-    margin: 0 8px 0 0;
-    
-    &:hover {
-      color: #1890ff;
-    }
-  }
-  
-  .ant-tabs-tab-active {
-    background-color: rgba(24, 144, 255, 0.08);
-    
-    .ant-tabs-tab-btn {
-      color: #1890ff;
-      font-weight: 600;
-    }
-  }
-  
-  .ant-tabs-ink-bar {
-    background-color: transparent;
+  .ant-tabs-nav {
+    margin-bottom: 0;
   }
 `;
 
@@ -768,77 +676,59 @@ const MyPetsPage = () => {
     cats: pets.filter(pet => pet.species === 'Mèo').length
   };
 
-  // Lọc thú cưng dựa trên tab và tìm kiếm
+  const tabItems = [
+    {
+      key: 'all',
+      label: (
+        <StyledBadge count={petStats.total} offset={[5, 0]}>
+          <span>Tất cả thú cưng</span>
+        </StyledBadge>
+      ),
+    },
+    {
+      key: 'dogs',
+      label: (
+        <StyledBadge count={petStats.dogs} offset={[5, 0]}>
+          <span>Chó cưng</span>
+        </StyledBadge>
+      ),
+    },
+    {
+      key: 'cats',
+      label: (
+        <StyledBadge count={petStats.cats} offset={[5, 0]}>
+          <span>Mèo cưng</span>
+        </StyledBadge>
+      ),
+    },
+  ];
+
+  // Lọc thú cưng dựa trên tab
   const filteredPets = pets.filter(pet => {
     // Lọc theo tab
-    const matchesTab = 
-      activeTab === 'all' || 
+    return activeTab === 'all' || 
       (activeTab === 'dogs' && pet.species === 'Chó') || 
       (activeTab === 'cats' && pet.species === 'Mèo');
-    
-    // Lọc theo từ khóa tìm kiếm - cải tiến tìm kiếm dùng toLowerCase() để case-insensitive
-    const searchLower = searchText.toLowerCase();
-    const matchesSearch = 
-      !searchText || 
-      pet.name.toLowerCase().includes(searchLower) || 
-      (pet.breed && pet.breed.toLowerCase().includes(searchLower));
-    
-    return matchesTab && matchesSearch;
   });
 
   const renderStats = () => {
     if (pets.length === 0) return null;
     
     return (
-      <StatsRow>
-        <StatCard iconbg="rgba(24, 144, 255, 0.1)" iconcolor="#1890ff" accentcolor="#1890ff">
-          <div className="stat-icon">
-            <TeamOutlined />
-          </div>
-          <StyledStatistic 
-            title="Thú cưng" 
-            value={petStats.total} 
-            valuecolor="#1890ff"
-            suffix={<Text type="secondary" style={{ fontSize: 16, marginLeft: 8 }}>bạn nuôi</Text>}
-          />
-        </StatCard>
-        
-        <StatCard iconbg="rgba(82, 196, 26, 0.1)" iconcolor="#52c41a" accentcolor="#52c41a">
-          <div className="stat-icon">
-            <MedicineBoxOutlined />
-          </div>
-          <StyledStatistic 
-            title="Lần khám bệnh" 
-            value={statsData.totalVisits} 
-            valuecolor="#52c41a"
-            suffix={<Text type="secondary" style={{ fontSize: 16, marginLeft: 8 }}>lần</Text>}
-          />
-        </StatCard>
-        
-        <StatCard iconbg="rgba(250, 173, 20, 0.1)" iconcolor="#faad14" accentcolor="#faad14">
-          <div className="stat-icon">
-            <CalendarOutlined />
-          </div>
-          <StyledStatistic
-            title="Lịch sắp tới" 
-            value={statsData.upcomingAppointments} 
-            valuecolor="#faad14"
-            suffix={<Text type="secondary" style={{ fontSize: 16, marginLeft: 8 }}>cuộc hẹn</Text>}
-          />
-        </StatCard>
-        
-        <StatCard iconbg="rgba(235, 47, 150, 0.1)" iconcolor="#eb2f96" accentcolor="#eb2f96">
-          <div className="stat-icon">
-            <BellOutlined />
-          </div>
-          <StyledStatistic 
-            title="Nhắc nhở" 
-            value={statsData.reminders} 
-            valuecolor="#eb2f96"
-            suffix={<Text type="secondary" style={{ fontSize: 16, marginLeft: 8 }}>sự kiện</Text>}
-          />
-        </StatCard>
-      </StatsRow>
+      <Row gutter={16} style={{ marginTop: 32 }}>
+        <Col xs={24} sm={12} lg={6}>
+          <Statistic title="Thú cưng" value={petStats.total} suffix="bạn nuôi" />
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Statistic title="Lần khám bệnh" value={statsData.totalVisits} suffix="lần" />
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Statistic title="Lịch sắp tới" value={statsData.upcomingAppointments} suffix="cuộc hẹn" />
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Statistic title="Nhắc nhở" value={statsData.reminders} suffix="sự kiện" />
+        </Col>
+      </Row>
     );
   };
 
@@ -1083,69 +973,13 @@ const MyPetsPage = () => {
         
         {pets.length === 0 ? renderEmptyState() : (
           <>
-            {/* Thêm thanh tìm kiếm và lọc */}
+            {/* Thêm thanh lọc */}
             <FilterCard>
-              <Row gutter={[24, 24]} align="middle">
-                <Col xs={24} md={12} lg={8}>
-                  <StyledSearch
-                    placeholder="Tìm kiếm tên, giống thú cưng..."
-                    allowClear
-                    enterButton={<SearchOutlined />}
-                    value={searchText}
-                    onChange={e => setSearchText(e.target.value)}
-                    size="large"
-                  />
-                </Col>
-                <Col xs={24} md={12} lg={16}>
-                  <StyledTabs 
-                    activeKey={activeTab} 
-                    onChange={setActiveTab}
-                    style={{ marginBottom: 0 }}
-                  >
-                    <TabPane 
-                      tab={
-                        <StyledBadge count={petStats.total} offset={[5, 0]}>
-                          <span>Tất cả thú cưng</span>
-                        </StyledBadge>
-                      } 
-                      key="all" 
-                    />
-                    <TabPane 
-                      tab={
-                        <StyledBadge count={petStats.dogs} offset={[5, 0]}>
-                          <span>Chó cưng</span>
-                        </StyledBadge>
-                      } 
-                      key="dogs" 
-                    />
-                    <TabPane 
-                      tab={
-                        <StyledBadge count={petStats.cats} offset={[5, 0]}>
-                          <span>Mèo cưng</span>
-                        </StyledBadge>
-                      } 
-                      key="cats" 
-                    />
-                  </StyledTabs>
-                </Col>
-              </Row>
-              
-              {searchText && filteredPets.length !== pets.length && (
-                <Alert
-                  message={`Tìm thấy ${filteredPets.length} thú cưng phù hợp với từ khóa "${searchText}"`}
-                  type="info"
-                  showIcon
-                  style={{ 
-                    marginTop: 24, 
-                    borderRadius: 12,
-                    border: 'none',
-                    backgroundColor: 'rgba(24, 144, 255, 0.08)',
-                    padding: '12px 16px'
-                  }}
-                  closable
-                  onClose={() => setSearchText('')}
-                />
-              )}
+              <StyledTabs 
+                activeKey={activeTab} 
+                onChange={setActiveTab}
+                items={tabItems}
+              />
             </FilterCard>
             
             {/* Hiển thị danh sách thú cưng đã lọc */}

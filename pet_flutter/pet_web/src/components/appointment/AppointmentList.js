@@ -776,6 +776,9 @@ const AppointmentList = () => {
     return appDate < now;
   };
 
+  // Chỉ Admin và Staff mới có quyền chỉnh sửa và hủy lịch; khách hàng chỉ xem
+  const isAdminOrStaff = user?.role === 'Admin' || user?.role === 'Staff';
+
   const columns = [
     {
       title: 'Thời gian',
@@ -896,58 +899,62 @@ const AppointmentList = () => {
             />
           </Tooltip>
           
-          <Tooltip title={isAppointmentPassed(record.appointmentDate) ? "Không thể chỉnh sửa lịch hẹn đã qua" : "Sửa lịch hẹn"} placement="bottom">
-            <ActionButton 
-              type="text" 
-              icon={<EditOutlined />} 
-              shape="circle"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEditAppointment(record.appointmentId);
-              }}
-              className="edit-btn"
-              disabled={isAppointmentPassed(record.appointmentDate)}
-              style={{ 
-                cursor: isAppointmentPassed(record.appointmentDate) ? 'not-allowed' : 'pointer',
-                color: isAppointmentPassed(record.appointmentDate) ? '#d9d9d9' : undefined
-              }}
-            />
-          </Tooltip>
-          
-          <Tooltip title={
-            isAppointmentPassed(record.appointmentDate) ? "Không thể hủy lịch hẹn đã qua" : 
-            (record.status !== "Scheduled" && record.status !== "Confirmed") ? "Chỉ có thể hủy lịch hẹn ở trạng thái đã đặt hoặc đã xác nhận" :
-            "Hủy lịch hẹn"
-          } placement="bottom">
-            <ActionButton 
-              type="text" 
-              icon={<DeleteOutlined />} 
-              shape="circle"
-              danger={!isAppointmentPassed(record.appointmentDate) && (record.status === "Scheduled" || record.status === "Confirmed")}
-              className="delete-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                // Kiểm tra nhanh điều kiện
-                if (isAppointmentPassed(record.appointmentDate)) {
-                  message.error("Không thể hủy lịch hẹn đã qua");
-                  return;
-                }
-                
-                if (record.status !== "Scheduled" && record.status !== "Confirmed") {
-                  message.error("Chỉ có thể hủy lịch hẹn ở trạng thái đã đặt hoặc đã xác nhận");
-                  return;
-                }
-                
-                // Hiển thị modal xác nhận hủy lịch đơn giản
-                showCancelConfirm(record);
-              }}
-              disabled={isAppointmentPassed(record.appointmentDate) || (record.status !== "Scheduled" && record.status !== "Confirmed")}
-              style={{ 
-                cursor: (isAppointmentPassed(record.appointmentDate) || (record.status !== "Scheduled" && record.status !== "Confirmed")) ? 'not-allowed' : 'pointer',
-                color: (isAppointmentPassed(record.appointmentDate) || (record.status !== "Scheduled" && record.status !== "Confirmed")) ? '#d9d9d9' : undefined
-              }}
-            />
-          </Tooltip>
+          {isAdminOrStaff && (
+            <>
+              <Tooltip title={isAppointmentPassed(record.appointmentDate) ? "Không thể chỉnh sửa lịch hẹn đã qua" : "Sửa lịch hẹn"} placement="bottom">
+                <ActionButton 
+                  type="text" 
+                  icon={<EditOutlined />} 
+                  shape="circle"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditAppointment(record.appointmentId);
+                  }}
+                  className="edit-btn"
+                  disabled={isAppointmentPassed(record.appointmentDate)}
+                  style={{ 
+                    cursor: isAppointmentPassed(record.appointmentDate) ? 'not-allowed' : 'pointer',
+                    color: isAppointmentPassed(record.appointmentDate) ? '#d9d9d9' : undefined
+                  }}
+                />
+              </Tooltip>
+              
+              <Tooltip title={
+                isAppointmentPassed(record.appointmentDate) ? "Không thể hủy lịch hẹn đã qua" : 
+                (record.status !== "Scheduled" && record.status !== "Confirmed") ? "Chỉ có thể hủy lịch hẹn ở trạng thái đã đặt hoặc đã xác nhận" :
+                "Hủy lịch hẹn"
+              } placement="bottom">
+                <ActionButton 
+                  type="text" 
+                  icon={<DeleteOutlined />} 
+                  shape="circle"
+                  danger={!isAppointmentPassed(record.appointmentDate) && (record.status === "Scheduled" || record.status === "Confirmed")}
+                  className="delete-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Kiểm tra nhanh điều kiện
+                    if (isAppointmentPassed(record.appointmentDate)) {
+                      message.error("Không thể hủy lịch hẹn đã qua");
+                      return;
+                    }
+                    
+                    if (record.status !== "Scheduled" && record.status !== "Confirmed") {
+                      message.error("Chỉ có thể hủy lịch hẹn ở trạng thái đã đặt hoặc đã xác nhận");
+                      return;
+                    }
+                    
+                    // Hiển thị modal xác nhận hủy lịch đơn giản
+                    showCancelConfirm(record);
+                  }}
+                  disabled={isAppointmentPassed(record.appointmentDate) || (record.status !== "Scheduled" && record.status !== "Confirmed")}
+                  style={{ 
+                    cursor: (isAppointmentPassed(record.appointmentDate) || (record.status !== "Scheduled" && record.status !== "Confirmed")) ? 'not-allowed' : 'pointer',
+                    color: (isAppointmentPassed(record.appointmentDate) || (record.status !== "Scheduled" && record.status !== "Confirmed")) ? '#d9d9d9' : undefined
+                  }}
+                />
+              </Tooltip>
+            </>
+          )}
         </Space>
       ),
     },
@@ -1081,7 +1088,7 @@ const AppointmentList = () => {
           </div>
           
           <StyledTable
-            columns={columns.map(col => {
+            columns={            columns.map(col => {
               // Customize column render for actions
               if (col.key === 'action') {
                 return {
@@ -1098,58 +1105,62 @@ const AppointmentList = () => {
                         />
                       </Tooltip>
                       
-                      <Tooltip title={isAppointmentPassed(record.appointmentDate) ? "Không thể chỉnh sửa lịch hẹn đã qua" : "Sửa lịch hẹn"} placement="bottom">
-                        <ActionButton 
-                          type="text" 
-                          icon={<EditOutlined />} 
-                          shape="circle"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditAppointment(record.appointmentId);
-                          }}
-                          className="edit-btn"
-                          disabled={isAppointmentPassed(record.appointmentDate)}
-                          style={{ 
-                            cursor: isAppointmentPassed(record.appointmentDate) ? 'not-allowed' : 'pointer',
-                            color: isAppointmentPassed(record.appointmentDate) ? '#d9d9d9' : undefined
-                          }}
-                        />
-                      </Tooltip>
-                      
-                      <Tooltip title={
-                        isAppointmentPassed(record.appointmentDate) ? "Không thể hủy lịch hẹn đã qua" : 
-                        (record.status !== "Scheduled" && record.status !== "Confirmed") ? "Chỉ có thể hủy lịch hẹn ở trạng thái đã đặt hoặc đã xác nhận" :
-                        "Hủy lịch hẹn"
-                      } placement="bottom">
-                        <ActionButton 
-                          type="text" 
-                          icon={<DeleteOutlined />} 
-                          shape="circle"
-                          danger={!isAppointmentPassed(record.appointmentDate) && (record.status === "Scheduled" || record.status === "Confirmed")}
-                          className="delete-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // Kiểm tra nhanh điều kiện
-                            if (isAppointmentPassed(record.appointmentDate)) {
-                              message.error("Không thể hủy lịch hẹn đã qua");
-                              return;
-                            }
-                            
-                            if (record.status !== "Scheduled" && record.status !== "Confirmed") {
-                              message.error("Chỉ có thể hủy lịch hẹn ở trạng thái đã đặt hoặc đã xác nhận");
-                              return;
-                            }
-                            
-                            // Hiển thị modal xác nhận hủy lịch đơn giản
-                            showCancelConfirm(record);
-                          }}
-                          disabled={isAppointmentPassed(record.appointmentDate) || (record.status !== "Scheduled" && record.status !== "Confirmed")}
-                          style={{ 
-                            cursor: (isAppointmentPassed(record.appointmentDate) || (record.status !== "Scheduled" && record.status !== "Confirmed")) ? 'not-allowed' : 'pointer',
-                            color: (isAppointmentPassed(record.appointmentDate) || (record.status !== "Scheduled" && record.status !== "Confirmed")) ? '#d9d9d9' : undefined
-                          }}
-                        />
-                      </Tooltip>
+                      {isAdminOrStaff && (
+                        <>
+                          <Tooltip title={isAppointmentPassed(record.appointmentDate) ? "Không thể chỉnh sửa lịch hẹn đã qua" : "Sửa lịch hẹn"} placement="bottom">
+                            <ActionButton 
+                              type="text" 
+                              icon={<EditOutlined />} 
+                              shape="circle"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditAppointment(record.appointmentId);
+                              }}
+                              className="edit-btn"
+                              disabled={isAppointmentPassed(record.appointmentDate)}
+                              style={{ 
+                                cursor: isAppointmentPassed(record.appointmentDate) ? 'not-allowed' : 'pointer',
+                                color: isAppointmentPassed(record.appointmentDate) ? '#d9d9d9' : undefined
+                              }}
+                            />
+                          </Tooltip>
+                          
+                          <Tooltip title={
+                            isAppointmentPassed(record.appointmentDate) ? "Không thể hủy lịch hẹn đã qua" : 
+                            (record.status !== "Scheduled" && record.status !== "Confirmed") ? "Chỉ có thể hủy lịch hẹn ở trạng thái đã đặt hoặc đã xác nhận" :
+                            "Hủy lịch hẹn"
+                          } placement="bottom">
+                            <ActionButton 
+                              type="text" 
+                              icon={<DeleteOutlined />} 
+                              shape="circle"
+                              danger={!isAppointmentPassed(record.appointmentDate) && (record.status === "Scheduled" || record.status === "Confirmed")}
+                              className="delete-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Kiểm tra nhanh điều kiện
+                                if (isAppointmentPassed(record.appointmentDate)) {
+                                  message.error("Không thể hủy lịch hẹn đã qua");
+                                  return;
+                                }
+                                
+                                if (record.status !== "Scheduled" && record.status !== "Confirmed") {
+                                  message.error("Chỉ có thể hủy lịch hẹn ở trạng thái đã đặt hoặc đã xác nhận");
+                                  return;
+                                }
+                                
+                                // Hiển thị modal xác nhận hủy lịch đơn giản
+                                showCancelConfirm(record);
+                              }}
+                              disabled={isAppointmentPassed(record.appointmentDate) || (record.status !== "Scheduled" && record.status !== "Confirmed")}
+                              style={{ 
+                                cursor: (isAppointmentPassed(record.appointmentDate) || (record.status !== "Scheduled" && record.status !== "Confirmed")) ? 'not-allowed' : 'pointer',
+                                color: (isAppointmentPassed(record.appointmentDate) || (record.status !== "Scheduled" && record.status !== "Confirmed")) ? '#d9d9d9' : undefined
+                              }}
+                            />
+                          </Tooltip>
+                        </>
+                      )}
                     </Space>
                   ),
                 };

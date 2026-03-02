@@ -1,4 +1,5 @@
 ﻿using BE_PetWeb_API.Extensions;
+using BE_PetWeb_API.Middleware;
 using BE_PetWeb_API.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
@@ -45,8 +46,12 @@ builder.Services.RegisterServices();
 // Add SignalR with enhanced configuration
 builder.Services.AddSignalR(options =>
 {
-    options.EnableDetailedErrors = true; // Enable detailed errors for development
+    options.EnableDetailedErrors = builder.Environment.IsDevelopment(); // Only in dev
 });
+
+// Add Health Checks
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<PetWebContext>("database");
 
 // Tăng kích thước tối đa của request để hỗ trợ file lớn
 builder.Services.Configure<IISServerOptions>(options =>
@@ -97,21 +102,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Add CORS - Cập nhật phần này
+// Add CORS - cho phép tất cả origins (đồ án demo)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        builder => builder.AllowAnyOrigin()
-                          .AllowAnyMethod()
-                          .AllowAnyHeader());
-
-    options.AddPolicy("AllowLocalhost",
-        builder => builder
-            .WithOrigins("http://localhost:3000", "https://localhost:3000")
+    options.AddPolicy("AllowSpecificOrigins",
+        policy => policy
+            .SetIsOriginAllowed(_ => true) // Cho phép mọi origin (portfolio demo)
             .AllowAnyMethod()
             .AllowAnyHeader()
             .WithExposedHeaders("Content-Disposition")
-            .SetIsOriginAllowed(origin => true) // Cho phép tất cả origin trong môi trường dev
             .AllowCredentials()); // Required for SignalR
 });
 
@@ -150,8 +149,14 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Configure Kestrel to listen on all network interfaces
-builder.WebHost.UseUrls("https://0.0.0.0:7164", "http://0.0.0.0:5181");
+// Configure Kestrel
+if (!builder.Environment.IsDevelopment())
+{
+    // Khi chạy qua IIS, IIS sẽ tự quản lý port
+    // Khi chạy standalone (self-host), dùng port 5000/5001
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
 
 var app = builder.Build();
 
@@ -209,17 +214,22 @@ catch (Exception ex)
     app.Logger.LogError(ex, "Error creating uploads directories");
 }
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Pet Web API v1");
-    });
-}
+// Global Exception Handling Middleware
+app.UseExceptionHandlingMiddleware();
 
-//app.UseHttpsRedirection();
+// Swagger - available in all environments for portfolio demo
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Pet Web API v1");
+    c.RoutePrefix = "swagger";
+});
+
+// HTTPS Redirection for production
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 // Thêm middleware xử lý CORS cho StaticFiles
 app.Use(async (context, next) =>
@@ -227,9 +237,9 @@ app.Use(async (context, next) =>
     // Thêm header CORS cho các request tới uploads
     if (context.Request.Path.StartsWithSegments("/uploads"))
     {
-        context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-        context.Response.Headers.Add("Access-Control-Allow-Methods", "GET");
-        context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+        context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+        context.Response.Headers.Append("Access-Control-Allow-Methods", "GET");
+        context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type");
 
         // Nếu là OPTIONS request (preflight), trả về ngay
         if (context.Request.Method == "OPTIONS")
@@ -242,11 +252,12 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// Serve static files from wwwroot folder (for images and other assets)
+// Serve static files from wwwroot folder (for images, uploads, and React SPA)
+app.UseDefaultFiles(); // Serves index.html by default
 app.UseStaticFiles();
 
-// Cập nhật phần này - Sử dụng chính sách CORS đã cập nhật
-app.UseCors("AllowLocalhost");
+// CORS policy
+app.UseCors("AllowSpecificOrigins");
 
 // Add Authentication middleware
 app.UseAuthentication();
@@ -255,6 +266,12 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Map SignalR Hub with CORS
-app.MapHub<BE_PetWeb_API.Hubs.TimeSlotSharingHub>("/timeSlotHub").RequireCors("AllowLocalhost");
+app.MapHub<BE_PetWeb_API.Hubs.TimeSlotSharingHub>("/timeSlotHub").RequireCors("AllowSpecificOrigins");
+
+// Health check endpoint
+app.MapHealthChecks("/api/health");
+
+// SPA fallback - serve index.html for any non-API, non-file routes (React Router)
+app.MapFallbackToFile("index.html");
 
 app.Run();

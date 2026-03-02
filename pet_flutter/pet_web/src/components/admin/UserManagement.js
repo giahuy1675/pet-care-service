@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Table, Button, Flex, Tag, Space, Radio, Alert, Checkbox, Dropdown } from 'antd';
+import type { TableProps } from 'antd';
 import useAuth from '../../hooks/useAuth';
 import axiosClient from '../../utils/axiosClient';
 import './UserManagement.css';
@@ -25,7 +27,9 @@ import {
   PhoneOutlined,
   HomeOutlined,
   SafetyOutlined,
-  CloseOutlined
+  CloseOutlined,
+  PoweroffOutlined,
+  DownOutlined
 } from '@ant-design/icons';
 
 // ============ Animation Keyframes ============
@@ -204,37 +208,26 @@ const RoleFilter = styled.div`
   max-width: 250px;
   position: relative;
 
-  select {
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
     width: 100%;
-    padding: 14px 20px;
-    appearance: none;
     background: white;
     border: 2px solid #e6e9f0;
     border-radius: 12px;
     font-size: 15px;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    cursor: pointer;
     color: #2B3674;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-decoration: none;
 
-    &:focus {
-      outline: none;
+    &:hover {
       border-color: #4318FF;
-      box-shadow: 0 0 0 4px rgba(67, 24, 255, 0.15);
+      box-shadow: 0 0 0 4px rgba(67, 24, 255, 0.12);
+      color: #4318FF;
     }
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: 15px;
-    transform: translateY(-50%);
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 8px solid #4318FF;
-    pointer-events: none;
   }
 
   @media (max-width: 768px) {
@@ -526,19 +519,6 @@ const TableContainer = styled.div`
   animation: ${fadeIn} 0.6s ease;
 `;
 
-const Table = styled.table`
-  width: 100%;
-  min-width: 1200px; /* Tăng giá trị này để đảm bảo đủ chỗ cho tất cả cột */
-  border-collapse: separate;
-  border-spacing: 0;
-
-  th, td {
-    padding: 16px 20px;
-    text-align: left;
-    border-bottom: 1px solid #f1f2f6;
-  }
-`;
-
 const RoleBadge = styled.span`
   display: inline-flex;
   align-items: center;
@@ -692,49 +672,7 @@ const ToastContainer = styled.div`
   bottom: 30px;
   right: 30px;
   z-index: 1000;
-`;
-
-const Toast = styled(motion.div)`
-  padding: 16px 20px;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 15px;
-  background: ${({ type }) => 
-    type === 'success' ? 'rgba(5, 205, 153, 0.1)' : 
-    type === 'error' ? 'rgba(255, 82, 82, 0.1)' : 
-    'rgba(67, 24, 255, 0.1)'};
-  border-left: 5px solid ${({ type }) => 
-    type === 'success' ? '#05CD99' : 
-    type === 'error' ? '#FF5252' : 
-    '#4318FF'};
-  color: ${({ type }) => 
-    type === 'success' ? '#05CD99' : 
-    type === 'error' ? '#FF5252' : 
-    '#4318FF'};
   max-width: 400px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-
-  .toast-content {
-    flex: 1;
-    padding-right: 15px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-
-    .anticon {
-      font-size: 22px;
-    }
-
-    .toast-message {
-      font-weight: 500;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-  }
 `;
 
 const EmptyStateCard = styled(motion.div)`
@@ -837,6 +775,16 @@ const EmptyStateCard = styled(motion.div)`
   }
 `;
 
+// Ant Design Checkbox custom styles (icon bo tròn, label màu xanh)
+const checkboxStyles = {
+  icon: {
+    borderRadius: 6,
+  },
+  label: {
+    fontWeight: 500,
+  },
+};
+
 const UserManagement = () => {
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
@@ -851,6 +799,11 @@ const UserManagement = () => {
     message: '',
     type: 'info' // 'info', 'success', 'error'
   });
+  // State cho pagination placement
+  const [topPagination, setTopPagination] = useState('topStart');
+  const [bottomPagination, setBottomPagination] = useState('bottomEnd');
+  // State cho button loading
+  const [buttonLoadings, setButtonLoadings] = useState({});
   
   // State cho create user modal
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -1205,6 +1158,118 @@ const UserManagement = () => {
     }
   };
 
+  // Helper function để set button loading state
+  const enterButtonLoading = (index) => {
+    setButtonLoadings((prevLoadings) => {
+      const newLoadings = { ...prevLoadings };
+      newLoadings[index] = true;
+      return newLoadings;
+    });
+  };
+
+  const exitButtonLoading = (index) => {
+    setButtonLoadings((prevLoadings) => {
+      const newLoadings = { ...prevLoadings };
+      newLoadings[index] = false;
+      return newLoadings;
+    });
+  };
+
+  // Định nghĩa columns cho Ant Design Table
+  const columns = [
+    {
+      title: 'ID',
+      dataIndex: 'userId',
+      key: 'userId',
+      width: 80,
+    },
+    {
+      title: 'Tên đăng nhập',
+      dataIndex: 'username',
+      key: 'username',
+    },
+    {
+      title: 'Email',
+      dataIndex: 'email',
+      key: 'email',
+    },
+    {
+      title: 'Họ và tên',
+      dataIndex: 'fullName',
+      key: 'fullName',
+    },
+    {
+      title: 'Vai trò',
+      key: 'role',
+      dataIndex: 'role',
+      render: (role) => {
+        const roleColors = {
+          'Admin': 'gold',
+          'Customer': 'blue',
+          'Staff': 'green'
+        };
+        return (
+          <Tag color={roleColors[role] || 'default'} icon={getRoleIcon(role)}>
+            {translateRole(role)}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: 'Trạng thái',
+      key: 'isActive',
+      dataIndex: 'isActive',
+      render: (isActive) => (
+        <Tag color={isActive ? 'success' : 'error'} icon={isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}>
+          {isActive ? 'Đang hoạt động' : 'Không hoạt động'}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Thao tác',
+      key: 'action',
+      render: (_, record) => (
+        <Space size="middle">
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
+            loading={buttonLoadings[`edit-${record.userId}`]}
+            onClick={() => {
+              enterButtonLoading(`edit-${record.userId}`);
+              handleEdit(record);
+              setTimeout(() => exitButtonLoading(`edit-${record.userId}`), 500);
+            }}
+          >
+            Sửa
+          </Button>
+          <Button
+            icon={record.isActive ? <StopOutlined /> : <CheckOutlined />}
+            loading={buttonLoadings[`toggle-${record.userId}`]}
+            onClick={async () => {
+              enterButtonLoading(`toggle-${record.userId}`);
+              await toggleUserStatus(record.userId, record.isActive);
+              exitButtonLoading(`toggle-${record.userId}`);
+            }}
+          >
+            {record.isActive ? 'Vô hiệu hóa' : 'Kích hoạt'}
+          </Button>
+          <Button
+            danger
+            icon={<DeleteOutlined />}
+            loading={buttonLoadings[`delete-${record.userId}`]}
+            onClick={async () => {
+              enterButtonLoading(`delete-${record.userId}`);
+              await handleDelete(record.userId);
+              exitButtonLoading(`delete-${record.userId}`);
+            }}
+          >
+            Xóa
+          </Button>
+        </Space>
+      ),
+    },
+  ];
+
   if (loading && users.length === 0) {
     return (
       <UserManagementContainer>
@@ -1224,33 +1289,28 @@ const UserManagement = () => {
             <TeamOutlined />
             Quản lý người dùng
           </h1>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button 
-              className="create-button"
+          <Flex gap="small" align="center" wrap>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
               onClick={() => setShowCreateModal(true)}
               style={{
-                padding: '10px 20px',
                 background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
-                color: 'white',
                 border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '600',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.3s ease',
                 boxShadow: '0 4px 15px rgba(82, 196, 26, 0.4)'
               }}
             >
-              <PlusOutlined /> Tạo người dùng
-            </button>
-            <button className="refresh-button" onClick={fetchUsers} disabled={loading}>
-              <SyncOutlined spin={loading} />
+              Tạo người dùng
+            </Button>
+            <Button
+              type="primary"
+              icon={<SyncOutlined />}
+              loading={loading}
+              onClick={fetchUsers}
+            >
               Làm mới dữ liệu
-            </button>
-          </div>
+            </Button>
+          </Flex>
         </Header>
         
         {error && (
@@ -1272,15 +1332,30 @@ const UserManagement = () => {
           </SearchInput>
           
           <RoleFilter>
-            <select 
-              value={filterRole} 
-              onChange={(e) => setFilterRole(e.target.value)}
+            <Dropdown
+              menu={{
+                items: [
+                  { key: '', label: 'Tất cả vai trò' },
+                  { key: 'Admin', label: 'Quản trị viên' },
+                  { key: 'Customer', label: 'Khách hàng' },
+                  { key: 'Staff', label: 'Nhân viên' },
+                ],
+                onClick: ({ key }) => setFilterRole(key),
+              }}
             >
-              <option value="">Tất cả vai trò</option>
-              <option value="Admin">Quản trị viên</option>
-              <option value="Customer">Khách hàng</option>
-              <option value="Staff">Nhân viên</option>
-            </select>
+              <a onClick={e => e.preventDefault()}>
+                <Space>
+                  {filterRole === ''
+                    ? 'Tất cả vai trò'
+                    : filterRole === 'Admin'
+                      ? 'Quản trị viên'
+                      : filterRole === 'Customer'
+                        ? 'Khách hàng'
+                        : 'Nhân viên'}
+                  <DownOutlined />
+                </Space>
+              </a>
+            </Dropdown>
           </RoleFilter>
         </FiltersContainer>
 
@@ -1387,25 +1462,43 @@ const UserManagement = () => {
                   </div>
                   
                   <div className="form-group checkbox">
-                    <label>
-                      <input
-                        type="checkbox"
+                    <Flex align="center">
+                      <Checkbox
                         name="isActive"
                         checked={formData.isActive}
-                        onChange={handleChange}
-                      />
-                      Đang hoạt động
-                    </label>
+                        styles={checkboxStyles}
+                        onChange={(e) =>
+                          handleChange({
+                            target: {
+                              name: 'isActive',
+                              type: 'checkbox',
+                              checked: e.target.checked,
+                            },
+                          })
+                        }
+                      >
+                        Đang hoạt động
+                      </Checkbox>
+                    </Flex>
                   </div>
                 </FormGrid>
                 
                 <FormActions>
-                  <button className="cancel" onClick={handleCancel}>
-                    <CloseOutlined /> Hủy bỏ
-                  </button>
-                  <button className="save" onClick={handleSave}>
-                    <CheckOutlined /> Lưu thay đổi
-                  </button>
+                  <Button onClick={handleCancel} icon={<CloseOutlined />}>
+                    Hủy bỏ
+                  </Button>
+                  <Button
+                    type="primary"
+                    icon={<CheckOutlined />}
+                    loading={loading}
+                    onClick={handleSave}
+                    style={{
+                      background: 'linear-gradient(135deg, #4318FF, #868CFF)',
+                      border: 'none'
+                    }}
+                  >
+                    Lưu thay đổi
+                  </Button>
                 </FormActions>
               </EditForm>
             </EditFormOverlay>
@@ -1437,107 +1530,43 @@ const UserManagement = () => {
           </EmptyStateCard>
         ) : (
           <TableContainer>
-            <Table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Tên đăng nhập</th>
-                  <th>Email</th>
-                  <th>Họ và tên</th>
-                  <th>Vai trò</th>
-                  <th>Trạng thái</th>
-                  <th>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map(user => (
-                    <motion.tr 
-                      key={user.userId} 
-                      className={!user.isActive ? 'inactive-user' : ''}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                      layout
-                    >
-                      <td>{user.userId}</td>
-                      <td>{user.username}</td>
-                      <td>{user.email}</td>
-                      <td>{user.fullName}</td>
-                      <td>
-                        <RoleBadge className={user.role.toLowerCase()}>
-                          {getRoleIcon(user.role)} {translateRole(user.role)}
-                        </RoleBadge>
-                      </td>
-                      <td>
-                        <StatusBadge className={user.isActive ? 'active' : 'inactive'}>
-                          {user.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
-                          {user.isActive ? 'Đang hoạt động' : 'Không hoạt động'}
-                        </StatusBadge>
-                      </td>
-                      <td>
-                        <ActionButtons>
-                          <button 
-                            className="edit" 
-                            onClick={() => handleEdit(user)}
-                            disabled={loading}
-                          >
-                            <EditOutlined /> Sửa
-                          </button>
-                          <button 
-                            className="toggle-status" 
-                            onClick={() => toggleUserStatus(user.userId, user.isActive)}
-                            disabled={loading}
-                          >
-                            {user.isActive ? <StopOutlined /> : <CheckOutlined />}
-                            {user.isActive ? 'Vô hiệu hóa' : 'Kích hoạt'}
-                          </button>
-                          <button 
-                            className="delete" 
-                            onClick={() => handleDelete(user.userId)}
-                            disabled={loading}
-                          >
-                            <DeleteOutlined /> Xóa
-                          </button>
-                        </ActionButtons>
-                      </td>
-                    </motion.tr>
-                  ))
-                ) : (
-                  <tr>
-                    <NoData colSpan="7">
-                      <div className="no-data-content">
-                        <LoadingOutlined />
-                        <p>Đang tải dữ liệu người dùng...</p>
-                      </div>
-                    </NoData>
-                  </tr>
-                )}
-              </tbody>
-            </Table>
+            <Table
+              columns={columns}
+              dataSource={filteredUsers.map(user => ({ ...user, key: user.userId }))}
+              loading={loading}
+              pagination={{
+                placement: [topPagination, bottomPagination],
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} người dùng`,
+              }}
+              rowClassName={(record) => !record.isActive ? 'inactive-user' : ''}
+            />
           </TableContainer>
         )}
 
         <AnimatePresence>
           {toast.show && (
             <ToastContainer>
-              <Toast 
-                type={toast.type}
+              <motion.div
                 initial={{ x: 100, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: 100, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               >
-                <div className="toast-content">
-                  {toast.type === 'success' ? <CheckCircleOutlined /> : 
-                   toast.type === 'error' ? <ExclamationCircleOutlined /> : 
-                   <InfoCircleOutlined />}
-                  <span className="toast-message">{toast.message}</span>
-                </div>
-                <button className="toast-close" onClick={closeToast}>
-                  <CloseOutlined />
-                </button>
-              </Toast>
+                <Alert
+                  type={toast.type === 'success' ? 'success' : toast.type === 'error' ? 'error' : 'info'}
+                  message={toast.type === 'success'
+                    ? 'Thành công'
+                    : toast.type === 'error'
+                      ? 'Lỗi'
+                      : 'Thông báo'}
+                  description={toast.message}
+                  showIcon
+                  closable
+                  onClose={closeToast}
+                />
+              </motion.div>
             </ToastContainer>
           )}
         </AnimatePresence>
@@ -1789,8 +1818,8 @@ const UserManagement = () => {
               </div>
 
               {/* Buttons */}
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button
+              <Flex gap="small" justify="flex-end">
+                <Button
                   onClick={() => {
                     setShowCreateModal(false);
                     setCreateFormData({
@@ -1804,40 +1833,22 @@ const UserManagement = () => {
                       role: 'Customer'
                     });
                   }}
-                  style={{
-                    padding: '12px 24px',
-                    background: '#f0f0f0',
-                    color: '#666',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '600'
-                  }}
                 >
                   Hủy
-                </button>
-                <button
+                </Button>
+                <Button
+                  type="primary"
+                  icon={createLoading ? <SyncOutlined spin /> : <CheckOutlined />}
+                  loading={createLoading}
                   onClick={handleCreateUser}
-                  disabled={createLoading}
                   style={{
-                    padding: '12px 24px',
-                    background: createLoading ? '#d9d9d9' : 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: createLoading ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
+                    background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
+                    border: 'none'
                   }}
                 >
-                  {createLoading ? <LoadingOutlined /> : <CheckOutlined />}
                   {createLoading ? 'Đang tạo...' : 'Tạo người dùng'}
-                </button>
-              </div>
+                </Button>
+              </Flex>
             </div>
           </div>
         </div>

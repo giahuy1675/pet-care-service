@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   Row, Col, Typography, Button, Spin, Card, Empty, 
   Divider, Space, Tag, Badge, Descriptions, Tabs,
-  Alert, Avatar, Image, Tooltip, Timeline, Statistic
+  Alert, Avatar, Image, Tooltip, Timeline, Statistic, Breadcrumb
 } from 'antd';
 import {
   EditOutlined, DeleteOutlined, ArrowLeftOutlined,
@@ -456,7 +456,7 @@ const PetDetailPage = () => {
     
     // Check if the path is in the format '/uploads/pets/filename.png'
     if (photoPath.includes('/uploads/pets/')) {
-      const baseURL = 'https://localhost:7164';
+      const baseURL = process.env.REACT_APP_BASE_URL || 'https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net';
       return `${baseURL}${photoPath}`;
     }
     
@@ -675,44 +675,25 @@ const PetDetailPage = () => {
           </Col>
           
           <Col xs={24} lg={14}>
+            <Breadcrumb
+              items={[
+                {
+                  href: '/',
+                  title: <HomeOutlined />,
+                },
+                {
+                  href: '/pets',
+                  title: 'Thú cưng',
+                },
+                {
+                  title: pet.name,
+                },
+              ]}
+              style={{ marginBottom: 8 }}
+            />
             <GradientTitle level={2}>
               {pet.name}
             </GradientTitle>
-            <Space size={[8, 16]} wrap style={{ marginBottom: 16 }}>
-              <AnimatedTag>
-                <HeartOutlined /> Thú cưng
-              </AnimatedTag>
-              
-              <AnimatedTag background={pet.species === 'Chó' ? 
-                'linear-gradient(90deg, #1890ff, #096dd9)' : 
-                'linear-gradient(90deg, #eb2f96, #c41d7f)'}>
-                {pet.species === 'Chó' ? '🐕' : '🐈'} {pet.species}
-              </AnimatedTag>
-              
-              <AnimatedTag background={pet.gender === 'Đực' ? 
-                'linear-gradient(90deg, #1890ff, #096dd9)' : 
-                'linear-gradient(90deg, #eb2f96, #c41d7f)'}>
-                {pet.gender}
-              </AnimatedTag>
-              
-              {pet.breed && (
-                <AnimatedTag background="linear-gradient(90deg, #52c41a, #389e0d)">
-                  <InfoCircleOutlined /> {pet.breed}
-                </AnimatedTag>
-              )}
-              
-              {pet.age && (
-                <AnimatedTag background="linear-gradient(90deg, #faad14, #d48806)">
-                  <CalendarOutlined /> {pet.age} tuổi
-                </AnimatedTag>
-              )}
-              
-              {pet.color && (
-                <AnimatedTag background="linear-gradient(90deg, #722ed1, #531dab)">
-                  {pet.color}
-                </AnimatedTag>
-              )}
-            </Space>
           </Col>
           
           <Col xs={24} lg={5} style={{ textAlign: 'right' }}>

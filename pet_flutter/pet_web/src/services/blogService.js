@@ -1,4 +1,4 @@
-import axiosClient from '../utils/axiosClient';
+﻿import axiosClient from '../utils/axiosClient';
 
 // Thêm helper function để chuẩn hóa đường dẫn ảnh
 const normalizeImagePath = (imagePath) => {
@@ -16,7 +16,7 @@ const normalizeImagePath = (imagePath) => {
   }
   
   // Đảm bảo đường dẫn có tiền tố domain
-  return `https://localhost:7164${path.startsWith('/') ? path : `/${path}`}`;
+  return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${path.startsWith('/') ? path : `/${path}`}`;
 };
 
 // Thêm hàm uploadImage để xử lý tải ảnh lên

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Routes, Route } from 'react-router-dom';
+import { useNavigate, useLocation, Routes, Route } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
 import useAuth from '../../hooks/useAuth';
@@ -471,7 +471,17 @@ const AppointmentContainer = styled.div`
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('dashboard');
+
+  // Hỗ trợ mở tab từ state khi navigate (vd: từ StaffServiceAssignment khi bỏ gán dịch vụ thất bại)
+  useEffect(() => {
+    const openTab = location.state?.openTab;
+    if (openTab && ['dashboard', 'users', 'appointments', 'services', 'products', 'categories', 'orders', 'blog', 'reviews', 'staffSchedule', 'createStaff', 'assignStaffServices', 'settings'].includes(openTab)) {
+      setActiveTab(openTab);
+      navigate(location.pathname, { replace: true, state: {} }); // Xóa state để tránh mở lại tab khi refresh
+    }
+  }, [location.state, location.pathname, navigate]);
   const [stats, setStats] = useState({
     users: 0,
     pets: 0,
@@ -642,11 +652,12 @@ const AdminDashboard = () => {
         orders: ordersCount
       });
       
-      setToast({
-        show: true,
-        message: 'Dữ liệu dashboard đã được tải thành công',
-        type: 'success'
-      });
+      // Nếu không cần toast thành công khi load dashboard, có thể bỏ đoạn này
+      // setToast({
+      //   show: true,
+      //   message: 'Dữ liệu dashboard đã được tải thành công',
+      //   type: 'success'
+      // });
       
     } catch (err) {
       console.error('Error fetching dashboard stats:', err);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+﻿import React, { useState, useEffect, useContext } from 'react';
 import {
   Card,
   Table,
@@ -110,10 +110,10 @@ const AdminReviewManagement = () => {
     }
     
     if (imagePath.startsWith('/')) {
-      return `https://localhost:7164${imagePath}`;
+      return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${imagePath}`;
     }
     
-    return `https://localhost:7164/uploads/reviews/${imagePath}`;
+    return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}/uploads/reviews/${imagePath}`;
   };
 
   useEffect(() => {

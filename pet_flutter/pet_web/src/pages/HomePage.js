@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
-import FeaturedProductsSection from '../components/FeaturedProductsSection';
 import PartnersSection from '../components/PartnersSection';
 import FAQSection from '../components/FAQSection';
 import ChatbotSupport from '../components/ChatbotSupport';
@@ -1477,7 +1476,7 @@ const HomePage = () => {
                     title="Hồ sơ y tế"
                     description="Theo dõi lịch sử y tế, tiêm chủng và điều trị"
                     buttonText="Xem hồ sơ"
-                    buttonLink="/medical-records"
+                    buttonLink="/"
                   />
                 </Col>
               </Row>
@@ -1491,8 +1490,6 @@ const HomePage = () => {
               <div style={{ marginTop: '84px' }}>
                 <WhyChooseUsSection />
               </div>
-              
-              <FeaturedProductsSection />
               
               <BlogSection />
               {/* Reviews section */}
@@ -1516,8 +1513,6 @@ const HomePage = () => {
               
               {/* Reviews section */}
               <ReviewsSection />
-              
-              <FeaturedProductsSection />
               
               <BlogSection /> 
 

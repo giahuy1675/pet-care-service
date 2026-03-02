@@ -1,6 +1,6 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 
-const API_BASE_URL = 'https://localhost:7164/api';
+const API_BASE_URL = 'https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api';
 
 // Tạo axios instance với config mặc định
 const apiClient = axios.create({

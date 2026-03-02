@@ -10,10 +10,6 @@ export const isTokenExpired = (token) => {
     
     // So sánh với thời gian hiện tại
     const now = Math.floor(Date.now() / 1000);
-    console.log('Token expires at:', new Date(exp * 1000).toLocaleString());
-    console.log('Current time:', new Date(now * 1000).toLocaleString());
-    console.log('Token is expired:', exp < now);
-    
     return exp < now;
   } catch (error) {
     console.error('Error checking token expiration:', error);
@@ -28,9 +24,7 @@ export const getUserFromToken = (token) => {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const payload = JSON.parse(window.atob(base64));
-    
-    console.log('Token payload:', payload);
-    
+
     // Lấy thông tin người dùng từ payload
     return {
       id: payload.nameid,

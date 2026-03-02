@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { CheckOutlined, CloseOutlined, UserOutlined, ToolOutlined, LoadingOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { HappyProvider } from '@ant-design/happy-work-theme';
+import { CheckOutlined, CloseOutlined, UserOutlined, ToolOutlined, LoadingOutlined, PlusOutlined, MinusOutlined, SearchOutlined, CalendarOutlined } from '@ant-design/icons';
+import { Button, Card, ConfigProvider, Input, Modal, Space, Table } from 'antd';
 import staffService from '../../services/staffService';
 import serviceService from '../../services/serviceService';
 
-const Button = ({ children, onClick, className, disabled, type = "button" }) => (
-  <button 
-    type={type}
-    onClick={onClick} 
-    className={`btn ${className}`} 
-    disabled={disabled}
-  >
-    {children}
-  </button>
-);
+const themeToken = {
+  colorPrimary: '#304FFE',
+  borderRadius: 12,
+};
 
 const Select = ({ value, onChange, children, className, placeholder }) => (
   <select 
@@ -23,17 +20,6 @@ const Select = ({ value, onChange, children, className, placeholder }) => (
     <option value="" disabled>{placeholder}</option>
     {children}
   </select>
-);
-
-const Card = ({ title, children, className }) => (
-  <div className={`card ${className}`}>
-    <div className="card-header">
-      <h5 className="card-title">{title}</h5>
-    </div>
-    <div className="card-body">
-      {children}
-    </div>
-  </div>
 );
 
 const Toast = ({ show, message, type, onClose }) => {
@@ -50,24 +36,104 @@ const Toast = ({ show, message, type, onClose }) => {
 };
 
 const StaffServiceAssignment = () => {
+  const navigate = useNavigate();
+  const [modal, modalContextHolder] = Modal.useModal();
   const [staffList, setStaffList] = useState([]);
   const [serviceList, setServiceList] = useState([]);
   const [selectedStaff, setSelectedStaff] = useState('');
   const [loading, setLoading] = useState(false);
   const [assignLoading, setAssignLoading] = useState({});
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
+  const [searchText, setSearchText] = useState('');
+  const [searchedColumn, setSearchedColumn] = useState('');
+  const searchInput = useRef(null);
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000);
   };
 
+  const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    confirm();
+    setSearchText(selectedKeys[0]);
+    setSearchedColumn(dataIndex);
+  };
+
+  const handleReset = (clearFilters) => {
+    clearFilters();
+    setSearchText('');
+  };
+
+  const getColumnSearchProps = (dataIndex) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
+      <div style={{ padding: 8 }} onKeyDown={e => e.stopPropagation()}>
+        <Input
+          ref={searchInput}
+          placeholder={`Tìm ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+          style={{ marginBottom: 8, display: 'block' }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Tìm
+          </Button>
+          <Button
+            onClick={() => clearFilters && handleReset(clearFilters)}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Xóa
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              confirm({ closeDropdown: false });
+              setSearchText(selectedKeys[0]);
+              setSearchedColumn(dataIndex);
+            }}
+          >
+            Lọc
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              close();
+            }}
+          >
+            Đóng
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <SearchOutlined style={{ color: filtered ? '#304FFE' : undefined }} />
+    ),
+    onFilter: (value, record) =>
+      record[dataIndex]?.toString().toLowerCase().includes(value.toLowerCase()),
+    filterDropdownProps: {
+      onOpenChange(open) {
+        if (open) {
+          setTimeout(() => searchInput.current?.select(), 100);
+        }
+      },
+    },
+  });
+
   // Fetch staff list
   const fetchStaff = async () => {
     try {
       setLoading(true);
       const staff = await staffService.getAllStaff();
-      console.log('Staff data:', staff);
       setStaffList(staff || []);
     } catch (error) {
       console.error('Error fetching staff:', error);
@@ -81,7 +147,6 @@ const StaffServiceAssignment = () => {
   const fetchServices = async () => {
     try {
       const services = await serviceService.getAllServices();
-      console.log('Services data:', services);
       setServiceList(services || []);
     } catch (error) {
       console.error('Error fetching services:', error);
@@ -115,8 +180,6 @@ const StaffServiceAssignment = () => {
 
     try {
       setAssignLoading(prev => ({ ...prev, [serviceId]: true }));
-      console.log(`Assigning service ${serviceId} to staff ${selectedStaff}`);
-      
       await staffService.assignServiceToStaff(selectedStaff, serviceId);
       showToast('Gán dịch vụ thành công!', 'success');
       
@@ -124,7 +187,8 @@ const StaffServiceAssignment = () => {
       await fetchStaff();
     } catch (error) {
       console.error('Error assigning service:', error);
-      showToast('Lỗi khi gán dịch vụ cho nhân viên', 'error');
+      const msg = typeof error === 'string' ? error : (error?.message || 'Lỗi khi gán dịch vụ cho nhân viên');
+      showToast(msg, 'error');
     } finally {
       setAssignLoading(prev => ({ ...prev, [serviceId]: false }));
     }
@@ -139,8 +203,6 @@ const StaffServiceAssignment = () => {
 
     try {
       setAssignLoading(prev => ({ ...prev, [serviceId]: true }));
-      console.log(`Removing service ${serviceId} from staff ${selectedStaff}`);
-      
       await staffService.removeServiceFromStaff(selectedStaff, serviceId);
       showToast('Bỏ gán dịch vụ thành công!', 'success');
       
@@ -148,7 +210,31 @@ const StaffServiceAssignment = () => {
       await fetchStaff();
     } catch (error) {
       console.error('Error removing service:', error);
-      showToast('Lỗi khi bỏ gán dịch vụ khỏi nhân viên', 'error');
+      const msg = typeof error === 'string' ? error : (error?.message || 'Lỗi khi bỏ gán dịch vụ khỏi nhân viên');
+      const hasActiveAppointments = typeof msg === 'string' && msg.includes('lịch hẹn hoạt động');
+      if (hasActiveAppointments) {
+        modal.confirm({
+          title: 'Không thể bỏ gán dịch vụ',
+          width: 520,
+          content: (
+            <div>
+              <p style={{ marginBottom: 12 }}>{msg}</p>
+              <p style={{ color: '#707EAE', fontSize: 13 }}>
+                <strong>Lý do:</strong> Nhân viên này đang có lịch hẹn chưa hoàn thành (Đã đặt lịch, Đã xác nhận...) với dịch vụ này.
+              </p>
+              <p style={{ color: '#707EAE', fontSize: 13, marginTop: 8 }}>
+                <strong>Cách xử lý:</strong> Vào <strong>Quản lý lịch hẹn</strong> để hoàn thành hoặc hủy các lịch hẹn đó trước, sau đó mới bỏ gán được.
+              </p>
+            </div>
+          ),
+          okText: 'Đến Quản lý lịch hẹn',
+          cancelText: 'Đóng',
+          okButtonProps: { icon: <CalendarOutlined /> },
+          onOk: () => navigate('/admin', { state: { openTab: 'appointments' } }),
+        });
+      } else {
+        showToast(msg, 'error');
+      }
     } finally {
       setAssignLoading(prev => ({ ...prev, [serviceId]: false }));
     }
@@ -165,32 +251,74 @@ const StaffServiceAssignment = () => {
   const selectedStaffData = getSelectedStaffData();
 
   return (
+    <ConfigProvider theme={{ token: themeToken }}>
     <div className="staff-service-assignment">
+      {modalContextHolder}
       <style jsx>{`
         .staff-service-assignment {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 20px;
+          padding: 0;
         }
 
         .assignment-header {
-          background: linear-gradient(135deg, #304FFE 0%, #304FFE 100%);
-          color: white;
-          padding: 30px;
-          border-radius: 15px;
-          margin-bottom: 30px;
-          text-align: center;
+          background: white;
+          padding: 24px 28px;
+          border-radius: 20px;
+          margin-bottom: 24px;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
 
         .assignment-header h1 {
           margin: 0;
-          font-size: 2rem;
+          font-size: 1.4rem;
           font-weight: 600;
+          color: #2B3674;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .assignment-header h1 .header-icon {
+          color: #304FFE;
+          font-size: 1.2rem;
         }
 
         .assignment-header p {
-          margin: 10px 0 0 0;
-          opacity: 0.9;
+          margin: 8px 0 0 34px;
+          color: #707EAE;
+          font-size: 14px;
+        }
+
+        .staff-table {
+          margin-bottom: 24px;
+          background: white;
+          padding: 24px;
+          border-radius: 20px;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .staff-table :global(.ant-table-thead > tr > th) {
+          background: #F4F7FE !important;
+          font-weight: 600;
+          color: #2B3674;
+          border-bottom: 2px solid #e1e5ef;
+        }
+
+        .staff-table :global(.ant-table-tbody > tr > td) {
+          color: #707EAE;
+        }
+
+        .staff-table :global(.selected-row) {
+          background: rgba(48, 79, 254, 0.08) !important;
+        }
+
+        .staff-table :global(.ant-table-tbody > tr) {
+          cursor: pointer;
+        }
+
+        .staff-table :global(.ant-table-tbody > tr:hover) {
+          background: #f8faff !important;
         }
 
         .staff-selector {
@@ -201,35 +329,37 @@ const StaffServiceAssignment = () => {
           display: block;
           margin-bottom: 10px;
           font-weight: 600;
-          color: #333;
+          color: #2B3674;
         }
 
         .form-control {
           width: 100%;
           padding: 12px 15px;
-          border: 2px solid #e1e5e9;
-          border-radius: 8px;
-          font-size: 16px;
-          transition: border-color 0.3s ease;
+          border: 1px solid #e1e5ef;
+          border-radius: 12px;
+          font-size: 14px;
+          color: #2B3674;
+          transition: all 0.3s ease;
         }
 
         .form-control:focus {
           outline: none;
           border-color: #304FFE;
-          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+          box-shadow: 0 0 0 3px rgba(48, 79, 254, 0.1);
         }
 
         .staff-info {
-          background: #f8f9fa;
+          background: white;
           padding: 20px;
-          border-radius: 12px;
-          margin-bottom: 30px;
+          border-radius: 16px;
+          margin-bottom: 24px;
           border-left: 4px solid #304FFE;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
 
         .staff-info h3 {
           margin: 0 0 10px 0;
-          color: #333;
+          color: #2B3674;
           display: flex;
           align-items: center;
           gap: 10px;
@@ -237,7 +367,7 @@ const StaffServiceAssignment = () => {
 
         .staff-info p {
           margin: 5px 0;
-          color: #666;
+          color: #707EAE;
         }
 
         .current-services {
@@ -252,8 +382,8 @@ const StaffServiceAssignment = () => {
         }
 
         .service-tag {
-          background: #304FFE;
-          color: white;
+          background: #F4F7FE;
+          color: #304FFE;
           padding: 5px 12px;
           border-radius: 20px;
           font-size: 14px;
@@ -262,40 +392,47 @@ const StaffServiceAssignment = () => {
 
         .services-grid {
           display: grid;
-          gap: 25px;
+          gap: 24px;
         }
 
         .category-section {
           background: white;
-          border-radius: 12px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          border-radius: 20px;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.05);
           overflow: hidden;
         }
 
         .category-header {
-          background: #304FFE;
-          color: white;
-          padding: 15px 20px;
+          background: #F4F7FE;
+          color: #2B3674;
+          padding: 16px 24px;
           font-weight: 600;
-          font-size: 18px;
+          font-size: 15px;
           display: flex;
           align-items: center;
           gap: 10px;
+          border-bottom: 1px solid #e1e5ef;
+          border-left: 4px solid #304FFE;
+        }
+
+        .category-header .cat-icon {
+          color: #304FFE;
+          font-size: 16px;
         }
 
         .category-services {
-          padding: 20px;
+          padding: 24px;
         }
 
         .service-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-          gap: 15px;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 20px;
         }
 
         .service-item {
-          border: 2px solid #e1e5e9;
-          border-radius: 10px;
+          border: 1px solid #e1e5ef;
+          border-radius: 12px;
           padding: 15px;
           transition: all 0.3s ease;
           position: relative;
@@ -303,12 +440,12 @@ const StaffServiceAssignment = () => {
 
         .service-item:hover {
           border-color: #304FFE;
-          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+          box-shadow: 0 4px 12px rgba(48, 79, 254, 0.1);
         }
 
         .service-item.assigned {
-          border-color: #28a745;
-          background: #f8fff9;
+          border-color: #52c41a;
+          background: #f6ffed;
         }
 
         .service-header {
@@ -320,19 +457,19 @@ const StaffServiceAssignment = () => {
 
         .service-name {
           font-weight: 600;
-          color: #333;
+          color: #2B3674;
           margin: 0;
         }
 
         .service-details {
           font-size: 14px;
-          color: #666;
+          color: #707EAE;
           margin: 5px 0;
         }
 
         .service-price {
           font-weight: 600;
-          color: #304FFE;
+          color: #2B3674;
           font-size: 16px;
         }
 
@@ -345,7 +482,7 @@ const StaffServiceAssignment = () => {
         .btn {
           padding: 8px 16px;
           border: none;
-          border-radius: 6px;
+          border-radius: 12px;
           cursor: pointer;
           font-weight: 500;
           display: flex;
@@ -362,36 +499,47 @@ const StaffServiceAssignment = () => {
         }
 
         .btn.primary {
-          background: #28a745;
+          background: #304FFE;
           color: white;
         }
 
         .btn.primary:hover:not(:disabled) {
-          background: #218838;
+          background: #2541e8;
+          box-shadow: 0 4px 12px rgba(48, 79, 254, 0.3);
         }
 
         .btn.danger {
-          background: #dc3545;
+          background: #ff4d4f;
           color: white;
         }
 
         .btn.danger:hover:not(:disabled) {
-          background: #c82333;
+          background: #ff7875;
+          box-shadow: 0 4px 12px rgba(255, 77, 79, 0.3);
         }
 
         .loading-state {
           text-align: center;
-          padding: 40px;
-          color: #666;
+          padding: 60px 40px;
+          color: #707EAE;
+          background: white;
+          border-radius: 20px;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
 
         .no-selection {
           text-align: center;
-          padding: 40px;
-          color: #666;
-          background: #f8f9fa;
-          border-radius: 12px;
-          border: 2px dashed #dee2e6;
+          padding: 60px 40px;
+          color: #707EAE;
+          background: white;
+          border-radius: 20px;
+          border: 2px dashed #e1e5ef;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .no-selection h3 {
+          color: #2B3674;
+          margin-bottom: 8px;
         }
 
         .toast {
@@ -400,19 +548,19 @@ const StaffServiceAssignment = () => {
           right: 20px;
           z-index: 1000;
           padding: 15px 20px;
-          border-radius: 8px;
+          border-radius: 12px;
           color: white;
           font-weight: 500;
           max-width: 400px;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+          box-shadow: 0 5px 20px rgba(0,0,0,0.15);
         }
 
         .toast-success {
-          background: #28a745;
+          background: #52c41a;
         }
 
         .toast-error {
-          background: #dc3545;
+          background: #ff4d4f;
         }
 
         .toast-content {
@@ -433,8 +581,11 @@ const StaffServiceAssignment = () => {
 
         .empty-state {
           text-align: center;
-          padding: 40px;
-          color: #666;
+          padding: 60px 40px;
+          color: #707EAE;
+          background: white;
+          border-radius: 20px;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
 
         .status-badge {
@@ -449,78 +600,79 @@ const StaffServiceAssignment = () => {
         }
 
         .status-assigned {
-          background: #d4edda;
-          color: #155724;
+          background: #f6ffed;
+          color: #52c41a;
         }
 
         .status-available {
-          background: #e2e3e5;
-          color: #383d41;
+          background: #F4F7FE;
+          color: #707EAE;
         }
       `}</style>
 
       <div className="assignment-header">
         <h1>
-          <ToolOutlined /> Gán Dịch Vụ Cho Nhân Viên
+          <ToolOutlined className="header-icon" /> Gán Dịch Vụ Cho Nhân Viên
         </h1>
         <p>Quản lý việc gán dịch vụ cho từng nhân viên</p>
       </div>
 
-      <div className="staff-selector">
-        <label htmlFor="staff-select">
-          <UserOutlined /> Chọn nhân viên:
-        </label>
-        <Select
-          id="staff-select"
-          value={selectedStaff}
-          onChange={(e) => setSelectedStaff(e.target.value)}
-          placeholder="-- Chọn nhân viên --"
-        >
-          {staffList.map(staff => (
-            <option key={staff.staffId} value={staff.staffId}>
-              {staff.fullName} - {staff.specialization}
-            </option>
-          ))}
-        </Select>
+      <div className="staff-table">
+        <Table
+          columns={[
+            {
+              title: 'Họ và tên',
+              dataIndex: 'fullName',
+              key: 'fullName',
+              width: '30%',
+              ...getColumnSearchProps('fullName'),
+            },
+            {
+              title: 'Email',
+              dataIndex: 'email',
+              key: 'email',
+              width: '30%',
+              ...getColumnSearchProps('email'),
+            },
+            {
+              title: 'Chuyên môn',
+              dataIndex: 'specialization',
+              key: 'specialization',
+              width: '25%',
+              ...getColumnSearchProps('specialization'),
+            },
+            {
+              title: 'Kinh nghiệm (năm)',
+              dataIndex: 'experience',
+              key: 'experience',
+              sorter: (a, b) => (a.experience || 0) - (b.experience || 0),
+              width: '15%',
+            },
+          ]}
+          dataSource={staffList.map(staff => ({
+            key: staff.staffId?.toString(),
+            ...staff,
+          }))}
+          size="middle"
+          pagination={{ pageSize: 5 }}
+          rowKey="key"
+          onRow={(record) => ({
+            onClick: () => setSelectedStaff(record.key),
+          })}
+          rowClassName={(record) =>
+            record.key === selectedStaff ? 'selected-row' : ''
+          }
+        />
       </div>
-
-      {selectedStaffData && (
-        <div className="staff-info">
-          <h3>
-            <UserOutlined />
-            Thông tin nhân viên: {selectedStaffData.fullName}
-          </h3>
-          <p><strong>Email:</strong> {selectedStaffData.email}</p>
-          <p><strong>Chuyên môn:</strong> {selectedStaffData.specialization}</p>
-          <p><strong>Kinh nghiệm:</strong> {selectedStaffData.experience || 0} năm</p>
-          
-          <div className="current-services">
-            <strong>Dịch vụ hiện tại:</strong>
-            <div className="service-tags">
-              {selectedStaffData.services?.length > 0 ? (
-                selectedStaffData.services.map(service => (
-                  <span key={service.serviceId} className="service-tag">
-                    {service.name}
-                  </span>
-                ))
-              ) : (
-                <span style={{ color: '#666', fontStyle: 'italic' }}>
-                  Chưa có dịch vụ nào được gán
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {loading ? (
         <div className="loading-state">
-          <LoadingOutlined style={{ fontSize: '24px' }} />
+          <LoadingOutlined style={{ fontSize: '32px', color: '#304FFE', marginBottom: 16 }} spin />
           <p>Đang tải dữ liệu...</p>
         </div>
       ) : !selectedStaff ? (
         <div className="no-selection">
-          <UserOutlined style={{ fontSize: '48px', marginBottom: '15px', opacity: 0.5 }} />
+          <UserOutlined style={{ fontSize: '48px', marginBottom: '15px', color: '#304FFE', opacity: 0.6 }} />
           <h3>Chưa chọn nhân viên</h3>
           <p>Vui lòng chọn nhân viên để xem và quản lý dịch vụ</p>
         </div>
@@ -534,7 +686,7 @@ const StaffServiceAssignment = () => {
             Object.entries(groupedServices).map(([category, services]) => (
               <div key={category} className="category-section">
                 <div className="category-header">
-                  <ToolOutlined />
+                  <ToolOutlined className="cat-icon" />
                   {category}
                 </div>
                 <div className="category-services">
@@ -542,49 +694,69 @@ const StaffServiceAssignment = () => {
                     {services.map(service => {
                       const isAssigned = hasService(service.serviceId);
                       const isLoading = assignLoading[service.serviceId];
+
+                      const badgeStyle = {
+                        padding: '4px 12px',
+                        borderRadius: 12,
+                        fontSize: 12,
+                        fontWeight: 500,
+                        backgroundColor: isAssigned ? '#f6ffed' : '#F4F7FE',
+                        color: isAssigned ? '#52c41a' : '#304FFE',
+                        border: isAssigned ? '1px solid rgba(82, 196, 26, 0.3)' : '1px solid rgba(48, 79, 254, 0.2)',
+                      };
                       
                       return (
-                        <div 
-                          key={service.serviceId} 
-                          className={`service-item ${isAssigned ? 'assigned' : ''}`}
+                        <Card
+                          key={service.serviceId}
+                          title={service.name}
+                          extra={<span style={badgeStyle}>{isAssigned ? 'Đã gán' : 'Chưa gán'}</span>}
+                          styles={{
+                            root: {
+                              borderRadius: 16,
+                              boxShadow: isAssigned
+                                ? '0 4px 12px rgba(82, 196, 26, 0.12)'
+                                : '0 5px 15px rgba(0,0,0,0.05)',
+                              border: isAssigned ? '1px solid rgba(82, 196, 26, 0.3)' : '1px solid #e1e5ef',
+                            },
+                            body: {
+                              paddingTop: 12,
+                            },
+                            title: {
+                              fontSize: 16,
+                              fontWeight: 600,
+                              color: '#2B3674',
+                            },
+                          }}
                         >
-                          <div className={`status-badge ${isAssigned ? 'status-assigned' : 'status-available'}`}>
-                            {isAssigned ? 'Đã gán' : 'Chưa gán'}
-                          </div>
-                          
-                          <div className="service-header">
-                            <h4 className="service-name">{service.name}</h4>
-                          </div>
-                          
-                          <div className="service-details">
-                            <p>Thời gian: {service.duration} phút</p>
-                            <p className="service-price">
-                              Giá: {service.price?.toLocaleString('vi-VN')} VND
-                            </p>
-                          </div>
-                          
-                          <div className="service-actions">
-                            {isAssigned ? (
+                          <p style={{ color: '#707EAE', marginBottom: 4 }}>Thời gian: {service.duration} phút</p>
+                          <p style={{ fontWeight: 600, color: '#2B3674', marginBottom: 16 }}>
+                            Giá: {service.price?.toLocaleString('vi-VN')} VND
+                          </p>
+                          {isAssigned ? (
+                            <Button
+                              type="primary"
+                              danger
+                              block
+                              onClick={() => removeService(service.serviceId)}
+                              disabled={isLoading}
+                            >
+                              {isLoading ? <LoadingOutlined /> : <MinusOutlined />}
+                              {isLoading ? 'Đang bỏ gán...' : 'Bỏ gán'}
+                            </Button>
+                          ) : (
+                            <HappyProvider>
                               <Button
-                                className="danger"
-                                onClick={() => removeService(service.serviceId)}
-                                disabled={isLoading}
-                              >
-                                {isLoading ? <LoadingOutlined /> : <MinusOutlined />}
-                                {isLoading ? 'Đang bỏ gán...' : 'Bỏ gán'}
-                              </Button>
-                            ) : (
-                              <Button
-                                className="primary"
+                                type="primary"
+                                block
                                 onClick={() => assignService(service.serviceId)}
                                 disabled={isLoading}
                               >
                                 {isLoading ? <LoadingOutlined /> : <PlusOutlined />}
                                 {isLoading ? 'Đang gán...' : 'Gán dịch vụ'}
                               </Button>
-                            )}
-                          </div>
-                        </div>
+                            </HappyProvider>
+                          )}
+                        </Card>
                       );
                     })}
                   </div>
@@ -602,6 +774,7 @@ const StaffServiceAssignment = () => {
         onClose={() => setToast({ show: false, message: '', type: '' })}
       />
     </div>
+    </ConfigProvider>
   );
 };
 

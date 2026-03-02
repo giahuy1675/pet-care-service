@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+*.user
+*.csproj.user
+*.tmp
+*.bak
+firebase-adminsdk.json
+appsettings.Production.json

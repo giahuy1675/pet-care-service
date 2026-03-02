@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axiosClient from '../../utils/axiosClient';
 import staffService from '../../services/staffService';
 import serviceService from '../../services/serviceService';
+import { Alert, Input, Steps } from 'antd';
 import { 
   UserAddOutlined, 
   UserOutlined, 
@@ -120,12 +121,8 @@ const FormContainer = styled(motion.div)`
 `;
 
 const StepIndicator = styled.div`
-  display: flex;
-  justify-content: center;
   margin-bottom: 30px;
-  padding: 20px;
-  background: #f8fafc;
-  border-radius: 12px;
+  padding: 16px 0;
 `;
 
 const Step = styled.div`
@@ -392,31 +389,12 @@ const Button = styled.button`
   }
 `;
 
-const Toast = styled(motion.div)`
+const ToastContainer = styled.div`
   position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 16px 20px;
-  border-radius: 12px;
-  color: white;
-  font-weight: 500;
+  bottom: 30px;
+  right: 30px;
   z-index: 1000;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-
-  &.success {
-    background: linear-gradient(135deg, #05CD99, #1FA7A7);
-  }
-
-  &.error {
-    background: linear-gradient(135deg, #FF5252, #FF6B6B);
-  }
-
-  &.info {
-    background: linear-gradient(135deg, #304FFE, #304FFE);
-  }
+  max-width: 400px;
 `;
 
 const LoadingOverlay = styled(motion.div)`
@@ -482,8 +460,6 @@ const StaffAccountCreation = () => {
 
   const [errors, setErrors] = useState({});
 
-
-
   const showToast = (message, type = 'info') => {
     setToast({ show: true, message, type });
     setTimeout(() => {
@@ -491,58 +467,46 @@ const StaffAccountCreation = () => {
     }, 3000);
   };
 
+  const closeToast = () => {
+    setToast(prev => ({ ...prev, show: false }));
+  };
+
   const validateStep = (step) => {
-    console.log('=== VALIDATE STEP', step, '===');
-    console.log('Form data for validation:', formData);
-    
     const newErrors = {};
 
     if (step === 1) {
-      console.log('Validating step 1...');
-      
       if (!formData.username?.trim()) {
         newErrors.username = 'Tên đăng nhập là bắt buộc';
-        console.log('❌ Username missing');
       }
       if (!formData.email?.trim()) {
         newErrors.email = 'Email là bắt buộc';
-        console.log('❌ Email missing');
       }
       if (!formData.password?.trim()) {
         newErrors.password = 'Mật khẩu là bắt buộc';
-        console.log('❌ Password missing');
       }
       if (!formData.fullName?.trim()) {
         newErrors.fullName = 'Họ và tên là bắt buộc';
-        console.log('❌ FullName missing');
       }
       
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (formData.email && !emailRegex.test(formData.email)) {
         newErrors.email = 'Email không hợp lệ';
-        console.log('❌ Email format invalid');
       }
       
       // Validate password length
       if (formData.password && formData.password.length < 6) {
         newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
-        console.log('❌ Password too short');
       }
     }
 
     if (step === 2) {
-      console.log('Validating step 2...');
-      
       if (!formData.specialization?.trim()) {
         newErrors.specialization = 'Chuyên môn là bắt buộc';
-        console.log('❌ Specialization missing');
       }
     }
 
-    console.log('Validation errors:', newErrors);
     const isValid = Object.keys(newErrors).length === 0;
-    console.log('Is valid:', isValid);
     
     setErrors(newErrors);
     return isValid;
@@ -587,35 +551,13 @@ const StaffAccountCreation = () => {
   };
 
   const handleSubmit = async () => {
-    console.log('=== BẮT ĐẦU SUBMIT ===');
-    console.log('Current step:', currentStep);
-    console.log('Form data hiện tại:', formData);
-    
     // Validate step
     const isValid = validateStep(currentStep);
-    console.log('Validation result:', isValid);
-    if (!isValid) {
-      console.log('Validation failed, stopping submit');
-      return;
-    }
+    if (!isValid) return;
 
     setLoading(true);
     try {
-      console.log('=== CHUẨN BỊ GỬI DỮ LIỆU ===');
-      console.log('Form data trước khi submit:', formData);
-      
-      // Kiểm tra dữ liệu cơ bản
-      console.log('Username:', formData.username);
-      console.log('Email:', formData.email);
-      console.log('Password length:', formData.password?.length);
-      console.log('FullName:', formData.fullName);
-      console.log('Specialization:', formData.specialization);
-      
-      // Tạo nhân viên (không có ServiceIds)
-      console.log('=== GỌI API TẠO NHÂN VIÊN ===');
-      const createdStaff = await staffService.createUserStaff(formData);
-      console.log('=== API THÀNH CÔNG ===');
-      console.log('Nhân viên đã tạo:', createdStaff);
+      await staffService.createUserStaff(formData);
       
       showToast('Tạo tài khoản nhân viên thành công! Bạn có thể gán dịch vụ thông qua trang "Quản lý người dùng".', 'success');
       
@@ -662,7 +604,6 @@ const StaffAccountCreation = () => {
       showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
-      console.log('=== KẾT THÚC SUBMIT ===');
     }
   };
 
@@ -679,14 +620,19 @@ const StaffAccountCreation = () => {
 
       <FormContainer>
         <StepIndicator>
-          <Step active={currentStep === 1}>
-            <UserOutlined />
-            Thông tin tài khoản
-          </Step>
-          <Step active={currentStep === 2}>
-            <TeamOutlined />
-            Thông tin nhân viên & Hoàn tất
-          </Step>
+          <Steps
+            current={currentStep - 1}
+            items={[
+              {
+                title: 'Thông tin tài khoản',
+                icon: <UserOutlined />,
+              },
+              {
+                title: 'Thông tin nhân viên & Hoàn tất',
+                icon: <TeamOutlined />,
+              },
+            ]}
+          />
         </StepIndicator>
 
         {currentStep === 1 && (
@@ -701,12 +647,13 @@ const StaffAccountCreation = () => {
                 <label>
                   <UserOutlined /> Tên đăng nhập <span className="required">*</span>
                 </label>
-                <input
-                  type="text"
+                <Input
+                  size="large"
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
                   placeholder="Nhập tên đăng nhập"
+                  prefix={<UserOutlined />}
                 />
                 {errors.username && <span style={{color: '#FF5252', fontSize: '13px'}}>{errors.username}</span>}
               </FormGroup>
@@ -715,12 +662,14 @@ const StaffAccountCreation = () => {
                 <label>
                   <MailOutlined /> Email <span className="required">*</span>
                 </label>
-                <input
-                  type="email"
+                <Input
+                  size="large"
                   name="email"
+                  type="email"
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="Nhập địa chỉ email"
+                  prefix={<MailOutlined />}
                 />
                 {errors.email && <span style={{color: '#FF5252', fontSize: '13px'}}>{errors.email}</span>}
               </FormGroup>
@@ -729,22 +678,17 @@ const StaffAccountCreation = () => {
                 <label>
                   <SafetyOutlined /> Mật khẩu <span className="required">*</span>
                 </label>
-                <PasswordInputWrapper>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder="Nhập mật khẩu"
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeInvisibleOutlined /> : <EyeTwoTone />}
-                  </button>
-                </PasswordInputWrapper>
+                <Input.Password
+                  size="large"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  placeholder="Nhập mật khẩu"
+                  prefix={<SafetyOutlined />}
+                  iconRender={(visible) =>
+                    visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+                  }
+                />
                 {errors.password && <span style={{color: '#FF5252', fontSize: '13px'}}>{errors.password}</span>}
               </FormGroup>
 
@@ -752,12 +696,13 @@ const StaffAccountCreation = () => {
                 <label>
                   <UserOutlined /> Họ và tên <span className="required">*</span>
                 </label>
-                <input
-                  type="text"
+                <Input
+                  size="large"
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleInputChange}
                   placeholder="Nhập họ và tên"
+                  prefix={<UserOutlined />}
                 />
                 {errors.fullName && <span style={{color: '#FF5252', fontSize: '13px'}}>{errors.fullName}</span>}
               </FormGroup>
@@ -766,12 +711,13 @@ const StaffAccountCreation = () => {
                 <label>
                   <PhoneOutlined /> Số điện thoại
                 </label>
-                <input
-                  type="tel"
+                <Input
+                  size="large"
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
                   placeholder="Nhập số điện thoại"
+                  prefix={<PhoneOutlined />}
                 />
               </FormGroup>
 
@@ -779,12 +725,13 @@ const StaffAccountCreation = () => {
                 <label>
                   <HomeOutlined /> Địa chỉ
                 </label>
-                <input
-                  type="text"
+                <Input
+                  size="large"
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
                   placeholder="Nhập địa chỉ"
+                  prefix={<HomeOutlined />}
                 />
               </FormGroup>
             </FormGrid>
@@ -901,34 +848,15 @@ const StaffAccountCreation = () => {
               <PlusOutlined />
             </Button>
           ) : (
-            <>
-              <Button 
-                type="button" 
-                className="secondary" 
-                onClick={() => {
-                  console.log('=== DEBUG INFO ===');
-                  console.log('Current step:', currentStep);
-                  console.log('Form data:', formData);
-                  console.log('Errors:', errors);
-                  
-                  // Test validation
-                  const isValid = validateStep(currentStep);
-                  console.log('Validation result:', isValid);
-                }}
-                style={{ marginRight: '10px' }}
-              >
-                🔍 Debug
-              </Button>
-              <Button 
-                type="button" 
-                className="primary" 
-                onClick={handleSubmit}
-                disabled={loading}
-              >
-                {loading ? <LoadingOutlined /> : <CheckOutlined />}
-                {loading ? 'Đang tạo...' : 'Tạo tài khoản nhân viên'}
-              </Button>
-            </>
+            <Button 
+              type="button" 
+              className="primary" 
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? <LoadingOutlined /> : <CheckOutlined />}
+              {loading ? 'Đang tạo...' : 'Tạo tài khoản nhân viên'}
+            </Button>
           )}
         </FormActions>
       </FormContainer>
@@ -950,14 +878,27 @@ const StaffAccountCreation = () => {
         )}
 
         {toast.show && (
-          <Toast
-            className={toast.type}
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-          >
-            <div>{toast.message}</div>
-          </Toast>
+          <ToastContainer>
+            <motion.div
+              initial={{ x: 100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 100, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            >
+              <Alert
+                type={toast.type === 'success' ? 'success' : toast.type === 'error' ? 'error' : 'info'}
+                message={toast.type === 'success'
+                  ? 'Thành công'
+                  : toast.type === 'error'
+                    ? 'Lỗi'
+                    : 'Thông báo'}
+                description={toast.message}
+                showIcon
+                closable
+                onClose={closeToast}
+              />
+            </motion.div>
+          </ToastContainer>
         )}
       </AnimatePresence>
     </Container>

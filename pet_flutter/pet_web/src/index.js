@@ -58,6 +58,13 @@ const theme = createTheme({
   shadows: [...createTheme().shadows],
 });
 
+if (process.env.NODE_ENV !== 'development') {
+  // Tắt toàn bộ console.log trong môi trường không phải dev
+  // Giữ console.error và console.warn để vẫn thấy lỗi quan trọng
+  // eslint-disable-next-line no-console
+  console.log = () => {};
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <GoogleOAuthProvider clientId="261005055168-52qfvdmp7n3fo022tffqco0o4ilvp7hb.apps.googleusercontent.com">

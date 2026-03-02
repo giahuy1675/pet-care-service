@@ -267,7 +267,11 @@ const assignServiceToStaff = async (staffId, serviceId) => {
     return response.data;
   } catch (error) {
     console.error('Lỗi gán dịch vụ cho nhân viên:', error);
-    throw error.response?.data?.message || 'Có lỗi xảy ra khi gán dịch vụ cho nhân viên';
+    const msg = error.response?.data;
+    const errorMessage = typeof msg === 'string' 
+      ? msg 
+      : (msg?.message || 'Có lỗi xảy ra khi gán dịch vụ cho nhân viên');
+    throw errorMessage;
   }
 };
 
@@ -278,7 +282,12 @@ const removeServiceFromStaff = async (staffId, serviceId) => {
     return response.data;
   } catch (error) {
     console.error('Lỗi hủy gán dịch vụ khỏi nhân viên:', error);
-    throw error.response?.data?.message || 'Có lỗi xảy ra khi hủy gán dịch vụ khỏi nhân viên';
+    // API có thể trả về JSON (data.message) hoặc text/plain (data là string)
+    const msg = error.response?.data;
+    const errorMessage = typeof msg === 'string' 
+      ? msg 
+      : (msg?.message || 'Có lỗi xảy ra khi hủy gán dịch vụ khỏi nhân viên');
+    throw errorMessage;
   }
 };
 

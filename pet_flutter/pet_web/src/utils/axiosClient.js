@@ -1,9 +1,9 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 
 const axiosClient = axios.create({
   // Cấu hình baseURL linh hoạt
   // baseURL mặc định - có thể thay đổi thủ công nếu cần
-  baseURL: process.env.REACT_APP_API_URL || 'https://localhost:7164/api',
+  baseURL: process.env.REACT_APP_API_URL || 'https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -22,43 +22,15 @@ axiosClient.interceptors.request.use(
   (config) => {
     // Dùng ID để theo dõi request khi retry
     config.requestId = config.requestId || Date.now() + Math.random().toString(36).substring(2, 9);
-    
-    console.log('=== AXIOS REQUEST DEBUG ===');
-    console.log('Method:', config.method?.toUpperCase());
-    console.log('URL:', config.url);
-    console.log('Base URL:', config.baseURL);
-    console.log('Full URL:', config.baseURL + config.url);
-    console.log('Headers:', config.headers);
-    
+
     const token = localStorage.getItem('token');
     if (token) {
-      // Log token để debug (chỉ hiển thị vài ký tự đầu)
-      console.log('✓ Token found:', token.substring(0, 15) + '...');
-      
       // Đảm bảo Bearer token đúng định dạng (có khoảng trắng sau "Bearer")
       config.headers['Authorization'] = `Bearer ${token}`;
-      console.log('✓ Authorization header set');
-    } else {
-      console.log('⚠ No token found in localStorage');
     }
 
-    // Log data if it's FormData
-    if (config.data instanceof FormData) {
-      console.log('FormData entries:');
-      for (let pair of config.data.entries()) {
-        if (pair[1] instanceof File) {
-          console.log(`  ${pair[0]}: [FILE] ${pair[1].name} (${pair[1].size} bytes)`);
-        } else {
-          console.log(`  ${pair[0]}: ${pair[1]}`);
-        }
-      }
-    } else if (config.data) {
-      console.log('Request data:', config.data);
-    }
-    
     // Đảm bảo withCredentials luôn được bật
     config.withCredentials = true;
-    console.log('=== END REQUEST DEBUG ===');
     
     return config;
   },
@@ -71,9 +43,6 @@ axiosClient.interceptors.request.use(
 // Interceptor cho response
 axiosClient.interceptors.response.use(
   (response) => {
-    // Log success response status
-    console.log(`Response success from ${response.config.url}:`, response.status);
-    
     // Xóa request khỏi retryMap khi thành công
     if (response.config.requestId) {
       retryMap.delete(response.config.requestId);
@@ -97,8 +66,6 @@ axiosClient.interceptors.response.use(
       
       // Kiểm tra số lần retry
       if (retryCount < MAX_RETRIES) {
-        console.log(`Retry attempt ${retryCount + 1}/${MAX_RETRIES} for ${originalRequest.url}`);
-        
         // Tăng retry count
         retryMap.set(originalRequest.requestId, retryCount + 1);
         

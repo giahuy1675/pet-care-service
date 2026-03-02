@@ -5,6 +5,7 @@ import orderService from '../services/orderService';
 import { getOrderStatusInfo, canCancelOrder, ORDER_STATUS } from '../utils/orderStatusUtils';
 import styled, { keyframes, css } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
+import { HappyProvider } from '@ant-design/happy-work-theme';
 import {
   Layout,
   Typography,
@@ -45,6 +46,7 @@ import {
   CheckCircleOutlined,
   InfoCircleOutlined,
   ClockCircleOutlined,
+  SyncOutlined,
   DollarOutlined,
   FireOutlined,
   UserOutlined,
@@ -491,22 +493,6 @@ const OrderAmount = styled.div`
   display: inline-block;
 `;
 
-const StatusBadge = styled(Tag)`
-  border: none !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
-  padding: 6px 10px !important;
-  border-radius: 8px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  box-shadow: 0 3px 6px ${props => props.color ? `${props.color}20` : 'rgba(0, 0, 0, 0.1)'} !important;
-  
-  .anticon {
-    margin-right: 6px;
-    font-size: 14px;
-  }
-`;
-
 const ActionButtons = styled(Space)`
   .action-btn {
     border-radius: 10px;
@@ -729,40 +715,25 @@ const OrdersPage = () => {
 
   const getStatusTag = (status) => {
     const statusInfo = getOrderStatusInfo(status);
-    
-    // Map icon based on status text
-    let icon;
+
     switch (statusInfo.text) {
       case 'Chờ xử lý':
-        icon = <ClockCircleOutlined />;
-        break;
+        return { label: statusInfo.text, color: 'default', icon: <ClockCircleOutlined /> };
       case 'Đang xử lý':
-        icon = <ClockCircleOutlined />;
-        break;
+        return { label: statusInfo.text, color: 'processing', icon: <SyncOutlined spin /> };
       case 'Đã xác nhận':
-        icon = <CheckCircleOutlined />;
-        break;
+        return { label: statusInfo.text, color: 'success', icon: <CheckCircleOutlined /> };
       case 'Đang giao hàng':
-        icon = <CarOutlined />;
-        break;
+        return { label: statusInfo.text, color: 'processing', icon: <CarOutlined /> };
       case 'Đã giao hàng':
-        icon = <CheckCircleOutlined />;
-        break;
+        return { label: statusInfo.text, color: 'success', icon: <CheckCircleOutlined /> };
       case 'Hoàn thành':
-        icon = <CheckCircleOutlined />;
-        break;
+        return { label: statusInfo.text, color: 'success', icon: <CheckCircleOutlined /> };
       case 'Đã hủy':
-        icon = <CloseCircleOutlined />;
-        break;
+        return { label: statusInfo.text, color: 'error', icon: <CloseCircleOutlined /> };
       default:
-        icon = <InfoCircleOutlined />;
+        return { label: statusInfo.text, color: 'warning', icon: <ExclamationCircleOutlined /> };
     }
-    
-    return { 
-      color: statusInfo.color,
-      label: statusInfo.text,
-      icon: icon
-    };
   };
 
   const formatCurrency = (amount) => {
@@ -841,12 +812,13 @@ const OrdersPage = () => {
       render: (status) => {
         const statusInfo = getStatusTag(status);
         return (
-          <StatusBadge 
+          <Tag
             color={statusInfo.color}
             icon={statusInfo.icon}
+            variant="filled"
           >
             {statusInfo.label}
-          </StatusBadge>
+          </Tag>
         );
       },
     },
@@ -855,13 +827,15 @@ const OrdersPage = () => {
       key: 'actions',
       render: (_, record) => (
         <ActionButtons size="small">
-          <Button
-            className="action-btn view-btn"
-            icon={<EyeOutlined />}
-            onClick={() => navigate(`/orders/${record.orderId}`)}
-          >
-            Chi tiết
-          </Button>
+          <HappyProvider>
+            <Button
+              type="primary"
+              icon={<EyeOutlined />}
+              onClick={() => navigate(`/orders/${record.orderId}`)}
+            >
+              Chi tiết
+            </Button>
+          </HappyProvider>
           
           {isAdmin && canCancelOrder(record.status) && (
             <Button

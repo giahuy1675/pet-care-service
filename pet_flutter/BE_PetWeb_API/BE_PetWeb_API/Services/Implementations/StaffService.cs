@@ -276,15 +276,15 @@ namespace BE_PetWeb_API.Services.Implementations
                     throw new Exception(errorMsg);
                 }
 
-                // Mã hóa mật khẩu
-                CreatePasswordHash(createUserStaffDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
+                // Mã hóa mật khẩu bằng BCrypt
+                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(createUserStaffDto.Password, workFactor: 12);
 
                 // Tạo User mới
                 var user = new User
                 {
                     Username = createUserStaffDto.Username,
                     Email = createUserStaffDto.Email,
-                    Password = Convert.ToBase64String(passwordHash) + ":" + Convert.ToBase64String(passwordSalt),
+                    Password = hashedPassword,
                     FullName = createUserStaffDto.FullName,
                     Phone = createUserStaffDto.Phone,
                     Address = createUserStaffDto.Address,
@@ -365,15 +365,6 @@ namespace BE_PetWeb_API.Services.Implementations
                 await transaction.RollbackAsync();
                 _logger.LogError(ex, $"Lỗi khi tạo User và Staff: {createUserStaffDto?.Username}");
                 throw new Exception($"Không thể tạo User và Staff. Lỗi: {ex.Message}");
-            }
-        }
-
-        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
-        {
-            using (var hmac = new System.Security.Cryptography.HMACSHA256())
-            {
-                passwordSalt = hmac.Key;
-                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
             }
         }
 
@@ -702,17 +693,7 @@ namespace BE_PetWeb_API.Services.Implementations
                     return false;
                 }
 
-                // Kiểm tra xem có đang có lịch hẹn nào sử dụng dịch vụ này không
-                var hasAppointments = await _context.Appointments
-                    .AnyAsync(a => a.StaffId == staffId && a.ServiceId == serviceId &&
-                                 (a.Status == "Scheduled" || a.Status == "Confirmed" || a.Status == "Pending"));
-
-                if (hasAppointments)
-                {
-                    _logger.LogWarning($"Không thể xóa dịch vụ ID: {serviceId} khỏi nhân viên ID: {staffId} vì có lịch hẹn đang hoạt động");
-                    throw new Exception("Không thể xóa dịch vụ đang có lịch hẹn hoạt động");
-                }
-
+                // Cho phép bỏ gán dịch vụ ngay cả khi còn lịch hẹn chưa hoàn thành (lịch hẹn vẫn giữ nguyên staffId, serviceId)
                 _context.StaffServices.Remove(staffService);
                 await _context.SaveChangesAsync();
 

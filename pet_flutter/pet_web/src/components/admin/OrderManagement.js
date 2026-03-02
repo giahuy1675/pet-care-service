@@ -51,13 +51,15 @@ import {
   HomeOutlined,
   CalendarOutlined,
   TagOutlined,
-  UserOutlined
+  UserOutlined,
+  DownOutlined
 } from '@ant-design/icons';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import orderService from '../../services/orderService';
 import useAuth from '../../hooks/useAuth';
 import { getOrderStatusInfo, getAdminStatusOptions, canCancelOrder, ORDER_STATUS } from '../../utils/orderStatusUtils';
+import { getProductImageUrl } from '../../utils/imageUtils';
 import './OrderManagement.css';
 
 const { Search } = Input;
@@ -111,10 +113,10 @@ const OrderManagement = () => {
 
   // Phương thức thanh toán
   const paymentMethods = {
-    'COD': { label: 'Thanh toán khi nhận hàng', icon: '💰' },
-    'VNPAY': { label: 'VNPay', icon: '💳' },
-    'MOMO': { label: 'Momo', icon: '📱' },
-    'Banking': { label: 'Chuyển khoản ngân hàng', icon: '🏦' }
+    'COD': { label: 'Thanh toán khi nhận hàng' },
+    'VNPAY': { label: 'VNPay' },
+    'MOMO': { label: 'Momo' },
+    'Banking': { label: 'Chuyển khoản ngân hàng' }
   };
 
   useEffect(() => {
@@ -321,7 +323,7 @@ const OrderManagement = () => {
           </Tag>
           <br />
           <Text type="secondary" style={{ fontSize: 11 }}>
-            {paymentMethods[record.paymentMethod]?.icon} {paymentMethods[record.paymentMethod]?.label || record.paymentMethod}
+            {paymentMethods[record.paymentMethod]?.label || record.paymentMethod}
           </Text>
         </div>
       )
@@ -358,20 +360,18 @@ const OrderManagement = () => {
 
         return (
           <Dropdown
-            menu={{
-              items: actionItems
-            }}
-            trigger={['click']}
+            menu={{ items: actionItems }}
             placement="bottomLeft"
           >
-            <Button 
-              type="text" 
-              icon={<MoreOutlined />}
-              style={{ 
-                border: '1px solid #d9d9d9',
-                borderRadius: 6
-              }}
-            />
+            <a
+              href="#"
+              onClick={e => e.preventDefault()}
+            >
+              <Space>
+                Thao tác
+                <DownOutlined />
+              </Space>
+            </a>
           </Dropdown>
         );
       }
@@ -608,7 +608,7 @@ const OrderManagement = () => {
                   </Tag>
                 </Descriptions.Item>
                 <Descriptions.Item label="Phương thức thanh toán" span={2}>
-                  {paymentMethods[selectedOrder.paymentMethod]?.icon} {paymentMethods[selectedOrder.paymentMethod]?.label}
+                  {paymentMethods[selectedOrder.paymentMethod]?.label}
                 </Descriptions.Item>
               </Descriptions>
             </Card>
@@ -628,10 +628,13 @@ const OrderManagement = () => {
                     key: 'productName',
                     render: (name, record) => (
                       <div style={{ display: 'flex', alignItems: 'center' }}>
-                        {record.productImage && (
+                        {(record.productImage || record.photo || record.imageUrl) && (
                           <img 
-                            src={`${process.env.REACT_APP_API_URL}/wwwroot/uploads/products/${record.productImage}`}
+                            src={getProductImageUrl(record.productImage || record.photo || record.imageUrl)}
                             alt={name}
+                            onError={(e) => {
+                              e.currentTarget.src = 'https://via.placeholder.com/40?text=No+Image';
+                            }}
                             style={{ 
                               width: 40, 
                               height: 40, 

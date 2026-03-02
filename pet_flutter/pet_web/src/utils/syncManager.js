@@ -10,7 +10,6 @@ class SyncManager {
   }
 
   init() {
-    console.log('🔄 SyncManager initialized');
     this.setupGlobalListeners();
   }
 
@@ -51,13 +50,6 @@ class SyncManager {
   handleAppointmentUpdate(event) {
     const { appointmentId, oldData, newData, staffChanged, timeChanged, dateChanged } = event.detail;
     
-    console.log('🔄 SyncManager: Processing appointment update', {
-      appointmentId,
-      staffChanged,
-      timeChanged,
-      dateChanged
-    });
-
     // Broadcast các events cần thiết
     if (staffChanged || timeChanged || dateChanged) {
       this.broadcastTimeSlotUpdates(oldData, newData);
@@ -68,12 +60,6 @@ class SyncManager {
   handleAppointmentStatusUpdate(event) {
     const { appointmentId, oldStatus, newStatus, appointmentData } = event.detail;
     
-    console.log('🔄 SyncManager: Processing status update', {
-      appointmentId,
-      oldStatus,
-      newStatus
-    });
-
     // Nếu hủy hoặc hoàn thành, cần cập nhật time slots
     if (['Cancelled', 'Completed'].includes(newStatus)) {
       this.broadcastSlotAvailable(appointmentData);
@@ -84,12 +70,6 @@ class SyncManager {
   handleStaffAssigned(event) {
     const { appointmentId, staffId, timeSlot } = event.detail;
     
-    console.log('🔄 SyncManager: Processing staff assignment', {
-      appointmentId,
-      staffId,
-      timeSlot
-    });
-
     // Broadcast cập nhật lịch nhân viên
     this.broadcastStaffBusySlot(staffId, timeSlot);
   }
@@ -98,8 +78,6 @@ class SyncManager {
   handleRefreshAll(event) {
     const { reason } = event.detail;
     
-    console.log('🔄 SyncManager: Processing global refresh', { reason });
-
     // Xóa tất cả cache
     this.clearAllCache();
     
@@ -186,8 +164,6 @@ class SyncManager {
         key.startsWith('debugPetBusyTimeSlots_') ||
         key.includes('staffSchedule_')
       );
-
-      console.log(`🗑️ SyncManager: Clearing ${cacheKeys.length} cache entries`);
       
       cacheKeys.forEach(key => {
         localStorage.removeItem(key);
@@ -203,7 +179,6 @@ class SyncManager {
     try {
       const event = new CustomEvent(eventName, { detail });
       window.dispatchEvent(event);
-      console.log(`📡 SyncManager: Dispatched ${eventName}`, detail);
     } catch (error) {
       console.error(`Error dispatching ${eventName}:`, error);
     }
@@ -211,8 +186,6 @@ class SyncManager {
 
   // Cleanup
   destroy() {
-    console.log('🔄 SyncManager: Cleaning up');
-    
     // Remove all listeners
     for (const [eventName, handlers] of this.listeners) {
       handlers.forEach(handler => {

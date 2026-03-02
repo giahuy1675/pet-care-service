@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+﻿import React, { useState, useContext, useEffect } from 'react';
 import { 
   Form, 
   Rate, 
@@ -127,7 +127,7 @@ const ReviewForm = ({
           uid: `existing-${index}`,
           name: `image-${index + 1}`,
           status: 'done',
-          url: imagePath.startsWith('http') ? imagePath : `https://localhost:7164${imagePath}`
+          url: imagePath.startsWith('http') ? imagePath : `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${imagePath}`
         }));
         setImageFileList(fileList);
       }
@@ -208,7 +208,7 @@ const ReviewForm = ({
       formData.append('files', file);
       
       const token = localStorage.getItem('token');
-      const response = await fetch('https://localhost:7164/api/Reviews/upload-images', {
+      const response = await fetch('${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Reviews/upload-images', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -428,7 +428,7 @@ const ReviewForm = ({
           >
             <ImageUploadContainer>
               <Upload
-                action="https://localhost:7164/api/Reviews/upload-images"
+                action={`${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Reviews/upload-images`}
                 listType="picture-card"
                 fileList={imageFileList}
                 onChange={handleImageChange}

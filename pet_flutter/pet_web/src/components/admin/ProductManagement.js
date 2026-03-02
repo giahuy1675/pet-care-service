@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
 import useAuth from '../../hooks/useAuth';
@@ -195,10 +195,10 @@ const ProductManagement = () => {
     }
     
     if (photoPath.startsWith('/')) {
-      return `https://localhost:7164${photoPath}`;
+      return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${photoPath}`;
     }
     
-    return `https://localhost:7164/uploads/products/${photoPath}`;
+    return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}/uploads/products/${photoPath}`;
   };
 
   // Tải lên hình ảnh sản phẩm
@@ -418,7 +418,7 @@ const ProductManagement = () => {
       
       // Thử xóa bằng fetch API thay vì sử dụng productService
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://localhost:7164/api/Products/${confirmDelete.productId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Products/${confirmDelete.productId}`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json',
@@ -594,7 +594,7 @@ const ProductManagement = () => {
       console.log(`Thử xóa trực tiếp sản phẩm ID: ${productId}`);
       
       // Sử dụng fetch API trực tiếp
-      const response = await fetch(`https://localhost:7164/api/Products/${productId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Products/${productId}`, {
         method: 'DELETE'
       });
       

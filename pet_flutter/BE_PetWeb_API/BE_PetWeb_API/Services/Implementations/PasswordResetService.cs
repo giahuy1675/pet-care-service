@@ -116,13 +116,12 @@ namespace BE_PetWeb_API.Services.Implementations
                     throw new Exception("Không tìm thấy người dùng với email này");
                 }
 
-                // Đặt lại mật khẩu - sử dụng HMACSHA256 giống AuthService
-                CreatePasswordHash(newPassword, out byte[] passwordHash, out byte[] passwordSalt);
-                user.Password = Convert.ToBase64String(passwordHash) + ":" + Convert.ToBase64String(passwordSalt);
-                user.UpdatedAt = DateTime.Now;
+            // Đặt lại mật khẩu - sử dụng BCrypt
+            user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 12);
+            user.UpdatedAt = DateTime.Now;
 
-                // Đánh dấu token đã được sử dụng
-                TokenStore.AddUsedToken(jti, ((JwtSecurityToken)validatedToken).ValidTo);
+            // Đánh dấu token đã được sử dụng
+            TokenStore.AddUsedToken(jti, ((JwtSecurityToken)validatedToken).ValidTo);
 
                 await _context.SaveChangesAsync();
                 return true;
@@ -354,9 +353,8 @@ namespace BE_PetWeb_API.Services.Implementations
             // Đánh dấu token đã sử dụng
             TokenStore.AddUsedToken(jti, jsonToken.ValidTo);
 
-            // Đặt lại mật khẩu - sử dụng HMACSHA256 giống AuthService
-            CreatePasswordHash(newPassword, out byte[] passwordHash, out byte[] passwordSalt);
-            user.Password = Convert.ToBase64String(passwordHash) + ":" + Convert.ToBase64String(passwordSalt);
+            // Đặt lại mật khẩu - sử dụng BCrypt
+            user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 12);
             user.UpdatedAt = DateTime.Now;
 
             // Xóa OTP đã sử dụng
@@ -369,18 +367,10 @@ namespace BE_PetWeb_API.Services.Implementations
         #region Helper Methods
         private string GenerateOtp()
         {
-            Random random = new Random();
-            return random.Next(100000, 999999).ToString();
-        }
-
-        // Thêm hàm CreatePasswordHash giống như trong AuthService
-        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
-        {
-            using (var hmac = new HMACSHA256())
-            {
-                passwordSalt = hmac.Key;
-                passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-            }
+            // Use cryptographically secure random
+            var bytes = System.Security.Cryptography.RandomNumberGenerator.GetBytes(4);
+            int value = Math.Abs(BitConverter.ToInt32(bytes, 0)) % 900000 + 100000;
+            return value.ToString();
         }
         #endregion
     }

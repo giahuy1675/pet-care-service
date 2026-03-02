@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+﻿import React, { useState, useContext, useEffect } from 'react';
 import {
   List,
   Card,
@@ -379,7 +379,7 @@ const ReviewList = ({ productId, reviews = [], onReviewUpdate, sortBy, onSortCha
                           console.log('Processing image path:', imagePath);
                           const imageUrl = imagePath.startsWith('http') 
                             ? imagePath 
-                            : `https://localhost:7164${imagePath}`;
+                            : `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${imagePath}`;
                           
                           console.log('Final image URL:', imageUrl);
                           return (

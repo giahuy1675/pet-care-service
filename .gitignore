@@ -17,3 +17,20 @@ obj/
 # OS
 Thumbs.db
 Desktop.ini
+
+# Sensitive files - NEVER commit these
+**/firebase-adminsdk.json
+**/appsettings.Production.json
+**/appsettings.*.local.json
+*.pfx
+*.key
+**/Properties/launchSettings.json
+
+# User secrets
+**/BE_PetWeb_API.csproj.user
+*.csproj.user
+
+# Backup files
+*.tmp
+*.bak
+*.Backup*

@@ -333,46 +333,48 @@ const AppointmentDetail = () => {
   const isAssignedStaff = appointment && user && 
     appointment.staffId && user.staffId === appointment.staffId;
   
-  // Cập nhật component render
-  // Thay thế phần loading
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
-        <Spin size="large" tip="Đang tải..." />
-      </div>
-    );
-  }
+  const handleCloseModal = () => {
+    // Đóng modal -> quay lại danh sách lịch hẹn
+    navigate('/appointments');
+  };
 
-  // Thay thế phần error
-  if (error) {
-    return (
-      <Alert
-        message="Lỗi"
-        description={error}
-        type="error"
-        showIcon
-        style={{ maxWidth: 800, margin: '24px auto' }}
-      />
-    );
-  }
-
-  // Thay thế phần not found
-  if (!appointment) {
-    return (
-      <Alert
-        message="Không tìm thấy thông tin"
-        description="Không tìm thấy thông tin lịch hẹn yêu cầu."
-        type="info"
-        showIcon
-        style={{ maxWidth: 800, margin: '24px auto' }}
-      />
-    );
-  }
-
-  // Thay thế phần return component chính
+  // Thay phần render sang dùng AntD Modal (như ví dụ bạn đưa)
   return (
-    <Content style={{ padding: '24px 0' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
+    <Modal
+      open={true}
+      onCancel={handleCloseModal}
+      loading={loading}
+      width={1000}
+      footer={null}
+      title={
+        <span>
+          <CalendarOutlined style={{ marginRight: 8 }} />
+          Chi tiết lịch hẹn
+        </span>
+      }
+      destroyOnClose
+    >
+      {error && (
+        <Alert
+          message="Lỗi"
+          description={error}
+          type="error"
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
+      )}
+
+      {!loading && !appointment && !error && (
+        <Alert
+          message="Không tìm thấy thông tin"
+          description="Không tìm thấy thông tin lịch hẹn yêu cầu."
+          type="info"
+          showIcon
+        />
+      )}
+
+      {!loading && appointment && (
+      <div style={{ maxWidth: 1200, margin: '0 auto', paddingTop: 8 }}>
         {message && (
           <Alert
             message="Thành công"
@@ -541,10 +543,7 @@ const AppointmentDetail = () => {
               {/* Action Buttons */}
               <Divider style={{ margin: '24px 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <AnimatedButton
-                  icon={<ArrowLeftOutlined />}
-                  onClick={() => navigate('/appointments')}
-                >
+                <AnimatedButton icon={<ArrowLeftOutlined />} onClick={handleCloseModal}>
                   Quay lại
                 </AnimatedButton>
                 
@@ -751,7 +750,8 @@ const AppointmentDetail = () => {
           </Form>
         </Modal>
       </div>
-    </Content>
+      )}
+    </Modal>
   );
 };
 

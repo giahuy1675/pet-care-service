@@ -6,6 +6,8 @@ import { Editor } from 'react-draft-wysiwyg';
 import draftToHtml from 'draftjs-to-html';
 import htmlToDraft from 'html-to-draftjs';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
+import { Button, Space, Flex, ConfigProvider, Pagination } from 'antd';
+import { HappyProvider } from '@ant-design/happy-work-theme';
 
 import { 
   EditOutlined, 
@@ -17,7 +19,10 @@ import {
   CheckCircleOutlined,
   SendOutlined,
   PictureOutlined,
-  VideoCameraOutlined
+  VideoCameraOutlined,
+  SyncOutlined,
+  PoweroffOutlined,
+  CloseOutlined
 } from '@ant-design/icons';
 import * as blogService from '../../services/blogService';
 import useAuth from '../../hooks/useAuth';
@@ -62,68 +67,6 @@ const Header = styled.div`
 const ActionButtons = styled.div`
   display: flex;
   gap: 12px;
-`;
-
-const Button = styled(motion.button)`
-  padding: 10px 18px;
-  border-radius: 8px;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-  
-  &.primary {
-    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-    color: white;
-    
-    &:hover {
-      box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
-      transform: translateY(-2px);
-    }
-    
-    &:active {
-      transform: translateY(0);
-    }
-  }
-  
-  &.secondary {
-    background: white;
-    color: #4a5568;
-    border: 1px solid #e2e8f0;
-    
-    &:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-      background: #f7fafc;
-      transform: translateY(-2px);
-    }
-  }
-  
-  &.danger {
-    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-    color: white;
-    
-    &:hover {
-      box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
-      transform: translateY(-2px);
-    }
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none !important;
-    box-shadow: none !important;
-  }
-  
-  .button-icon {
-    display: flex;
-    align-items: center;
-    font-size: 16px;
-  }
 `;
 
 const SearchBar = styled.div`
@@ -376,36 +319,6 @@ const ActionGroup = styled.div`
   }
 `;
 
-const Pagination = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 30px;
-  gap: 8px;
-`;
-
-const PageButton = styled.button`
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  border: ${props => props.active ? 'none' : '1px solid #e2e8f0'};
-  background: ${props => props.active ? 'linear-gradient(135deg, #4299e1 0%, #3182ce 100%)' : 'white'};
-  color: ${props => props.active ? 'white' : '#4a5568'};
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
-  transition: all 0.3s;
-  opacity: ${props => props.disabled ? 0.5 : 1};
-  box-shadow: ${props => props.active ? '0 4px 10px rgba(66, 153, 225, 0.3)' : '0 2px 6px rgba(0, 0, 0, 0.05)'};
-  
-  &:hover:not(:disabled) {
-    background: ${props => props.active ? 'linear-gradient(135deg, #4299e1 0%, #3182ce 100%)' : '#f7fafc'};
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, ${props => props.active ? 0.25 : 0.1});
-  }
-`;
 
 const StatusBadge = styled.span`
   display: inline-block;
@@ -884,6 +797,7 @@ const BlogManagement = () => {
   const { user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [buttonLoadings, setButtonLoadings] = useState({});
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [postsPerPage] = useState(10);
@@ -1483,14 +1397,15 @@ const BlogManagement = () => {
       <Header>
         <h2>Quản lý Blog</h2>
         <ActionButtons>
-          <Button 
-            className="primary"
-            onClick={() => { resetForm(); setShowForm(true); }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <FileAddOutlined /> Tạo bài viết mới
-          </Button>
+          <HappyProvider>
+            <Button
+              type="primary"
+              icon={<FileAddOutlined />}
+              onClick={() => { resetForm(); setShowForm(true); }}
+            >
+              Tạo bài viết mới
+            </Button>
+          </HappyProvider>
         </ActionButtons>
       </Header>
       
@@ -1502,9 +1417,13 @@ const BlogManagement = () => {
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
         />
-        <button onClick={handleSearch}>
-          <SearchOutlined />
-        </button>
+        <Button
+          type="primary"
+          icon={<SearchOutlined />}
+          onClick={handleSearch}
+        >
+          Tìm kiếm
+        </Button>
       </SearchBar>
       
       <FilterSection>
@@ -1568,69 +1487,68 @@ const BlogManagement = () => {
                     </StatusBadge>
                   </Td>
                   <Td className="actions">
-                    <ActionGroup>
-                      <button 
-                        className="view" 
-                        title="Xem bài viết"
+                    <Space size="small">
+                      <Button
+                        icon={<EyeOutlined />}
                         onClick={() => window.open(`/blog/${post.postId || post.id}`, '_blank')}
-                      >
-                        <EyeOutlined />
-                      </button>
-                      <button 
-                        className="edit" 
+                        title="Xem bài viết"
+                      />
+                      <Button
+                        type="primary"
+                        icon={<EditOutlined />}
+                        loading={buttonLoadings[`edit-${post.postId || post.id}`]}
+                        onClick={() => {
+                          setButtonLoadings(prev => ({ ...prev, [`edit-${post.postId || post.id}`]: true }));
+                          openEditForm(post);
+                          setTimeout(() => {
+                            setButtonLoadings(prev => ({ ...prev, [`edit-${post.postId || post.id}`]: false }));
+                          }, 500);
+                        }}
                         title="Sửa bài viết"
-                        onClick={() => openEditForm(post)}
-                      >
-                        <EditOutlined />
-                      </button>
-                      <button 
-                        className="delete" 
+                      />
+                      <Button
+                        danger
+                        icon={<DeleteOutlined />}
+                        loading={buttonLoadings[`delete-${post.postId || post.id}`]}
+                        onClick={() => {
+                          setButtonLoadings(prev => ({ ...prev, [`delete-${post.postId || post.id}`]: true }));
+                          confirmDelete(post);
+                          setTimeout(() => {
+                            setButtonLoadings(prev => ({ ...prev, [`delete-${post.postId || post.id}`]: false }));
+                          }, 500);
+                        }}
                         title="Xóa bài viết"
-                        onClick={() => confirmDelete(post)}
-                      >
-                        <DeleteOutlined />
-                      </button>
+                      />
                       {post.status !== 'Published' && (
-                        <button 
-                          className="publish" 
+                        <Button
+                          type="primary"
+                          icon={<SendOutlined />}
+                          loading={buttonLoadings[`publish-${post.postId || post.id}`]}
+                          onClick={() => {
+                            setButtonLoadings(prev => ({ ...prev, [`publish-${post.postId || post.id}`]: true }));
+                            handlePublish(post);
+                            setTimeout(() => {
+                              setButtonLoadings(prev => ({ ...prev, [`publish-${post.postId || post.id}`]: false }));
+                            }, 500);
+                          }}
                           title="Xuất bản bài viết"
-                          onClick={() => handlePublish(post)}
-                        >
-                          <SendOutlined />
-                        </button>
+                        />
                       )}
-                    </ActionGroup>
+                    </Space>
                   </Td>
                 </Tr>
               ))}
             </tbody>
           </Table>
           
-          <Pagination>
-            <PageButton 
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              &laquo;
-            </PageButton>
-            
-            {Array.from({ length: totalPages }, (_, i) => (
-              <PageButton 
-                key={i + 1}
-                active={currentPage === i + 1}
-                onClick={() => paginate(i + 1)}
-              >
-                {i + 1}
-              </PageButton>
-            ))}
-            
-            <PageButton 
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-            >
-              &raquo;
-            </PageButton>
-          </Pagination>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 30 }}>
+            <Pagination
+              current={currentPage}
+              onChange={(page) => setCurrentPage(page)}
+              total={posts.length}
+              pageSize={postsPerPage}
+            />
+          </div>
         </>
       )}
       
@@ -1648,7 +1566,7 @@ const BlogManagement = () => {
           >
             <ModalHeader>
               <h3>{currentPost ? 'Chỉnh sửa bài viết' : 'Tạo bài viết mới'}</h3>
-              <button onClick={resetForm}>&times;</button>
+              <Button type="text" icon={<CloseOutlined />} onClick={resetForm} />
             </ModalHeader>
             
             <Form onSubmit={handleSubmit}>
@@ -1782,24 +1700,19 @@ const BlogManagement = () => {
               </FormGroup>
               
               <FormActions>
-                <Button 
-                  type="button" 
-                  className="secondary"
-                  onClick={resetForm}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
+                <Button onClick={resetForm}>
                   Hủy
                 </Button>
-                <Button 
-                  type="submit" 
-                  className="primary"
-                  disabled={loading}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {loading ? 'Đang lưu...' : currentPost ? 'Cập nhật' : 'Tạo bài viết'}
-                </Button>
+                <HappyProvider>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    disabled={loading}
+                    icon={<SendOutlined />}
+                  >
+                    {loading ? 'Đang lưu...' : currentPost ? 'Cập nhật' : 'Tạo bài viết'}
+                  </Button>
+                </HappyProvider>
               </FormActions>
             </Form>
           </ModalContent>
@@ -1828,20 +1741,15 @@ const BlogManagement = () => {
               <p>Bạn có chắc chắn muốn xóa bài viết <strong>"{currentPost?.title}"</strong>? Hành động này không thể khôi phục.</p>
               
               <div className="actions">
-                <Button 
-                  className="secondary"
-                  onClick={() => setShowDeleteConfirm(false)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
+                <Button onClick={() => setShowDeleteConfirm(false)}>
                   Hủy
                 </Button>
-                <Button 
-                  className="danger"
+                <Button
+                  type="primary"
+                  danger
                   onClick={handleDelete}
                   disabled={loading}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  icon={<DeleteOutlined />}
                 >
                   {loading ? 'Đang xóa...' : 'Xóa'}
                 </Button>

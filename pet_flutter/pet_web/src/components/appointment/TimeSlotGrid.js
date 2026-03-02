@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useState, useCallback, useRef } from 'react';
 import { Card, Badge, Empty, Spin } from 'antd';
+import { CheckCircleFilled } from '@ant-design/icons';
 import styled from 'styled-components';
 import dayjs from '../../utils/dayjs';
 
@@ -836,7 +837,15 @@ const TimeSlotGrid = ({
       return { status: 'warning', text: `👤 ${reason}` };
     }
     
-    return { status: 'success', text: '✅ Khả dụng' };
+    return { 
+      status: 'success', 
+      text: (
+        <span>
+          <CheckCircleFilled style={{ color: '#52c41a', marginRight: 4 }} />
+          Khả dụng
+        </span>
+      )
+    };
   }, [isSelected, isBeingSelectedByOthers, getOtherUserInfo, isPastSlot, isPetBusy, isStaffBusy, mySelectionTimestamp, currentTime]);
 
   // SignalR status display

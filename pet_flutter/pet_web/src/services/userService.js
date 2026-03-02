@@ -17,9 +17,7 @@ export const getAvatarUrl = (avatarPath) => {
 
 export const getUserProfile = async (userId) => {
   try {
-    console.log(`Đang tải thông tin người dùng ID: ${userId}`);
     const response = await axiosClient.get(`/Users/${userId}`);
-    console.log('Tải thông tin người dùng thành công:', response.data);
     return response.data;
   } catch (error) {
     console.error('Lỗi tải thông tin người dùng:', error.response?.data || error.message);
@@ -73,19 +71,12 @@ export const updateUserProfile = async (userId, userData) => {
       }
     }
 
-    // Log dữ liệu gửi đi
-    console.log('Dữ liệu cập nhật:');
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`);
-    }
-    
-    const response = await axiosClient.put(`/Users/${userId}`, formData, {
+    // Gọi endpoint cập nhật profile (không thay đổi role/avatar)
+    const response = await axiosClient.put(`/Users/${userId}/profile`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       }
     });
-    
-    console.log('Phản hồi cập nhật:', response.data);
     
     // Cập nhật localStorage
     const storedUser = localStorage.getItem('user');
@@ -103,8 +94,6 @@ export const updateUserProfile = async (userId, userData) => {
       
       // Phát sự kiện để thông báo cho các component khác
       window.dispatchEvent(new Event('userProfileUpdated'));
-      
-      console.log('Đã cập nhật thông tin người dùng:', updatedUser);
     }
     
     return response.data;
@@ -154,14 +143,10 @@ export const updateUserProfile = async (userId, userData) => {
 
 export const changePassword = async (userId, passwordData) => {
   try {
-    console.log(`Đang đổi mật khẩu cho người dùng ID: ${userId}`);
-    
     const response = await axiosClient.post(`/Users/${userId}/change-password`, {
       currentPassword: passwordData.currentPassword,
       newPassword: passwordData.newPassword
     });
-    
-    console.log('Phản hồi đổi mật khẩu:', response.status);
     return true;
   } catch (error) {
     console.error('Lỗi đổi mật khẩu:', error.response?.data || error.message);
