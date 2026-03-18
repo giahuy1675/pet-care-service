@@ -65,9 +65,11 @@ if (process.env.NODE_ENV !== 'development') {
   console.log = () => {};
 }
 
+const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || '261005055168-52qfvdmp7n3fo022tffqco0o4ilvp7hb.apps.googleusercontent.com';
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <GoogleOAuthProvider clientId="261005055168-52qfvdmp7n3fo022tffqco0o4ilvp7hb.apps.googleusercontent.com">
+  <GoogleOAuthProvider clientId={googleClientId}>
     <ThemeProvider theme={theme}>
       <App />
     </ThemeProvider>

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation, Routes, Route } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Divider, Menu, Switch } from 'antd';
 import styled from 'styled-components';
 import useAuth from '../../hooks/useAuth';
 import { Navigate } from 'react-router-dom';
@@ -20,26 +21,25 @@ import axiosClient from '../../utils/axiosClient';
 import './admin-dashboard.css';
 
 // Import Ant Design Icons
-import { 
-  DashboardOutlined, 
-  UserOutlined, 
-  UserAddOutlined,
-  ShoppingOutlined, 
-  CustomerServiceOutlined, 
-  HeartOutlined, 
-  CalendarOutlined, 
-  SettingOutlined, 
+import {
+  AppstoreOutlined,
+  CalendarOutlined,
+  CustomerServiceOutlined,
+  DashboardOutlined,
+  FileOutlined,
+  LinkOutlined,
   LogoutOutlined,
+  MailOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  TeamOutlined,
-  InfoCircleOutlined,
-  ExclamationCircleOutlined,
-  CheckCircleOutlined,
-  FileOutlined,
-  TagsOutlined,
+  SettingOutlined,
   ShoppingCartOutlined,
-  StarOutlined
+  ShoppingOutlined,
+  StarOutlined,
+  TagsOutlined,
+  TeamOutlined,
+  UserAddOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 
 // Styled Components
@@ -66,15 +66,15 @@ const AdminContent = styled.div`
 
 const Sidebar = styled(motion.div)`
   width: 260px;
-  background: linear-gradient(180deg, #304FFE 0%, #304FFE 100%);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
   z-index: 10;
   position: fixed;
   left: ${props => props.isVisible ? '0' : '-260px'};
   top: 0;
   bottom: 0;
   overflow-y: auto;
-  color: white;
+  color: #1f1f1f;
   transition: left 0.3s ease;
   
   &::-webkit-scrollbar {
@@ -94,10 +94,10 @@ const Sidebar = styled(motion.div)`
 
 const SidebarHeader = styled.div`
   padding: 25px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid #f0f0f0;
   
   h2 {
-    color: white;
+    color: #1f1f1f;
     margin: 0;
     font-weight: 600;
     font-size: 1.5rem;
@@ -113,52 +113,25 @@ const SidebarHeader = styled.div`
   }
 `;
 
-const MenuList = styled.ul`
-  list-style: none;
-  padding: 20px 0;
-  margin: 0;
-`;
+const SidebarMenuWrap = styled.div`
+  padding: 14px;
 
-const MenuItem = styled(motion.li)`
-  padding: 14px 20px;
-  margin: 5px 15px;
-  border-radius: 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  position: relative;
-  color: rgba(255, 255, 255, 0.7);
-  
-  .anticon {
-    font-size: 18px;
-  }
-  
-  &.active {
-    background: rgba(255, 255, 255, 0.15);
+  .menu-controls {
     color: white;
-    font-weight: 600;
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-    
-    &::before {
-      content: '';
-      position: absolute;
-      left: -15px;
-      top: 50%;
-      transform: translateY(-50%);
-      height: 30px;
-      width: 4px;
-      background: white;
-      border-radius: 0 4px 4px 0;
-    }
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
-  
-  &:hover:not(.active) {
-    background: rgba(255, 255, 255, 0.08);
-    color: white;
-    transform: translateX(5px);
+
+  .menu-controls.light {
+    color: #2B3674;
+  }
+
+  .ant-menu {
+    border-inline-end: none !important;
+    border-radius: 12px;
   }
 `;
 
@@ -492,6 +465,8 @@ const AdminDashboard = () => {
   const [error, setError] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [menuMode, setMenuMode] = useState('inline');
+  const [menuTheme, setMenuTheme] = useState('light');
   const [toast, setToast] = useState({
     show: false,
     message: '',
@@ -500,27 +475,12 @@ const AdminDashboard = () => {
   
   const sidebarVariants = {
     hidden: { x: "-100%" },
-    visible: { 
+    visible: {
       x: 0,
       transition: {
         type: "spring",
         stiffness: 100,
         damping: 15,
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  };
-
-  const menuItemVariants = {
-    hidden: { x: -20, opacity: 0 },
-    visible: { 
-      x: 0, 
-      opacity: 1,
-      transition: { 
-        type: "spring", 
-        stiffness: 100, 
-        damping: 10 
       }
     }
   };
@@ -567,6 +527,72 @@ const AdminDashboard = () => {
     if (isMobile) {
       setShowSidebar(false);
     }
+  };
+
+  const menuItems = useMemo(() => ([
+    { key: 'dashboard', icon: <DashboardOutlined />, label: 'Tổng quan' },
+    { key: 'users', icon: <CalendarOutlined />, label: 'Quản lý người dùng' },
+    {
+      key: 'sub-admin-services',
+      icon: <AppstoreOutlined />,
+      label: 'Quản lý dịch vụ',
+      children: [
+        { key: 'appointments', icon: <CalendarOutlined />, label: 'Quản lý lịch hẹn' },
+        { key: 'services', icon: <CustomerServiceOutlined />, label: 'Dịch vụ' },
+        { key: 'categories', icon: <TagsOutlined />, label: 'Danh mục' },
+      ],
+    },
+    {
+      key: 'sub-admin-commerce',
+      icon: <SettingOutlined />,
+      label: 'Kinh doanh',
+      children: [
+        { key: 'products', icon: <ShoppingOutlined />, label: 'Sản phẩm' },
+        { key: 'orders', icon: <ShoppingCartOutlined />, label: 'Quản lý đơn hàng' },
+        { key: 'blog', icon: <FileOutlined />, label: 'Quản lý Blog' },
+        { key: 'reviews', icon: <StarOutlined />, label: 'Quản lý đánh giá' },
+      ],
+    },
+    {
+      key: 'sub-admin-staff',
+      icon: <UserOutlined />,
+      label: 'Nhân viên',
+      children: [
+        { key: 'staffSchedule', icon: <CalendarOutlined />, label: 'Quản lý ca làm' },
+        { key: 'createStaff', icon: <UserAddOutlined />, label: 'Tạo tài khoản nhân viên' },
+        { key: 'assignStaffServices', icon: <UserOutlined />, label: 'Gán dịch vụ cho nhân viên' },
+      ],
+    },
+    { key: 'settings', icon: <SettingOutlined />, label: 'Cài đặt' },
+    {
+      key: 'logout-link',
+      icon: <LinkOutlined />,
+      label: (
+        <a href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
+          Đăng xuất
+        </a>
+      ),
+    },
+  ]), []);
+
+  const selectedMenuKeys = activeTab === 'settings' ? ['settings'] : [activeTab];
+  const openMenuKeys = ['sub-admin-services', 'sub-admin-commerce', 'sub-admin-staff'];
+
+  const changeMode = (value) => {
+    setMenuMode(value ? 'vertical' : 'inline');
+  };
+
+  const changeTheme = (value) => {
+    setMenuTheme(value ? 'dark' : 'light');
+  };
+
+  const handleMenuClick = ({ key }) => {
+    if (key === 'logout-link') {
+      handleLogout();
+      return;
+    }
+
+    handleTabChange(key);
   };
 
   const fetchDashboardStats = async () => {
@@ -730,106 +756,23 @@ const AdminDashboard = () => {
           <SidebarHeader>
             <h2><TeamOutlined /> Pet<span>Web</span></h2>
           </SidebarHeader>
-          <MenuList>
-            <MenuItem 
-              className={activeTab === 'dashboard' ? 'active' : ''} 
-              onClick={() => handleTabChange('dashboard')}
-              variants={menuItemVariants}
-            >
-              <DashboardOutlined /> Tổng quan
-            </MenuItem>
-            <MenuItem 
-              className={activeTab === 'users' ? 'active' : ''} 
-              onClick={() => handleTabChange('users')}
-              variants={menuItemVariants}
-            >
-              <UserOutlined /> Quản lý người dùng
-            </MenuItem>
-            <MenuItem 
-              className={activeTab === 'appointments' ? 'active' : ''} 
-              onClick={() => handleTabChange('appointments')}
-              variants={menuItemVariants}
-            >
-              <CalendarOutlined /> Quản lý lịch hẹn
-            </MenuItem>
-            <MenuItem 
-              className={activeTab === 'services' ? 'active' : ''} 
-              onClick={() => handleTabChange('services')}
-              variants={menuItemVariants}
-            >
-              <CustomerServiceOutlined /> Dịch vụ
-            </MenuItem>
-            <MenuItem 
-              className={activeTab === 'products' ? 'active' : ''} 
-              onClick={() => handleTabChange('products')}
-              variants={menuItemVariants}
-            >
-              <ShoppingOutlined /> Sản phẩm
-            </MenuItem>
-            <MenuItem 
-              className={activeTab === 'categories' ? 'active' : ''} 
-              onClick={() => handleTabChange('categories')}
-              variants={menuItemVariants}
-            >
-              <TagsOutlined /> Danh mục
-            </MenuItem>
-            <MenuItem 
-              className={activeTab === 'orders' ? 'active' : ''} 
-              onClick={() => handleTabChange('orders')}
-              variants={menuItemVariants}
-            >
-              <ShoppingCartOutlined /> Quản lý đơn hàng
-            </MenuItem>
-            <MenuItem 
-              className={activeTab === 'blog' ? 'active' : ''} 
-              onClick={() => handleTabChange('blog')}
-              variants={menuItemVariants}
-            >
-              <FileOutlined /> Quản lý Blog
-            </MenuItem>
-            <MenuItem 
-              className={activeTab === 'reviews' ? 'active' : ''} 
-              onClick={() => handleTabChange('reviews')}
-              variants={menuItemVariants}
-            >
-              <StarOutlined /> Quản lý đánh giá
-            </MenuItem>
-            <MenuItem 
-              className={activeTab === 'staffSchedule' ? 'active' : ''} 
-              onClick={() => handleTabChange('staffSchedule')}
-              variants={menuItemVariants}
-            >
-              <CalendarOutlined /> Quản lý ca làm
-            </MenuItem>
-            <MenuItem 
-              className={activeTab === 'createStaff' ? 'active' : ''} 
-              onClick={() => handleTabChange('createStaff')}
-              variants={menuItemVariants}
-            >
-              <UserAddOutlined /> Tạo tài khoản nhân viên
-            </MenuItem>
-            <MenuItem 
-              className={activeTab === 'assignStaffServices' ? 'active' : ''} 
-              onClick={() => handleTabChange('assignStaffServices')}
-              variants={menuItemVariants}
-            >
-              <UserOutlined /> Gán dịch vụ cho nhân viên
-            </MenuItem>
-            <MenuItem 
-              className={activeTab === 'settings' ? 'active' : ''} 
-              onClick={() => handleTabChange('settings')}
-              variants={menuItemVariants}
-            >
-              <SettingOutlined /> Cài đặt
-            </MenuItem>
-            <MenuItem 
-              onClick={handleLogout}
-              variants={menuItemVariants}
-              style={{ marginTop: '30px', color: 'rgba(255, 255, 255, 0.9)' }}
-            >
-              <LogoutOutlined /> Đăng xuất
-            </MenuItem>
-          </MenuList>
+          <SidebarMenuWrap>
+            <div className={`menu-controls ${menuTheme === 'light' ? 'light' : ''}`}>
+              <Switch onChange={changeMode} /> Change Mode
+              <Divider type="vertical" />
+              <Switch onChange={changeTheme} /> Change Style
+            </div>
+
+            <Menu
+              style={{ width: '100%' }}
+              selectedKeys={selectedMenuKeys}
+              defaultOpenKeys={openMenuKeys}
+              mode={menuMode}
+              theme={menuTheme}
+              items={menuItems}
+              onClick={handleMenuClick}
+            />
+          </SidebarMenuWrap>
         </Sidebar>
         
         <MainContent sidebarVisible={showSidebar && !isMobile}>

@@ -159,8 +159,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\Order.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:18:06.576Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:18:06.576Z"
             },
             {
               "$type": "Document",
@@ -172,8 +171,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\ReviewReply.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:17:51.95Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:17:51.95Z"
             },
             {
               "$type": "Document",
@@ -185,8 +183,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Controllers\\AppointmentController.cs",
               "ViewState": "AgIAAC0BAAAAAAAAAAAkwBYAAABAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-23T12:52:24.862Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-23T12:52:24.862Z"
             },
             {
               "$type": "Document",
@@ -198,8 +195,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\DTOs\\Appointment\\TimeSlotDto.cs",
               "ViewState": "AgIAABIAAAAAAAAAAAAiwAQAAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-29T12:47:58.74Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-29T12:47:58.74Z"
             },
             {
               "$type": "Document",
@@ -211,8 +207,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Hubs\\TimeSlotSharingHub.cs",
               "ViewState": "AgIAAEUBAAAAAAAAAAA8wFMBAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T07:03:45.726Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T07:03:45.726Z"
             },
             {
               "$type": "Document",
@@ -245,7 +240,7 @@
               "RelativeDocumentMoniker": "BE_PetWeb_API\\Program.cs",
               "ToolTip": "C:\\Users\\giahu\\OneDrive\\Desktop\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Program.cs",
               "RelativeToolTip": "BE_PetWeb_API\\Program.cs",
-              "ViewState": "AgIAAOoAAAAAAAAAAAAAAAAAAAAfAAAAAAAAAA==",
+              "ViewState": "AgIAAN4AAAAAAAAAAAAAAOkAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-06-17T03:54:18.937Z",
               "EditorCaption": ""
@@ -260,8 +255,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\Appointment.cs",
               "ViewState": "AgIAACgAAAAAAAAAAADwvzMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:19:27.976Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:19:27.976Z"
             },
             {
               "$type": "Document",
@@ -273,8 +267,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\PetGallery.cs",
               "ViewState": "AgIAAAsAAAAAAAAAAAAxwBgAAAA5AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:21:22.962Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:21:22.962Z"
             },
             {
               "$type": "Document",
@@ -322,8 +315,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\Notification.cs",
               "ViewState": "AgIAABkAAAAAAAAAAAAkwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:18:11.966Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:18:11.966Z"
             },
             {
               "$type": "Document",
@@ -335,8 +327,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\User.cs",
               "ViewState": "AgIAADoAAAAAAAAAAAA8wDkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:20:18.861Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:20:18.861Z"
             },
             {
               "$type": "Document",
@@ -348,8 +339,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\Comment.cs",
               "ViewState": "AgIAABYAAAAAAAAAAAAkwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:20:38.504Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:20:38.504Z"
             },
             {
               "$type": "Document",
@@ -361,8 +351,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\Service.cs",
               "ViewState": "AgIAACwAAAAAAAAAAAAUwDUAAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:04:38.441Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:04:38.441Z"
             },
             {
               "$type": "Document",
@@ -374,8 +363,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\Staff.cs",
               "ViewState": "AgIAABoAAAAAAAAAAAA9wCoAAAA3AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:03:10.648Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:03:10.648Z"
             },
             {
               "$type": "Document",
@@ -387,8 +375,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Services\\Implementations\\AppointmentService.cs",
               "ViewState": "AgIAAA4AAAAAAAAAAIA9wF0AAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T07:29:08.94Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T07:29:08.94Z"
             },
             {
               "$type": "Document",
@@ -400,8 +387,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\CartItem.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:20:43.546Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:20:43.546Z"
             },
             {
               "$type": "Document",
@@ -413,8 +399,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\Category.cs",
               "ViewState": "AgIAAA8AAAAAAAAAAAAYwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:20:44.278Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:20:44.278Z"
             },
             {
               "$type": "Document",
@@ -426,8 +411,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Services\\Interfaces\\IAppointmentService.cs",
               "ViewState": "AgIAAAEAAAAAAAAAAAAtwAsAAABBAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T07:29:12.872Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T07:29:12.872Z"
             },
             {
               "$type": "Document",
@@ -463,8 +447,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Controllers\\StaffController.cs",
               "ViewState": "AgIAAFIAAAAAAAAAAAAkwE0AAAA2AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-17T03:32:48.258Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-17T03:32:48.258Z"
             },
             {
               "$type": "Document",

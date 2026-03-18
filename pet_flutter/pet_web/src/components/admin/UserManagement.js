@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Table, Button, Flex, Tag, Space, Radio, Alert, Checkbox, Dropdown } from 'antd';
-import type { TableProps } from 'antd';
+import { Table, Button, Flex, Tag, Space, Radio, Alert, Checkbox, Dropdown, Drawer, Tabs, Spin, Empty, List, Row, Col, Divider } from 'antd';
 import useAuth from '../../hooks/useAuth';
 import axiosClient from '../../utils/axiosClient';
+import petService from '../../services/petService';
 import './UserManagement.css';
 // Import Ant Design Icons
 import {
@@ -785,6 +785,13 @@ const checkboxStyles = {
   },
 };
 
+const DescriptionItem = ({ title, content }) => (
+  <div style={{ marginBottom: 14 }}>
+    <p style={{ marginBottom: 6, color: '#707EAE', fontWeight: 600 }}>{title}:</p>
+    <div>{content}</div>
+  </div>
+);
+
 const UserManagement = () => {
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
@@ -829,6 +836,12 @@ const UserManagement = () => {
     role: '',
     isActive: true
   });
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailUser, setDetailUser] = useState(null);
+  const [detailAppointments, setDetailAppointments] = useState([]);
+  const [detailPets, setDetailPets] = useState([]);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailTabKey, setDetailTabKey] = useState('1');
 
   // Tải danh sách người dùng khi component được mount
   useEffect(() => {
@@ -959,6 +972,45 @@ const UserManagement = () => {
       ...formData,
       [name]: type === 'checkbox' ? checked : value
     });
+  };
+
+  const openDetailDrawer = async (selectedUser) => {
+    try {
+      setDetailOpen(true);
+      setDetailUser(selectedUser);
+      setDetailTabKey('1');
+      setDetailLoading(true);
+
+      let appointments = [];
+      try {
+        const response = await axiosClient.get('/Appointments');
+        const list = Array.isArray(response.data) ? response.data : [];
+        appointments = list.filter((a) => Number(a.userId) === Number(selectedUser.userId));
+      } catch (e) {
+        appointments = [];
+      }
+
+      let pets = [];
+      try {
+        const petList = await petService.getPetsByUserId(selectedUser.userId);
+        pets = Array.isArray(petList) ? petList : [];
+      } catch (e) {
+        pets = [];
+      }
+
+      setDetailAppointments(appointments);
+      setDetailPets(pets);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const closeDetailDrawer = () => {
+    setDetailOpen(false);
+    setDetailUser(null);
+    setDetailAppointments([]);
+    setDetailPets([]);
+    setDetailTabKey('1');
   };
 
   // Bắt đầu chỉnh sửa người dùng
@@ -1534,6 +1586,10 @@ const UserManagement = () => {
               columns={columns}
               dataSource={filteredUsers.map(user => ({ ...user, key: user.userId }))}
               loading={loading}
+              onRow={(record) => ({
+                onClick: () => openDetailDrawer(record),
+                style: { cursor: 'pointer' },
+              })}
               pagination={{
                 placement: [topPagination, bottomPagination],
                 pageSize: 10,
@@ -1544,6 +1600,217 @@ const UserManagement = () => {
             />
           </TableContainer>
         )}
+
+        <Drawer
+          width={720}
+          placement="right"
+          onClose={closeDetailDrawer}
+          open={detailOpen}
+          title=""
+          styles={{ body: { paddingBottom: 24, paddingTop: 8 } }}
+        >
+          {detailUser && (
+            <>
+              <p style={{ marginBottom: 24, fontSize: 24, fontWeight: 600 }}>User Profile</p>
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={12}><DescriptionItem title="Họ và tên" content={detailUser.fullName || 'N/A'} /></Col>
+                <Col span={12}><DescriptionItem title="Tài khoản" content={detailUser.username || 'N/A'} /></Col>
+              </Row>
+
+              <Tabs
+                activeKey={detailTabKey}
+                onChange={setDetailTabKey}
+                items={[
+                  {
+                    key: '1',
+                    label: 'Thông tin',
+                    children: detailLoading ? (
+                      <div style={{ textAlign: 'center', padding: '32px 0' }}><Spin /></div>
+                    ) : (
+                      <>
+                        <Row gutter={16}>
+                          <Col span={12}><DescriptionItem title="Email" content={detailUser.email || 'N/A'} /></Col>
+                          <Col span={12}><DescriptionItem title="Điện thoại" content={detailUser.phone || 'N/A'} /></Col>
+                        </Row>
+                        <Row gutter={16}>
+                          <Col span={24}><DescriptionItem title="Địa chỉ" content={detailUser.address || 'N/A'} /></Col>
+                        </Row>
+                        <Row gutter={16}>
+                          <Col span={12}><DescriptionItem title="Vai trò" content={translateRole(detailUser.role || '')} /></Col>
+                          <Col span={12}><DescriptionItem title="Trạng thái" content={detailUser.isActive ? 'Đang hoạt động' : 'Không hoạt động'} /></Col>
+                        </Row>
+                      </>
+                    ),
+                  },
+                  {
+                    key: '2',
+                    label: `Lịch hẹn (${detailAppointments.length})`,
+                    children: detailLoading ? (
+                      <div style={{ textAlign: 'center', padding: '32px 0' }}><Spin /></div>
+                    ) : detailAppointments.length === 0 ? (
+                      <Empty description="Chưa có lịch hẹn" />
+                    ) : (
+                      <>
+                        <Row gutter={16} style={{ marginBottom: 12 }}>
+                          <Col span={8}><DescriptionItem title="Tổng lịch hẹn" content={detailAppointments.length} /></Col>
+                          <Col span={8}><DescriptionItem title="Hoàn thành" content={detailAppointments.filter((a) => (a.status || '').toLowerCase() === 'completed').length} /></Col>
+                          <Col span={8}><DescriptionItem title="Đã hủy" content={detailAppointments.filter((a) => (a.status || '').toLowerCase() === 'cancelled').length} /></Col>
+                        </Row>
+
+                        <Divider style={{ margin: '10px 0 14px' }} />
+
+                        <Table
+                          size="small"
+                          rowSelection={{
+                            type: 'checkbox',
+                            onChange: (selectedRowKeys, selectedRows) => {
+                              console.log('selectedRowKeys:', selectedRowKeys, 'selectedRows:', selectedRows);
+                            },
+                          }}
+                          columns={[
+                            {
+                              title: 'Mã lịch',
+                              dataIndex: 'appointmentId',
+                              key: 'appointmentId',
+                              width: 90,
+                              render: (value) => `#${value || 'N/A'}`,
+                            },
+                            {
+                              title: 'Dịch vụ',
+                              dataIndex: 'serviceName',
+                              key: 'serviceName',
+                              render: (text) => <a>{text || 'N/A'}</a>,
+                            },
+                            {
+                              title: 'Trạng thái',
+                              dataIndex: 'status',
+                              key: 'status',
+                              render: (status) => {
+                                const s = (status || '').toLowerCase();
+                                const color = s === 'completed' ? 'success' : s === 'cancelled' ? 'error' : 'processing';
+                                const label = s === 'completed' ? 'Hoàn thành' : s === 'cancelled' ? 'Đã hủy' : status || 'Chờ xử lý';
+                                return <Tag color={color}>{label}</Tag>;
+                              },
+                            },
+                            {
+                              title: 'Ngày hẹn',
+                              dataIndex: 'appointmentDate',
+                              key: 'appointmentDate',
+                              render: (date) => date ? new Date(date).toLocaleDateString('vi-VN') : 'N/A',
+                            },
+                            {
+                              title: 'Giờ',
+                              key: 'timeSlot',
+                              render: (_, record) => {
+                                const directTime = record.timeSlot || record.appointmentTime || record.startTimeString;
+                                if (directTime) return directTime;
+
+                                if (record.appointmentDate) {
+                                  const d = new Date(record.appointmentDate);
+                                  if (!Number.isNaN(d.getTime())) {
+                                    return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                                  }
+                                }
+
+                                return 'N/A';
+                              },
+                            },
+                            {
+                              title: 'Ghi chú',
+                              dataIndex: 'notes',
+                              key: 'notes',
+                              render: (notes) => notes || '-',
+                            },
+                          ]}
+                          dataSource={detailAppointments.map((appt) => ({ ...appt, key: appt.appointmentId || `${appt.serviceName}-${appt.timeSlot}` }))}
+                          pagination={{ pageSize: 6, showSizeChanger: false }}
+                        />
+                      </>
+                    ),
+                  },
+                  {
+                    key: '3',
+                    label: `Thú cưng (${detailPets.length})`,
+                    children: detailLoading ? (
+                      <div style={{ textAlign: 'center', padding: '32px 0' }}><Spin /></div>
+                    ) : detailPets.length === 0 ? (
+                      <Empty description="Chưa có thú cưng" />
+                    ) : (
+                      <Table
+                        size="small"
+                        rowSelection={{
+                          type: 'checkbox',
+                          onChange: (selectedRowKeys, selectedRows) => {
+                            console.log('selectedPetKeys:', selectedRowKeys, 'selectedPets:', selectedRows);
+                          },
+                        }}
+                        columns={[
+                          {
+                            title: 'Mã thú cưng',
+                            dataIndex: 'petId',
+                            key: 'petId',
+                            width: 110,
+                            render: (value) => `#${value || 'N/A'}`,
+                          },
+                          {
+                            title: 'Tên thú cưng',
+                            dataIndex: 'name',
+                            key: 'name',
+                            render: (text) => <a>{text || 'Không tên'}</a>,
+                          },
+                          {
+                            title: 'Loài',
+                            dataIndex: 'species',
+                            key: 'species',
+                            render: (value) => value || 'N/A',
+                          },
+                          {
+                            title: 'Giống',
+                            dataIndex: 'breed',
+                            key: 'breed',
+                            render: (value) => value || 'N/A',
+                          },
+                          {
+                            title: 'Tuổi',
+                            key: 'age',
+                            width: 90,
+                            render: (_, record) => {
+                              if (record.age !== undefined && record.age !== null) return record.age;
+
+                              const dob = record.dateOfBirth || record.DateOfBirth || record.birthdate;
+                              if (dob) {
+                                const birthDate = new Date(dob);
+                                if (!Number.isNaN(birthDate.getTime())) {
+                                  const now = new Date();
+                                  let age = now.getFullYear() - birthDate.getFullYear();
+                                  const monthDiff = now.getMonth() - birthDate.getMonth();
+                                  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birthDate.getDate())) {
+                                    age -= 1;
+                                  }
+                                  return age >= 0 ? age : 'N/A';
+                                }
+                              }
+
+                              return 'N/A';
+                            },
+                          },
+                          {
+                            title: 'Giới tính',
+                            dataIndex: 'gender',
+                            key: 'gender',
+                            render: (value) => value || 'N/A',
+                          },
+                        ]}
+                        dataSource={detailPets.map((pet) => ({ ...pet, key: pet.petId || pet.id || pet.name }))}
+                        pagination={{ pageSize: 6, showSizeChanger: false }}
+                      />
+                    ),
+                  },
+                ]}
+              />
+            </>
+          )}
+        </Drawer>
 
         <AnimatePresence>
           {toast.show && (

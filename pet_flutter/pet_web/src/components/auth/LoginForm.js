@@ -462,6 +462,19 @@ const LoginForm = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Alert
+        message="Tài khoản demo Admin"
+        description={
+          <div>
+            <div><strong>Username:</strong> admin</div>
+            <div><strong>Password:</strong> admin123</div>
+          </div>
+        }
+        type="info"
+        showIcon
+        style={{ marginBottom: 16, borderRadius: 10 }}
+      />
       
       {success ? (
         <motion.div

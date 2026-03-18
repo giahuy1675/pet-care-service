@@ -56,7 +56,6 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'animate.css';
 import styled from 'styled-components';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -360,13 +359,11 @@ function App() {
   }, []);
 
   return (
-    <GoogleOAuthProvider clientId="261005055168-52qfvdmp7n3fo022tffqco0o4ilvp7hb.apps.googleusercontent.com">
-      <AuthProvider>
-        <Router>
-          <AppContent />
-        </Router>
-      </AuthProvider>
-    </GoogleOAuthProvider>
+    <AuthProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </AuthProvider>
   );
 }
 

@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
-import { 
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
+import {
+  LineChart, Line, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
+import { Column, DualAxes, Pie } from '@ant-design/plots';
 import axiosClient from '../../utils/axiosClient';
-import { 
+import {
   SyncOutlined
 } from '@ant-design/icons';
 import { DatePicker } from 'antd';
@@ -202,8 +203,6 @@ const TableCard = styled.div`
   }
 `;
 
-const COLORS = ['#304FFE', '#05CD99', '#FF6B9D', '#FFA500', '#8B5CF6', '#FF5252'];
-
 const DashboardStatistics = () => {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState([
@@ -272,6 +271,26 @@ const DashboardStatistics = () => {
     value: item.count
   })) || [];
 
+  const statusPieConfig = {
+    data: statusData,
+    angleField: 'value',
+    colorField: 'name',
+    legend: false,
+    innerRadius: 0.6,
+    label: false,
+    style: {
+      stroke: '#fff',
+      inset: 1,
+      radius: 10,
+    },
+    scale: {
+      color: {
+        palette: 'spectral',
+        offset: (t) => t * 0.8 + 0.1,
+      },
+    },
+  };
+
   const revenueByDateData = revenue?.revenueByDate?.map(item => ({
     date: dayjs(item.date).format('DD/MM'),
     revenue: item.revenue,
@@ -290,12 +309,76 @@ const DashboardStatistics = () => {
     cancelled: item.cancelledAppointments
   })) || [];
 
-  const hourlyData = hourlyStats?.hourlyStats?.map(item => ({
-    timeSlot: item.timeSlot,
-    count: item.count,
-    completed: item.completedCount,
-    cancelled: item.cancelledCount
-  })) || [];
+  const topServicesColumnConfig = {
+    data: servicesData,
+    xField: 'name',
+    yField: 'bookings',
+    label: false,
+    axis: {
+      x: {
+        labelAutoRotate: false,
+        labelFormatter: (text) => (text.length > 16 ? `${text.slice(0, 16)}...` : text),
+      },
+      y: {
+        title: 'Số lượt đặt',
+      },
+    },
+    style: {
+      radiusTopLeft: 10,
+      radiusTopRight: 10,
+      fill: '#304FFE',
+      maxWidth: 56,
+    },
+    tooltip: {
+      items: [
+        (d) => ({
+          name: 'Số lượt đặt',
+          value: `${d.bookings} lượt`,
+        }),
+      ],
+    },
+    interaction: {
+      elementHighlight: { background: true },
+    },
+  };
+
+  const hourlyBarData = (hourlyStats?.hourlyStats || []).flatMap((item) => [
+    { time: item.timeSlot, value: item.count || 0, type: 'Tổng lịch hẹn' },
+    { time: item.timeSlot, value: item.cancelledCount || 0, type: 'Đã hủy' },
+  ]);
+
+  const hourlyLineData = (hourlyStats?.hourlyStats || []).map((item) => ({
+    time: item.timeSlot,
+    count: item.completedCount || 0,
+  }));
+
+  const hourlyDualAxesConfig = {
+    xField: 'time',
+    legend: true,
+    children: [
+      {
+        data: hourlyBarData,
+        type: 'interval',
+        yField: 'value',
+        stack: true,
+        colorField: 'type',
+        style: { maxWidth: 56 },
+        scale: { y: { domainMin: 0, key: 'hourly-axis', independent: false } },
+        interaction: { elementHighlight: { background: true } },
+      },
+      {
+        data: hourlyLineData,
+        type: 'line',
+        yField: 'count',
+        style: { lineWidth: 3, stroke: '#FE911E' },
+        scale: { y: { domainMin: 0, key: 'hourly-axis', independent: false } },
+      },
+    ],
+    axis: {
+      x: { labelAutoRotate: false },
+      y: { grid: true },
+    },
+  };
 
   return (
     <DashboardContainer>
@@ -365,26 +448,26 @@ const DashboardStatistics = () => {
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={revenueByDateData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="date" 
+              <XAxis
+                dataKey="date"
                 style={{ fontSize: '12px' }}
               />
-              <YAxis 
+              <YAxis
                 tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
                 style={{ fontSize: '12px' }}
               />
-              <Tooltip 
+              <Tooltip
                 formatter={(value) => [`${value.toLocaleString('vi-VN')}₫`, 'Doanh thu']}
                 labelFormatter={(label) => `Ngày: ${label}`}
                 contentStyle={{ borderRadius: '8px', border: '1px solid #e0e0e0' }}
               />
               <Legend wrapperStyle={{ paddingTop: '10px' }} />
-              <Line 
-                type="monotone" 
-                dataKey="revenue" 
-                stroke="#304FFE" 
+              <Line
+                type="monotone"
+                dataKey="revenue"
+                stroke="#304FFE"
                 strokeWidth={3}
-                name="Doanh thu" 
+                name="Doanh thu"
                 dot={{ fill: '#304FFE', r: 4 }}
                 activeDot={{ r: 6 }}
               />
@@ -395,59 +478,13 @@ const DashboardStatistics = () => {
         {/* Trạng thái lịch hẹn */}
         <ChartCard>
           <h3>Phân bố trạng thái lịch hẹn</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={statusData}
-                cx="50%"
-                cy="50%"
-                labelLine={true}
-                label={({name, percent, value}) => `${name}: ${value} (${(percent * 100).toFixed(1)}%)`}
-                outerRadius={90}
-                fill="#8884d8"
-                dataKey="value"
-                paddingAngle={2}
-              >
-                {statusData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip 
-                formatter={(value, name) => [`${value} lịch hẹn`, name]}
-                contentStyle={{ borderRadius: '8px', border: '1px solid #e0e0e0' }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+          <Pie {...statusPieConfig} height={300} />
         </ChartCard>
 
         {/* Top dịch vụ */}
         <ChartCard>
           <h3>Top 5 dịch vụ phổ biến</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={servicesData} margin={{ top: 5, right: 30, left: 20, bottom: 80 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="name" 
-                angle={-35} 
-                textAnchor="end" 
-                height={120}
-                interval={0}
-                style={{ fontSize: '11px' }}
-              />
-              <YAxis style={{ fontSize: '12px' }} />
-              <Tooltip 
-                formatter={(value) => [`${value} lượt đặt`, 'Số lượt đặt']}
-                contentStyle={{ borderRadius: '8px', border: '1px solid #e0e0e0' }}
-              />
-              <Legend wrapperStyle={{ paddingTop: '10px' }} />
-              <Bar 
-                dataKey="bookings" 
-                fill="#304FFE" 
-                name="Số lượt đặt"
-                radius={[8, 8, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <Column {...topServicesColumnConfig} height={300} />
         </ChartCard>
 
         {/* Hiệu suất nhân viên */}
@@ -456,29 +493,29 @@ const DashboardStatistics = () => {
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={staffData} margin={{ top: 5, right: 30, left: 20, bottom: 80 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="name" 
-                angle={-35} 
-                textAnchor="end" 
+              <XAxis
+                dataKey="name"
+                angle={-35}
+                textAnchor="end"
                 height={120}
                 interval={0}
                 style={{ fontSize: '11px' }}
               />
               <YAxis style={{ fontSize: '12px' }} />
-              <Tooltip 
+              <Tooltip
                 formatter={(value, name) => [`${value} lịch hẹn`, name]}
                 contentStyle={{ borderRadius: '8px', border: '1px solid #e0e0e0' }}
               />
               <Legend wrapperStyle={{ paddingTop: '10px' }} />
-              <Bar 
-                dataKey="completed" 
-                fill="#05CD99" 
+              <Bar
+                dataKey="completed"
+                fill="#05CD99"
                 name="Hoàn thành"
                 radius={[8, 8, 0, 0]}
               />
-              <Bar 
-                dataKey="cancelled" 
-                fill="#FF5252" 
+              <Bar
+                dataKey="cancelled"
+                fill="#FF5252"
                 name="Hủy"
                 radius={[8, 8, 0, 0]}
               />
@@ -522,27 +559,7 @@ const DashboardStatistics = () => {
       {/* Thống kê theo khung giờ */}
       <ChartCard style={{ marginBottom: '30px' }}>
         <h3>Thống kê theo khung giờ</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={hourlyData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis 
-              dataKey="timeSlot" 
-              style={{ fontSize: '11px' }}
-            />
-            <YAxis style={{ fontSize: '12px' }} />
-            <Tooltip 
-              formatter={(value, name) => [`${value} lịch hẹn`, name]}
-              contentStyle={{ borderRadius: '8px', border: '1px solid #e0e0e0' }}
-            />
-            <Legend wrapperStyle={{ paddingTop: '10px' }} />
-            <Bar 
-              dataKey="count" 
-              fill="#304FFE" 
-              name="Tổng lịch hẹn"
-              radius={[8, 8, 0, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
+        <DualAxes {...hourlyDualAxesConfig} height={300} />
       </ChartCard>
 
       {/* Top khách hàng */}

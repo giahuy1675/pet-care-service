@@ -5,6 +5,7 @@
   "dependencies": {
     "@ant-design/happy-work-theme": "^2.0.0",
     "@ant-design/icons": "^6.0.0",
+    "@ant-design/plots": "^2.3.3",
     "@ckeditor/ckeditor5-build-classic": "^44.3.0",
     "@ckeditor/ckeditor5-react": "^9.5.0",
     "@emotion/react": "^11.14.0",

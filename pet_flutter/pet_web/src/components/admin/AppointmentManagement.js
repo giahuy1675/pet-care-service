@@ -61,6 +61,8 @@ import AdminCreateAppointment from './AdminCreateAppointment';
 // Thêm import isPetBusySlot helper
 import { isPetBusySlot } from '../appointment/isPetBusySlot';
 
+const devLog = (..._args) => {};
+
 // Thêm constants cho buffer time và min duration
 const BUFFER_TIME_MINUTES = 10; // 10 phút giữa các lịch hẹn
 const DEFAULT_SERVICE_DURATION = 30; // Thời lượng dịch vụ mặc định nếu không có thông tin
@@ -1085,8 +1087,8 @@ const formatDateTimeWithTimeZoneOffset = (date) => {
   // Đơn giản: chỉ cần lấy ISO string và loại bỏ 'Z' để giữ nguyên local time
   const inputDate = typeof date === 'string' ? new Date(date) : date;
   
-  console.log('🕐 [formatDateTimeWithTimeZoneOffset] Input:', inputDate);
-  console.log('🕐 [formatDateTimeWithTimeZoneOffset] Local Hours:', inputDate.getHours());
+  devLog('🕐 [formatDateTimeWithTimeZoneOffset] Input:', inputDate);
+  devLog('🕐 [formatDateTimeWithTimeZoneOffset] Local Hours:', inputDate.getHours());
   
   // Lấy các thành phần ngày giờ từ local time
   const year = inputDate.getFullYear();
@@ -1099,7 +1101,7 @@ const formatDateTimeWithTimeZoneOffset = (date) => {
   // Tạo chuỗi ISO local (không có 'Z')
   const localISOString = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
   
-  console.log('🕐 [formatDateTimeWithTimeZoneOffset] Output (local ISO):', localISOString);
+  devLog('🕐 [formatDateTimeWithTimeZoneOffset] Output (local ISO):', localISOString);
   
   return localISOString;
 };
@@ -1107,19 +1109,19 @@ const formatDateTimeWithTimeZoneOffset = (date) => {
 const adjustTimeZoneFromServer = (dateString) => {
   if (!dateString) return null;
   
-  console.log('🔧 adjustTimeZoneFromServer input:', dateString);
+  devLog('🔧 adjustTimeZoneFromServer input:', dateString);
   
   // Nếu đã là Date object, trả về nguyên trạng
   if (dateString instanceof Date) {
-    console.log('🔧 adjustTimeZoneFromServer - already Date object:', dateString);
+    devLog('🔧 adjustTimeZoneFromServer - already Date object:', dateString);
     return dateString;
   }
   
   // ✅ FIXED: Không cần chuyển đổi timezone - chỉ parse trực tiếp
   // Server đã gửi đúng local time hoặc browser sẽ tự chuyển đổi
   const date = new Date(dateString);
-  console.log('🔧 adjustTimeZoneFromServer - parsed date:', date);
-  console.log('🔧 adjustTimeZoneFromServer - hours:', date.getHours());
+  devLog('🔧 adjustTimeZoneFromServer - parsed date:', date);
+  devLog('🔧 adjustTimeZoneFromServer - hours:', date.getHours());
   
   return date;
 };
@@ -1391,7 +1393,7 @@ const AppointmentManagement = () => {
   // Auto-select current appointment time slot when editTimeSlots changes
   useEffect(() => {
     if (currentAppointmentTime && editTimeSlots.length > 0 && !selectedEditTimeSlot) {
-      console.log('🎯 Auto-selecting current time slot:', currentAppointmentTime);
+      devLog('🎯 Auto-selecting current time slot:', currentAppointmentTime);
       
       const currentSlot = editTimeSlots.find(slot => {
         const slotTime = slot.startTimeString || 
@@ -1402,10 +1404,10 @@ const AppointmentManagement = () => {
       });
       
       if (currentSlot) {
-        console.log('✅ Auto-selected current time slot:', currentSlot);
+        devLog('✅ Auto-selected current time slot:', currentSlot);
         setSelectedEditTimeSlot(currentSlot);
       } else {
-        console.log('⚠️ Current time slot not found in generated slots');
+        devLog('⚠️ Current time slot not found in generated slots');
       }
     }
   }, [editTimeSlots, currentAppointmentTime, selectedEditTimeSlot]);
@@ -1421,7 +1423,7 @@ const AppointmentManagement = () => {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      console.log('Đang tải lịch hẹn...');
+      devLog('Đang tải lịch hẹn...');
       
       // Sử dụng appointmentService thay vì gọi API trực tiếp
       let appointmentsData;
@@ -1430,20 +1432,20 @@ const AppointmentManagement = () => {
         // Ưu tiên sử dụng appointmentService
         const response = await appointmentService.getAllAppointments();
         appointmentsData = response;
-        console.log('Dữ liệu lịch hẹn đã nhận từ service:', appointmentsData);
+        devLog('Dữ liệu lịch hẹn đã nhận từ service:', appointmentsData);
         
         // DEBUG: Kiểm tra timezone của appointment đầu tiên
         if (appointmentsData && appointmentsData.length > 0) {
           const firstAppt = appointmentsData[0];
-          console.log('🕐 DEBUG TIMEZONE - First appointment raw date:', firstAppt.appointmentDate);
-          console.log('🕐 DEBUG TIMEZONE - Date type:', typeof firstAppt.appointmentDate);
+          devLog('🕐 DEBUG TIMEZONE - First appointment raw date:', firstAppt.appointmentDate);
+          devLog('🕐 DEBUG TIMEZONE - Date type:', typeof firstAppt.appointmentDate);
           const testDate = new Date(firstAppt.appointmentDate);
-          console.log('🕐 DEBUG TIMEZONE - After new Date():', testDate);
-          console.log('🕐 DEBUG TIMEZONE - toString():', testDate.toString());
-          console.log('🕐 DEBUG TIMEZONE - toISOString():', testDate.toISOString());
-          console.log('🕐 DEBUG TIMEZONE - toLocaleString():', testDate.toLocaleString());
-          console.log('🕐 DEBUG TIMEZONE - getHours():', testDate.getHours());
-          console.log('🕐 DEBUG TIMEZONE - getMinutes():', testDate.getMinutes());
+          devLog('🕐 DEBUG TIMEZONE - After new Date():', testDate);
+          devLog('🕐 DEBUG TIMEZONE - toString():', testDate.toString());
+          devLog('🕐 DEBUG TIMEZONE - toISOString():', testDate.toISOString());
+          devLog('🕐 DEBUG TIMEZONE - toLocaleString():', testDate.toLocaleString());
+          devLog('🕐 DEBUG TIMEZONE - getHours():', testDate.getHours());
+          devLog('🕐 DEBUG TIMEZONE - getMinutes():', testDate.getMinutes());
         }
       } catch (serviceError) {
         console.error('Lỗi khi sử dụng appointmentService:', serviceError);
@@ -1451,7 +1453,7 @@ const AppointmentManagement = () => {
         // Fallback nếu service gặp lỗi
         const response = await axiosClient.get('/Appointments');
         appointmentsData = response.data;
-        console.log('Dữ liệu lịch hẹn đã nhận từ fallback:', appointmentsData);
+        devLog('Dữ liệu lịch hẹn đã nhận từ fallback:', appointmentsData);
       }
       
       // Chuẩn hóa trạng thái và dữ liệu ngày giờ
@@ -1470,7 +1472,7 @@ const AppointmentManagement = () => {
         
         // Chuẩn hóa định dạng ngày giờ
         if (appointment.appointmentDate) {
-          console.log('🕐 [FETCH] Raw appointment date from server:', appointment.appointmentDate);
+          devLog('🕐 [FETCH] Raw appointment date from server:', appointment.appointmentDate);
           
           // ✅ FIXED: Không cần adjust timezone - browser sẽ tự parse đúng
           // Nếu server gửi ISO string với 'Z', new Date() sẽ tự chuyển sang local time
@@ -1478,8 +1480,8 @@ const AppointmentManagement = () => {
           const parsedDate = new Date(appointment.appointmentDate);
           appointment.appointmentDate = parsedDate;
           
-          console.log('🕐 [FETCH] Parsed date (local):', parsedDate);
-          console.log('🕐 [FETCH] Local hours:', parsedDate.getHours());
+          devLog('🕐 [FETCH] Parsed date (local):', parsedDate);
+          devLog('🕐 [FETCH] Local hours:', parsedDate.getHours());
         }
         
         return appointment;
@@ -1567,13 +1569,13 @@ const AppointmentManagement = () => {
     
     try {
       const formattedDate = dayjs(date).format('YYYY-MM-DD');
-      console.log(`🐕 Fetching busy slots for pet ${petId} on ${formattedDate}`);
+      devLog(`🐕 Fetching busy slots for pet ${petId} on ${formattedDate}`);
       
       // ===== SỬ DỤNG API CHUYÊN BIỆT TRƯỚC =====
       try {
         const response = await axiosClient.get(`/Appointments/Pet/${petId}/busy-slots?date=${formattedDate}`);
         if (response.data && Array.isArray(response.data)) {
-          console.log(`✅ Pet ${petId} busy slots from API:`, response.data);
+          devLog(`✅ Pet ${petId} busy slots from API:`, response.data);
           return response.data;
         }
       } catch (apiError) {
@@ -1582,7 +1584,7 @@ const AppointmentManagement = () => {
       
       // ===== FALLBACK: SỬ DỤNG APPOINTMENTSERVICE =====
       const busySlots = await appointmentService.getPetBusyTimeSlots(petId, formattedDate);
-      console.log(`🔄 Pet ${petId} busy slots from service:`, busySlots);
+      devLog(`🔄 Pet ${petId} busy slots from service:`, busySlots);
       
       return Array.isArray(busySlots) ? busySlots : [];
     } catch (error) {
@@ -1600,13 +1602,13 @@ const AppointmentManagement = () => {
     
     try {
       const formattedDate = dayjs(date).format('YYYY-MM-DD');
-      console.log(`🐕 Fetching appointments for pet ${petId} on ${formattedDate}`);
+      devLog(`🐕 Fetching appointments for pet ${petId} on ${formattedDate}`);
       
       // ===== SỬ DỤNG API CHUYÊN BIỆT TRƯỚC =====
       try {
         const response = await axiosClient.get(`/Appointments/Pet/${petId}/appointments?date=${formattedDate}`);
         if (response.data && Array.isArray(response.data)) {
-          console.log(`✅ Pet ${petId} appointments from API:`, response.data);
+          devLog(`✅ Pet ${petId} appointments from API:`, response.data);
           return response.data;
         }
       } catch (apiError) {
@@ -1620,7 +1622,7 @@ const AppointmentManagement = () => {
         !['Cancelled', 'Completed'].includes(apt.status) // Loại trừ đã hủy/hoàn thành
       );
       
-      console.log(`🔄 Pet ${petId} appointments from filtered list:`, allAppointments);
+      devLog(`🔄 Pet ${petId} appointments from filtered list:`, allAppointments);
       return allAppointments;
     } catch (error) {
       console.error(`❌ Error fetching pet appointments for pet ${petId}:`, error);
@@ -1637,13 +1639,13 @@ const AppointmentManagement = () => {
     
     try {
       const formattedDate = dayjs(date).format('YYYY-MM-DD');
-      console.log(`👤 [FETCH STAFF BUSY] Fetching busy slots for staff ${staffId} on ${formattedDate}`);
+      devLog(`👤 [FETCH STAFF BUSY] Fetching busy slots for staff ${staffId} on ${formattedDate}`);
       
       // ===== SỬ DỤNG API CHUYÊN BIỆT TRƯỚC =====
       try {
         const response = await axiosClient.get(`/Staff/${staffId}/busy-slots?date=${formattedDate}`);
         if (response.data && Array.isArray(response.data)) {
-          console.log(`✅ [FETCH STAFF BUSY] Staff ${staffId} busy slots from API:`, response.data);
+          devLog(`✅ [FETCH STAFF BUSY] Staff ${staffId} busy slots from API:`, response.data);
           return response.data;
         }
       } catch (apiError) {
@@ -1652,7 +1654,7 @@ const AppointmentManagement = () => {
       
       // ===== FALLBACK: SỬ DỤNG APPOINTMENTSERVICE =====
       const busySlots = await appointmentService.getStaffBusyTimeSlots(staffId, formattedDate);
-      console.log(`🔄 [FETCH STAFF BUSY] Staff ${staffId} busy slots from service:`, busySlots);
+      devLog(`🔄 [FETCH STAFF BUSY] Staff ${staffId} busy slots from service:`, busySlots);
       
       return Array.isArray(busySlots) ? busySlots : [];
     } catch (error) {
@@ -1670,19 +1672,19 @@ const AppointmentManagement = () => {
     
     try {
       const formattedDate = dayjs(date).format('YYYY-MM-DD');
-      console.log(`👤 [FETCH STAFF APPTS] Fetching appointments for staff ${staffId} on ${formattedDate}`);
+      devLog(`👤 [FETCH STAFF APPTS] Fetching appointments for staff ${staffId} on ${formattedDate}`);
       
       // ===== DÙNG CHECKSTAFFSCHEDULE =====
       const scheduleData = await appointmentService.checkStaffSchedule(staffId, formattedDate);
       
-      console.log(`👤 [FETCH STAFF APPTS] Raw scheduleData:`, scheduleData);
+      devLog(`👤 [FETCH STAFF APPTS] Raw scheduleData:`, scheduleData);
       
       if (scheduleData && scheduleData.appointments) {
-        console.log(`✅ [FETCH STAFF APPTS] Staff ${staffId} appointments:`, scheduleData.appointments);
+        devLog(`✅ [FETCH STAFF APPTS] Staff ${staffId} appointments:`, scheduleData.appointments);
         const filteredAppts = scheduleData.appointments.filter(apt => 
           !['Cancelled', 'Completed'].includes(apt.status) // Loại trừ đã hủy/hoàn thành
         );
-        console.log(`✅ [FETCH STAFF APPTS] Filtered appointments (active only):`, filteredAppts);
+        devLog(`✅ [FETCH STAFF APPTS] Filtered appointments (active only):`, filteredAppts);
         return scheduleData.appointments.filter(apt => 
           !['Cancelled', 'Completed'].includes(apt.status) // Loại trừ đã hủy/hoàn thành
         );
@@ -1699,7 +1701,7 @@ const AppointmentManagement = () => {
   const loadEditTimeSlots = async (serviceId, staffId, date, petId, excludeAppointmentId = null) => {
     try {
       setLoadingEditTimeSlots(true);
-      console.log('🔄 loadEditTimeSlots called with:', { serviceId, staffId, date, petId, excludeAppointmentId });
+      devLog('🔄 loadEditTimeSlots called with:', { serviceId, staffId, date, petId, excludeAppointmentId });
       
       // ===== VALIDATE INPUT PARAMETERS =====
       if (!serviceId || !date || !petId) {
@@ -1720,7 +1722,7 @@ const AppointmentManagement = () => {
       
       // ===== LẤY THỜI LƯỢNG DỊCH VỤ THỰC TẾ =====
       const actualServiceDuration = getServiceDuration(serviceId, services);
-      console.log(`🕐 Edit: Using actual service duration: ${actualServiceDuration} minutes for service ${serviceId}`);
+      devLog(`🕐 Edit: Using actual service duration: ${actualServiceDuration} minutes for service ${serviceId}`);
       
       // ===== FETCH PET BUSY SLOTS AND APPOINTMENTS =====
       const [busySlots, petAppts] = await Promise.all([
@@ -1728,8 +1730,8 @@ const AppointmentManagement = () => {
         fetchPetAppointments(petId, date)
       ]);
       
-      console.log(`🐕 Pet ${petId} busy slots:`, busySlots);
-      console.log(`🐕 Pet ${petId} appointments:`, petAppts);
+      devLog(`🐕 Pet ${petId} busy slots:`, busySlots);
+      devLog(`🐕 Pet ${petId} appointments:`, petAppts);
       
       // ===== FETCH STAFF BUSY SLOTS IF STAFF SELECTED =====
       let staffBusySlots = [];
@@ -1741,22 +1743,22 @@ const AppointmentManagement = () => {
           fetchStaffAppointments(staffId, date)
         ]);
         
-        console.log(`👤 Staff ${staffId} busy slots:`, staffBusySlots);
-        console.log(`👤 Staff ${staffId} appointments:`, staffAppts);
+        devLog(`👤 Staff ${staffId} busy slots:`, staffBusySlots);
+        devLog(`👤 Staff ${staffId} appointments:`, staffAppts);
         
         setEditStaffBusyTimeSlots(staffBusySlots);
         setEditStaffAppointments(staffAppts);
       }
       
       // ===== TẠO SLOTS VỚI DURATION THỰC TẾ THAY VÌ GỌI API =====
-      console.log('🔧 Creating time slots with actual service duration instead of API call...');
+      devLog('🔧 Creating time slots with actual service duration instead of API call...');
       
       // ===== FILTER OUT CURRENT APPOINTMENT FROM STAFF BUSY SLOTS =====
       let filteredStaffBusySlots = staffBusySlots;
       let filteredStaffAppts = staffAppts; // Declare at function scope
       
       if (excludeAppointmentId && staffAppts.length > 0) {
-        console.log(`🔧 [ADMIN DEBUG] Filtering out appointmentId ${excludeAppointmentId} from staff busy slots`);
+        devLog(`🔧 [ADMIN DEBUG] Filtering out appointmentId ${excludeAppointmentId} from staff busy slots`);
         
         // Tạo lại staffBusySlots từ staff appointments, loại trừ appointment đang edit
         filteredStaffAppts = staffAppts.filter(apt => 
@@ -1771,10 +1773,10 @@ const AppointmentManagement = () => {
           return null;
         }).filter(Boolean);
         
-        console.log(`🔧 [ADMIN DEBUG] Original staff appointments:`, staffAppts.length);
-        console.log(`🔧 [ADMIN DEBUG] Filtered staff appointments:`, filteredStaffAppts.length);
-        console.log(`🔧 [ADMIN DEBUG] Original staffBusySlots:`, staffBusySlots);
-        console.log(`🔧 [ADMIN DEBUG] Filtered staffBusySlots:`, filteredStaffBusySlots);
+        devLog(`🔧 [ADMIN DEBUG] Original staff appointments:`, staffAppts.length);
+        devLog(`🔧 [ADMIN DEBUG] Filtered staff appointments:`, filteredStaffAppts.length);
+        devLog(`🔧 [ADMIN DEBUG] Original staffBusySlots:`, staffBusySlots);
+        devLog(`🔧 [ADMIN DEBUG] Filtered staffBusySlots:`, filteredStaffBusySlots);
       }
       
       const generatedSlots = generateEditTimeSlots(
@@ -1787,7 +1789,7 @@ const AppointmentManagement = () => {
         petAppts
       );
       
-      console.log(`✅ Generated ${generatedSlots.length} edit time slots with actual service duration ${actualServiceDuration} minutes`);
+      devLog(`✅ Generated ${generatedSlots.length} edit time slots with actual service duration ${actualServiceDuration} minutes`);
       
       // ===== CẬP NHẬT STATES =====
       setEditTimeSlots(generatedSlots);
@@ -1809,7 +1811,7 @@ const AppointmentManagement = () => {
 
   // Thêm handler cho TimeSlotGrid trong edit mode
   const handleEditTimeSlotSelect = (slot) => {
-    console.log('Selected edit time slot:', slot);
+    devLog('Selected edit time slot:', slot);
     setSelectedEditTimeSlot(slot);
     
     // Update form data with selected time
@@ -1882,7 +1884,7 @@ const AppointmentManagement = () => {
       
       // Gọi API để lấy chi tiết đầy đủ
       const detailData = await appointmentService.getAppointmentById(appointment.appointmentId);
-      console.log('📋 Chi tiết appointment từ API:', detailData);
+      devLog('📋 Chi tiết appointment từ API:', detailData);
       
       if (detailData) {
         // Chuẩn hóa appointmentDate về Date object
@@ -1909,7 +1911,7 @@ const AppointmentManagement = () => {
 
   // Bắt đầu chỉnh sửa lịch hẹn
   const handleEdit = async (appointment) => {
-    console.log('🔧 Starting edit for appointment:', appointment);
+    devLog('🔧 Starting edit for appointment:', appointment);
     setCurrentAppointment(appointment);
     
     // Set form data
@@ -1931,7 +1933,7 @@ const AppointmentManagement = () => {
       try {
         const staff = await staffService.getStaffByService(appointment.serviceId);
         setAvailableStaffForEdit(Array.isArray(staff) ? staff : []);
-        console.log('✅ Loaded staff for service:', staff);
+        devLog('✅ Loaded staff for service:', staff);
       } catch (error) {
         console.error('❌ Error loading staff for service:', error);
         setAvailableStaffForEdit([]);
@@ -1940,7 +1942,7 @@ const AppointmentManagement = () => {
     
     // ===== IMMEDIATELY LOAD BUSY SLOTS AND TIME SLOTS =====
     if (appointment.appointmentDate && appointment.serviceId && appointment.petId) {
-      console.log('🔄 Loading busy slots and time slots immediately...');
+      devLog('🔄 Loading busy slots and time slots immediately...');
       
       try {
         // Load busy slots and time slots in parallel
@@ -1954,7 +1956,7 @@ const AppointmentManagement = () => {
         
         // Store current appointment time for auto-selection
         const currentTime = extractTimeFromISOString(appointment.appointmentDate);
-        console.log('🎯 Storing current time for auto-selection:', currentTime);
+        devLog('🎯 Storing current time for auto-selection:', currentTime);
         setCurrentAppointmentTime(currentTime);
         
       } catch (error) {
@@ -1983,7 +1985,7 @@ const AppointmentManagement = () => {
       const serviceId = parseInt(createFormData.serviceId);
       const petId = parseInt(createFormData.petId);
       
-      console.log('📅 Loading time slots for create:', { selectedDate, serviceId, petId });
+      devLog('📅 Loading time slots for create:', { selectedDate, serviceId, petId });
       
       // Load lịch bận của thú cưng song song với time slots
       const [slotsResponse, petBusySlots, petAppts] = await Promise.all([
@@ -1992,7 +1994,7 @@ const AppointmentManagement = () => {
         appointmentService.getPetAppointments(petId, selectedDate)
       ]);
       
-      console.log('✅ Loaded data:', {
+      devLog('✅ Loaded data:', {
         slots: slotsResponse?.timeSlots?.length || 0,
         petBusySlots: petBusySlots?.length || 0,
         petAppointments: petAppts?.length || 0,
@@ -2001,13 +2003,13 @@ const AppointmentManagement = () => {
       });
       
       // Set pet busy slots và appointments
-      console.log('🔴 Setting createPetBusySlots:', petBusySlots);
-      console.log('📋 Setting createPetAppointments:', petAppts);
+      devLog('🔴 Setting createPetBusySlots:', petBusySlots);
+      devLog('📋 Setting createPetAppointments:', petAppts);
       setCreatePetBusySlots(petBusySlots || []);
       setCreatePetAppointments(petAppts || []);
       
       if (slotsResponse && slotsResponse.timeSlots) {
-        console.log('📋 Time slots count:', slotsResponse.timeSlots.length);
+        devLog('📋 Time slots count:', slotsResponse.timeSlots.length);
         setCreateTimeSlots(slotsResponse.timeSlots);
       } else {
         console.warn('⚠️ No time slots in response:', slotsResponse);
@@ -2059,7 +2061,7 @@ const AppointmentManagement = () => {
         notes: createFormData.notes || ''
       };
 
-      console.log('Creating appointment:', appointmentData);
+      devLog('Creating appointment:', appointmentData);
 
       const result = await appointmentService.createAppointment(appointmentData);
 
@@ -2166,12 +2168,12 @@ const AppointmentManagement = () => {
       // Tạo UTC datetime bằng cách CỘNG offset (vì offset là âm)
       const utcDateTime = new Date(localDate.getTime() - (timezoneOffsetMinutes * 60000));
       
-      console.log('🕐 [TIMEZONE DEBUG] Selected date:', formData.appointmentDate);
-      console.log('🕐 [TIMEZONE DEBUG] Selected time:', timeToUse);
-      console.log('🕐 [TIMEZONE DEBUG] Local datetime:', localDate);
-      console.log('🕐 [TIMEZONE DEBUG] Timezone offset (minutes):', timezoneOffsetMinutes);
-      console.log('🕐 [TIMEZONE DEBUG] UTC datetime to send:', utcDateTime);
-      console.log('🕐 [TIMEZONE DEBUG] UTC ISO string:', utcDateTime.toISOString());
+      devLog('🕐 [TIMEZONE DEBUG] Selected date:', formData.appointmentDate);
+      devLog('🕐 [TIMEZONE DEBUG] Selected time:', timeToUse);
+      devLog('🕐 [TIMEZONE DEBUG] Local datetime:', localDate);
+      devLog('🕐 [TIMEZONE DEBUG] Timezone offset (minutes):', timezoneOffsetMinutes);
+      devLog('🕐 [TIMEZONE DEBUG] UTC datetime to send:', utcDateTime);
+      devLog('🕐 [TIMEZONE DEBUG] UTC ISO string:', utcDateTime.toISOString());
       
       // Validate business hours (kiểm tra theo giờ local, không phải UTC)
       const hour = localDate.getHours();
@@ -2275,10 +2277,10 @@ const AppointmentManagement = () => {
         notes: formData.notes
       };
       
-      console.log('🕐 [ADMIN SAVE] Local time selected:', `${hours}:${minutes}`);
-      console.log('🕐 [ADMIN SAVE] UTC sent to server:', updatedData.appointmentDate);
+      devLog('🕐 [ADMIN SAVE] Local time selected:', `${hours}:${minutes}`);
+      devLog('🕐 [ADMIN SAVE] UTC sent to server:', updatedData.appointmentDate);
       
-      console.log('Updating appointment with data:', updatedData);
+      devLog('Updating appointment with data:', updatedData);
       
       // Update appointment
       let response;
@@ -2289,7 +2291,7 @@ const AppointmentManagement = () => {
           currentAppointment.appointmentId, 
           updatedData
         );
-        console.log('Update response from service:', response);
+        devLog('Update response from service:', response);
         success = true;
       } catch (serviceError) {
         console.error('Error using appointmentService:', serviceError);
@@ -2299,7 +2301,7 @@ const AppointmentManagement = () => {
             `/Appointments/${currentAppointment.appointmentId}`, 
             updatedData
           );
-          console.log('Update response from fallback 1:', response.data);
+          devLog('Update response from fallback 1:', response.data);
           response = response.data;
           success = true;
         } catch (error1) {
@@ -2309,7 +2311,7 @@ const AppointmentManagement = () => {
             `/api/Appointments/${currentAppointment.appointmentId}`, 
             updatedData
           );
-          console.log('Update response from fallback 2:', response.data);
+          devLog('Update response from fallback 2:', response.data);
           response = response.data;
           success = true;
         }
@@ -2335,7 +2337,7 @@ const AppointmentManagement = () => {
           
           // 1. Đồng bộ lịch bận của thú cưng (dùng localDate)
           if (appointmentData.petId) {
-            console.log(`🔄 Đồng bộ lịch bận thú cưng ${appointmentData.petId}`);
+            devLog(`🔄 Đồng bộ lịch bận thú cưng ${appointmentData.petId}`);
             window.dispatchEvent(new CustomEvent('pet-busy-slots-updated', {
               detail: {
                 petId: appointmentData.petId,
@@ -2349,7 +2351,7 @@ const AppointmentManagement = () => {
           
           // 2. Đồng bộ lịch bận của nhân viên CŨ (nếu có)
           if (appointmentData.staffId && appointmentData.staffId !== staffIdToUse) {
-            console.log(`🔄 Xóa lịch bận nhân viên cũ ${appointmentData.staffId}`);
+            devLog(`🔄 Xóa lịch bận nhân viên cũ ${appointmentData.staffId}`);
             window.dispatchEvent(new CustomEvent('staff-appointments-updated', {
               detail: {
                 staffId: appointmentData.staffId,
@@ -2362,7 +2364,7 @@ const AppointmentManagement = () => {
           
           // 3. Đồng bộ lịch bận của nhân viên MỚI
           if (staffIdToUse) {
-            console.log(`🔄 Thêm lịch bận nhân viên mới ${staffIdToUse}`);
+            devLog(`🔄 Thêm lịch bận nhân viên mới ${staffIdToUse}`);
             window.dispatchEvent(new CustomEvent('staff-appointments-updated', {
               detail: {
                 staffId: staffIdToUse,
@@ -2395,7 +2397,7 @@ const AppointmentManagement = () => {
             if (key.includes('undefined') || key.includes('null')) return;
             try {
               localStorage.removeItem(key);
-              console.log(`🗑️ Đã xóa cache: ${key}`);
+              devLog(`🗑️ Đã xóa cache: ${key}`);
             } catch (e) {
               console.warn('Lỗi khi xóa cache:', e);
             }
@@ -2453,7 +2455,7 @@ const AppointmentManagement = () => {
 
   // 1. Sửa lại hàm updateAppointmentStatus
   const updateAppointmentStatus = async (appointmentId, newStatus) => {
-    console.log(`Cập nhật trạng thái lịch hẹn ${appointmentId} thành ${newStatus}`);
+    devLog(`Cập nhật trạng thái lịch hẹn ${appointmentId} thành ${newStatus}`);
 
     // Chuyển đổi trạng thái sang tiếng Anh (nếu đang là tiếng Việt)
     const englishStatus = statusViToEn[newStatus] || newStatus;
@@ -2860,7 +2862,7 @@ const AppointmentManagement = () => {
     try {
       setLoading(true);
       const staffData = await staffService.getStaffByService(serviceId);
-      console.log('Staff data for service:', staffData);
+      devLog('Staff data for service:', staffData);
       setAvailableStaffForService(Array.isArray(staffData) ? staffData : []);
     } catch (error) {
       console.error('Error fetching staff for service:', error);
@@ -2879,7 +2881,7 @@ const AppointmentManagement = () => {
   const generateStaffTimeSlots = (selectedDate, serviceDuration = 30, appointmentTime = null) => {
     if (!selectedDate) return [];
     
-    console.log(`[generateStaffTimeSlots] Tạo slots với thời lượng dịch vụ: ${serviceDuration} phút`);
+    devLog(`[generateStaffTimeSlots] Tạo slots với thời lượng dịch vụ: ${serviceDuration} phút`);
     
     const actualServiceDuration = serviceDuration || 30;
     const bufferTime = 10; // Buffer time 10 phút
@@ -2923,7 +2925,7 @@ const AppointmentManagement = () => {
       }
     }
     
-    console.log(`[generateStaffTimeSlots] Đã tạo ${slots.length} slots với interval ${slotInterval} phút`);
+    devLog(`[generateStaffTimeSlots] Đã tạo ${slots.length} slots với interval ${slotInterval} phút`);
     return slots;
   };
 
@@ -2945,7 +2947,7 @@ const AppointmentManagement = () => {
     const BUFFER_TIME_MINUTES = 10; // Define the buffer time constant
     const totalSlotTime = actualServiceDuration + BUFFER_TIME_MINUTES; // duration + 10 phút buffer
     
-    console.log(`🔧 Generating EDIT time slots with service duration: ${actualServiceDuration} minutes + ${BUFFER_TIME_MINUTES} buffer = ${totalSlotTime} minutes total`);
+    devLog(`🔧 Generating EDIT time slots with service duration: ${actualServiceDuration} minutes + ${BUFFER_TIME_MINUTES} buffer = ${totalSlotTime} minutes total`);
     
     // ===== TẠO SLOTS THEO THỜI GIAN DỊCH VỤ THỰC TẾ =====
     const date = dayjs(appointmentDate); // Create dayjs object from appointmentDate
@@ -2965,7 +2967,7 @@ const AppointmentManagement = () => {
       // Kiểm tra slot có kết thúc trước 21:30 không
       const slotEndTime = currentTime.add(actualServiceDuration, 'minute');
       if (slotEndTime.isAfter(endTime)) {
-        console.log(`⏰ Edit slot ${currentTime.format('HH:mm')} bị bỏ qua vì sẽ kết thúc sau 21:30`);
+        devLog(`⏰ Edit slot ${currentTime.format('HH:mm')} bị bỏ qua vì sẽ kết thúc sau 21:30`);
         break;
       }
       
@@ -3016,7 +3018,7 @@ const AppointmentManagement = () => {
       currentTime = currentTime.add(totalSlotTime, 'minute');
     }
     
-    console.log(`✅ Generated ${slots.length} EDIT time slots with service duration ${actualServiceDuration}min + ${BUFFER_TIME_MINUTES}min buffer`);
+    devLog(`✅ Generated ${slots.length} EDIT time slots with service duration ${actualServiceDuration}min + ${BUFFER_TIME_MINUTES}min buffer`);
     
     return slots;
   };
@@ -3053,10 +3055,10 @@ const AppointmentManagement = () => {
   const generateEditTimeSlots = (selectedDate, serviceDuration = 30, petBusySlots = [], staffBusySlots = [], excludeAppointmentId = null, staffAppointments = [], petAppointments = []) => {
     if (!selectedDate) return [];
     
-    console.log(`[generateEditTimeSlots] Tạo slots với thời lượng dịch vụ: ${serviceDuration} phút`);
-    console.log(`👨‍⚕️ [ADMIN DEBUG] Received staffBusySlots:`, staffBusySlots);
-    console.log(`🐕 [ADMIN DEBUG] Received petBusySlots:`, petBusySlots);
-    console.log(`🔧 [ADMIN DEBUG] Excluding appointmentId:`, excludeAppointmentId);
+    devLog(`[generateEditTimeSlots] Tạo slots với thời lượng dịch vụ: ${serviceDuration} phút`);
+    devLog(`👨‍⚕️ [ADMIN DEBUG] Received staffBusySlots:`, staffBusySlots);
+    devLog(`🐕 [ADMIN DEBUG] Received petBusySlots:`, petBusySlots);
+    devLog(`🔧 [ADMIN DEBUG] Excluding appointmentId:`, excludeAppointmentId);
     
     const actualServiceDuration = serviceDuration || 30;
     const bufferTime = 10; // Buffer time 10 phút
@@ -3112,7 +3114,7 @@ const AppointmentManagement = () => {
             const isWithinRange = slotTime.isSameOrAfter(aptStart) && slotTime.isBefore(aptEnd);
           
           // DEBUG: Log all appointments being checked
-          console.log(`🔍 [DEBUG] Checking slot ${slotStartStr} vs appointment:`, {
+          devLog(`🔍 [DEBUG] Checking slot ${slotStartStr} vs appointment:`, {
             appointmentId: apt.appointmentId,
             aptStart: aptStartTime,
             aptEnd: aptEndTime,
@@ -3123,7 +3125,7 @@ const AppointmentManagement = () => {
           });
           
             if (isWithinRange) {
-              console.log(`🐕 [ADMIN EDIT] Pet busy - slot ${slotStartStr} falls within appointment ${aptStartTime}-${aptEndTime} (appointmentId: ${apt.appointmentId})`);
+              devLog(`🐕 [ADMIN EDIT] Pet busy - slot ${slotStartStr} falls within appointment ${aptStartTime}-${aptEndTime} (appointmentId: ${apt.appointmentId})`);
             }
             
             return isWithinRange;
@@ -3161,7 +3163,7 @@ const AppointmentManagement = () => {
             const isWithinRange = slotTime.isSameOrAfter(aptStart) && slotTime.isBefore(aptEnd);
             
             if (isWithinRange) {
-              console.log(`👤 [ADMIN EDIT] Staff busy - slot ${slotStartStr} falls within appointment ${aptStartTime}-${aptEndTime}`);
+              devLog(`👤 [ADMIN EDIT] Staff busy - slot ${slotStartStr} falls within appointment ${aptStartTime}-${aptEndTime}`);
             }
             
             return isWithinRange;
@@ -3174,7 +3176,7 @@ const AppointmentManagement = () => {
       
       // DEBUG: Log specific slot check (for key slots)
       if (slotStartStr === '14:40' || slotStartStr === '19:40' || slotStartStr === '18:30' || slotStartStr === '19:00' || slotStartStr === '19:30') {
-        console.log(`👨‍⚕️ [ADMIN DEBUG] Slot ${slotStartStr} check:`, {
+        devLog(`👨‍⚕️ [ADMIN DEBUG] Slot ${slotStartStr} check:`, {
           slotStartStr: slotStartStr,
           actualServiceDuration: actualServiceDuration,
           slotInterval: slotInterval,
@@ -3208,7 +3210,7 @@ const AppointmentManagement = () => {
       slots.push(slotData);
     }
     
-    console.log(`[generateEditTimeSlots] Đã tạo ${slots.length} slots với interval ${slotInterval} phút`);
+    devLog(`[generateEditTimeSlots] Đã tạo ${slots.length} slots với interval ${slotInterval} phút`);
     return slots;
   };
 
@@ -3234,7 +3236,7 @@ const AppointmentManagement = () => {
   const assignStaffToAppointment = async (appointmentId, staffId, timeSlot = null) => {
     try {
       setLoading(true);
-      console.log('🔄 Assigning staff to appointment:', {
+      devLog('🔄 Assigning staff to appointment:', {
         appointmentId,
         staffId,
         timeSlot: timeSlot ? timeSlot.startTimeString || timeSlot.startTime : 'no change'
@@ -3268,16 +3270,16 @@ const AppointmentManagement = () => {
         
         updateData.appointmentDate = utcDateTime.toISOString();
         
-        console.log(`⏰ [ASSIGN STAFF] Changing appointment time:`);
-        console.log(`   - From: ${formatTime(currentAppointment.appointmentDate)}`);
-        console.log(`   - To (local): ${slotTime}`);
-        console.log(`   - To (UTC): ${utcDateTime.toISOString()}`);
+        devLog(`⏰ [ASSIGN STAFF] Changing appointment time:`);
+        devLog(`   - From: ${formatTime(currentAppointment.appointmentDate)}`);
+        devLog(`   - To (local): ${slotTime}`);
+        devLog(`   - To (UTC): ${utcDateTime.toISOString()}`);
       }
       
       // Sử dụng appointmentService.updateAppointment thay vì fetch
       const updatedAppointment = await appointmentService.updateAppointment(appointmentId, updateData);
       
-      console.log('✅ Staff assigned successfully:', updatedAppointment);
+      devLog('✅ Staff assigned successfully:', updatedAppointment);
       
       // Refresh appointments list
       await fetchAppointments();
@@ -3358,7 +3360,7 @@ const AppointmentManagement = () => {
 
   // Xử lý chọn time slot
   const handleTimeSlotSelect = (timeSlot) => {
-    console.log('Time slot selected:', timeSlot);
+    devLog('Time slot selected:', timeSlot);
     setSelectedTimeSlot(timeSlot);
     setSelectedEditTimeSlot(timeSlot);
     
@@ -4257,7 +4259,7 @@ const AppointmentManagement = () => {
                             // Load staff schedule data
                             const loadData = async () => {
                               try {
-                                console.log(`🔧 [STAFF ASSIGN] Loading data for staff ${staff.staffId} on ${selectedUnassignedAppointment.appointmentDate}`);
+                                devLog(`🔧 [STAFF ASSIGN] Loading data for staff ${staff.staffId} on ${selectedUnassignedAppointment.appointmentDate}`);
                                 
                                 // Fetch staff busy slots and appointments
                                 const [busySlots, appointments] = await Promise.all([
@@ -4265,15 +4267,15 @@ const AppointmentManagement = () => {
                                   fetchStaffAppointments(staff.staffId, selectedUnassignedAppointment.appointmentDate)
                                 ]);
                                 
-                                console.log(`🔧 [STAFF ASSIGN] Staff ${staff.staffId} busy slots:`, busySlots);
-                                console.log(`🔧 [STAFF ASSIGN] Staff ${staff.staffId} appointments:`, appointments);
+                                devLog(`🔧 [STAFF ASSIGN] Staff ${staff.staffId} busy slots:`, busySlots);
+                                devLog(`🔧 [STAFF ASSIGN] Staff ${staff.staffId} appointments:`, appointments);
                                 
                                 setStaffBusyTimeSlots(busySlots);
                                 setStaffAppointments(appointments);
                                 
                                 // Get service duration for slot generation
                                 const serviceDuration = getServiceDuration(selectedUnassignedAppointment.serviceId, services);
-                                console.log(`🔧 [STAFF ASSIGN] Service duration: ${serviceDuration} minutes`);
+                                devLog(`🔧 [STAFF ASSIGN] Service duration: ${serviceDuration} minutes`);
                                 
                                 // Generate slots using generateEditTimeSlots instead (better logic)
                                 const slots = generateEditTimeSlots(
@@ -4286,10 +4288,10 @@ const AppointmentManagement = () => {
                                   [] // no pet appointments for staff assignment
                                 );
                                 
-                                console.log(`🔧 [STAFF ASSIGN] Generated ${slots.length} slots for staff assignment`);
+                                devLog(`🔧 [STAFF ASSIGN] Generated ${slots.length} slots for staff assignment`);
                                 setStaffTimeSlots(slots);
                                 
-                                console.log(`🔧 [STAFF ASSIGN] Setting loadingTimeSlots to false`);
+                                devLog(`🔧 [STAFF ASSIGN] Setting loadingTimeSlots to false`);
                                 setLoadingTimeSlots(false);
                                 
                                 // Auto-select current appointment time slot if staff is available
@@ -4306,7 +4308,7 @@ const AppointmentManagement = () => {
                                   });
                                 }
                                 
-                                console.log('✅ Staff schedule loaded successfully:', {
+                                devLog('✅ Staff schedule loaded successfully:', {
                                   staffId: staff.staffId,
                                   busySlots: busySlots,
                                   appointments: appointments,
@@ -4325,7 +4327,7 @@ const AppointmentManagement = () => {
                                   type: 'error'
                                 });
                               } finally {
-                                console.log(`🔧 [STAFF ASSIGN] Finally block - setting loadingTimeSlots to false`);
+                                devLog(`🔧 [STAFF ASSIGN] Finally block - setting loadingTimeSlots to false`);
                                 setLoadingTimeSlots(false);
                               }
                             };
@@ -4848,7 +4850,7 @@ const AppointmentManagement = () => {
                 </div>
               ) : (
                 (() => {
-                  console.log(`🔧 [TIMESLOT RENDER] Rendering TimeSlotGrid with:`, {
+                  devLog(`🔧 [TIMESLOT RENDER] Rendering TimeSlotGrid with:`, {
                     staffTimeSlots: staffTimeSlots.length,
                     staffBusyTimeSlots: staffBusyTimeSlots,
                     staffAppointments: staffAppointments.length,
@@ -5361,8 +5363,8 @@ const AppointmentManagement = () => {
                                 key={user.userId}
                                 onClick={() => {
                                   const userId = user.userId;
-                                  console.log('👤 Selected userId:', userId);
-                                  console.log('🐾 All pets:', pets);
+                                  devLog('👤 Selected userId:', userId);
+                                  devLog('🐾 All pets:', pets);
                                   
                                   setCreateFormData({
                                     ...createFormData,
@@ -5379,7 +5381,7 @@ const AppointmentManagement = () => {
                                   
                                   // Lọc thú cưng của khách hàng này
                                   const filteredPets = pets.filter(p => p.userId === userId);
-                                  console.log('✅ Filtered pets for user:', filteredPets);
+                                  devLog('✅ Filtered pets for user:', filteredPets);
                                   setUserPets(filteredPets);
                                   setSelectedCreateTimeSlot(null);
                                 }}
@@ -5493,7 +5495,7 @@ const AppointmentManagement = () => {
                   <AdminCreateAppointment 
                     userId={parseInt(createFormData.userId)}
                     onSuccess={(response) => {
-                      console.log('✅ Tạo lịch hẹn thành công:', response);
+                      devLog('✅ Tạo lịch hẹn thành công:', response);
                       // Đóng modal
                       setShowCreateModal(false);
                       // Reset form

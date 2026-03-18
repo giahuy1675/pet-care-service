@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\Users\\giahu\\OneDrive\\Desktop\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|c:\\users\\giahu\\onedrive\\desktop\\do_an_chuyen_nganh_v1\\pet_flutter\\be_petweb_api\\be_petweb_api\\hubs\\timeslotsharinghub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|solutionrelative:be_petweb_api\\hubs\\timeslotsharinghub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|c:\\users\\giahu\\onedrive\\desktop\\do_an_chuyen_nganh_v1\\pet_flutter\\be_petweb_api\\be_petweb_api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|solutionrelative:be_petweb_api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -20,10 +24,6 @@
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\dotnet\\sdk\\10.0.102\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.PackageDependencyResolution.targets||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|c:\\users\\giahu\\onedrive\\desktop\\do_an_chuyen_nganh_v1\\pet_flutter\\be_petweb_api\\be_petweb_api\\hubs\\timeslotsharinghub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|solutionrelative:be_petweb_api\\hubs\\timeslotsharinghub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{C026FC78-E703-4686-BA33-C60F4A02997E}|BE_PetWeb_API\\BE_PetWeb_API.csproj|c:\\users\\giahu\\onedrive\\desktop\\do_an_chuyen_nganh_v1\\pet_flutter\\be_petweb_api\\be_petweb_api\\controllers\\appointmentcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -143,7 +143,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 8,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Bookmark",
@@ -159,8 +159,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\Order.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:18:06.576Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:18:06.576Z"
             },
             {
               "$type": "Document",
@@ -172,8 +171,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\ReviewReply.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:17:51.95Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:17:51.95Z"
             },
             {
               "$type": "Document",
@@ -185,8 +183,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Controllers\\AppointmentController.cs",
               "ViewState": "AgIAAC0BAAAAAAAAAAAkwBYAAABAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-23T12:52:24.862Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-23T12:52:24.862Z"
             },
             {
               "$type": "Document",
@@ -198,25 +195,24 @@
               "RelativeToolTip": "BE_PetWeb_API\\DTOs\\Appointment\\TimeSlotDto.cs",
               "ViewState": "AgIAABIAAAAAAAAAAAAiwAQAAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-29T12:47:58.74Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-29T12:47:58.74Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 0,
               "Title": "TimeSlotSharingHub.cs",
               "DocumentMoniker": "C:\\Users\\giahu\\OneDrive\\Desktop\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Hubs\\TimeSlotSharingHub.cs",
               "RelativeDocumentMoniker": "BE_PetWeb_API\\Hubs\\TimeSlotSharingHub.cs",
               "ToolTip": "C:\\Users\\giahu\\OneDrive\\Desktop\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Hubs\\TimeSlotSharingHub.cs",
               "RelativeToolTip": "BE_PetWeb_API\\Hubs\\TimeSlotSharingHub.cs",
-              "ViewState": "AgIAAEUBAAAAAAAAAAA8wFMBAAApAAAAAAAAAA==",
+              "ViewState": "AgIAAJIAAAAAAAAAAAAQwFMBAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-28T07:03:45.726Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\Users\\giahu\\OneDrive\\Desktop\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\appsettings.json",
               "RelativeDocumentMoniker": "BE_PetWeb_API\\appsettings.json",
@@ -228,7 +224,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "CreateAdminAccount.sql",
               "DocumentMoniker": "C:\\Users\\giahu\\OneDrive\\Desktop\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Scripts\\CreateAdminAccount.sql",
               "RelativeDocumentMoniker": "BE_PetWeb_API\\Scripts\\CreateAdminAccount.sql",
@@ -239,13 +235,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\giahu\\OneDrive\\Desktop\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Program.cs",
               "RelativeDocumentMoniker": "BE_PetWeb_API\\Program.cs",
               "ToolTip": "C:\\Users\\giahu\\OneDrive\\Desktop\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Program.cs",
               "RelativeToolTip": "BE_PetWeb_API\\Program.cs",
-              "ViewState": "AgIAAOoAAAAAAAAAAAAAAAAAAAAfAAAAAAAAAA==",
+              "ViewState": "AgIAAN4AAAAAAAAAAAAAAOkAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-06-17T03:54:18.937Z",
               "EditorCaption": ""
@@ -260,8 +256,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\Appointment.cs",
               "ViewState": "AgIAACgAAAAAAAAAAADwvzMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:19:27.976Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:19:27.976Z"
             },
             {
               "$type": "Document",
@@ -273,12 +268,11 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\PetGallery.cs",
               "ViewState": "AgIAAAsAAAAAAAAAAAAxwBgAAAA5AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:21:22.962Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:21:22.962Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "StatisticsController.cs",
               "DocumentMoniker": "C:\\Users\\giahu\\OneDrive\\Desktop\\do_an_chuyen_nganh_v1\\pet_flutter\\BE_PetWeb_API\\BE_PetWeb_API\\Controllers\\StatisticsController.cs",
               "RelativeDocumentMoniker": "BE_PetWeb_API\\Controllers\\StatisticsController.cs",
@@ -290,7 +284,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "Microsoft.PackageDependencyResolution.targets",
               "DocumentMoniker": "C:\\Program Files\\dotnet\\sdk\\10.0.102\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.PackageDependencyResolution.targets",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\Program Files\\dotnet\\sdk\\10.0.102\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.PackageDependencyResolution.targets",
@@ -322,8 +316,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\Notification.cs",
               "ViewState": "AgIAABkAAAAAAAAAAAAkwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:18:11.966Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:18:11.966Z"
             },
             {
               "$type": "Document",
@@ -335,8 +328,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\User.cs",
               "ViewState": "AgIAADoAAAAAAAAAAAA8wDkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:20:18.861Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:20:18.861Z"
             },
             {
               "$type": "Document",
@@ -348,8 +340,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\Comment.cs",
               "ViewState": "AgIAABYAAAAAAAAAAAAkwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:20:38.504Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:20:38.504Z"
             },
             {
               "$type": "Document",
@@ -361,8 +352,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\Service.cs",
               "ViewState": "AgIAACwAAAAAAAAAAAAUwDUAAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:04:38.441Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:04:38.441Z"
             },
             {
               "$type": "Document",
@@ -374,8 +364,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\Staff.cs",
               "ViewState": "AgIAABoAAAAAAAAAAAA9wCoAAAA3AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:03:10.648Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:03:10.648Z"
             },
             {
               "$type": "Document",
@@ -387,8 +376,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Services\\Implementations\\AppointmentService.cs",
               "ViewState": "AgIAAA4AAAAAAAAAAIA9wF0AAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T07:29:08.94Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T07:29:08.94Z"
             },
             {
               "$type": "Document",
@@ -400,8 +388,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\CartItem.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:20:43.546Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:20:43.546Z"
             },
             {
               "$type": "Document",
@@ -413,8 +400,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Models\\Category.cs",
               "ViewState": "AgIAAA8AAAAAAAAAAAAYwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T08:20:44.278Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T08:20:44.278Z"
             },
             {
               "$type": "Document",
@@ -426,8 +412,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Services\\Interfaces\\IAppointmentService.cs",
               "ViewState": "AgIAAAEAAAAAAAAAAAAtwAsAAABBAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T07:29:12.872Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-28T07:29:12.872Z"
             },
             {
               "$type": "Document",
@@ -463,8 +448,7 @@
               "RelativeToolTip": "BE_PetWeb_API\\Controllers\\StaffController.cs",
               "ViewState": "AgIAAFIAAAAAAAAAAAAkwE0AAAA2AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-17T03:32:48.258Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-17T03:32:48.258Z"
             },
             {
               "$type": "Document",

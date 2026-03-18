@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -10,14 +10,7 @@ const AdminRoute = ({ children }) => {
   const user = auth?.user;
   const loading = auth?.loading;
 
-  useEffect(() => {
-    console.log('AdminRoute - User:', user);
-    console.log('AdminRoute - Loading:', loading);
-    console.log('AdminRoute - Is Admin:', user?.role === 'Admin');
-  }, [user, loading]);
-
   if (loading) {
-    console.log('AdminRoute - Still loading, showing loading indicator');
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
         <CircularProgress />
@@ -26,17 +19,14 @@ const AdminRoute = ({ children }) => {
   }
 
   if (!user) {
-    console.log('AdminRoute - No user found, redirecting to login');
     return <Navigate to="/login" state={{ from: { pathname: '/admin' } }} replace />;
   }
 
   if (user.role !== 'Admin' && user.role !== 'Staff') {
-    console.log('AdminRoute - User is not Admin/Staff, redirecting to home');
     return <Navigate to="/" replace />;
   }
 
-  console.log('AdminRoute - User is Admin, rendering admin content');
-  // Nếu là Admin, hiển thị component con
+  // Nếu là Admin/Staff, hiển thị component con
   return children;
 };
 

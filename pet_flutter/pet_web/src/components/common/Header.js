@@ -111,7 +111,7 @@ const jiggle = keyframes`
 
 // Styled components
 const LogoWrapper = styled.div`
-  background: linear-gradient(135deg, ${props => props.theme.colorPrimary}, ${props => props.theme.colorPrimaryActive});
+  background: transparent;
   border-radius: 16px;
   width: 45px;
   height: 45px;
@@ -119,7 +119,6 @@ const LogoWrapper = styled.div`
   align-items: center;
   justify-content: center;
   margin-right: 15px;
-  box-shadow: 0 6px 20px ${props => props.theme.colorPrimary}60;
   position: relative;
   z-index: 1;
 `;
@@ -636,7 +635,16 @@ const Header = () => {
             }}
           >
             <LogoWrapper theme={token}>
-              <PetIcon style={{ color: '#fff', fontSize: 24 }} />
+              <img 
+                src="/animal-care.png" 
+                alt="Pet Web Logo" 
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: 'contain',
+                  borderRadius: '12px'
+                }} 
+              />
             </LogoWrapper>
             
             <Link to="/" style={{ textDecoration: 'none' }}>
@@ -836,18 +844,26 @@ const Header = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div
                 style={{
-                  background: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
+                  background: 'transparent',
                   borderRadius: 12,
                   width: 36,
                   height: 36,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: `0 6px 16px ${token.colorPrimary}40`,
-                  transform: 'rotate(-5deg)',
+                  overflow: 'hidden',
                 }}
               >
-                <PetIcon style={{ color: '#fff', fontSize: 20 }} />
+                <img 
+                  src="/animal-care.png" 
+                  alt="Pet Web Logo" 
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'contain',
+                    borderRadius: '12px'
+                  }} 
+                />
               </div>
               <Title level={5} style={{ margin: 0, fontWeight: 600 }}>
                 Pet Web
