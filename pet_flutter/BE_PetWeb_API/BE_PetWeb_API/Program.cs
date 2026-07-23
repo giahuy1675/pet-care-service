@@ -33,9 +33,22 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     });
 
+// Lấy Connection String
+var connectionString = builder.Configuration.GetConnectionString("PetWebConnection");
+
+// Tự động chuyển đổi định dạng URI (của Neon/Render) sang định dạng chuẩn của Npgsql
+if (!string.IsNullOrEmpty(connectionString) && (connectionString.StartsWith("postgres://") || connectionString.StartsWith("postgresql://")))
+{
+    var uri = new Uri(connectionString);
+    var userInfo = uri.UserInfo.Split(':');
+    var password = userInfo.Length > 1 ? userInfo[1] : "";
+    
+    connectionString = $"Host={uri.Host};Port={(uri.Port > 0 ? uri.Port : 5432)};Database={uri.LocalPath.TrimStart('/')};Username={userInfo[0]};Password={password};SSL Mode=Require;Trust Server Certificate=true;";
+}
+
 // Add DbContext
 builder.Services.AddDbContext<PetWebContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PetWebConnection")));
+    options.UseNpgsql(connectionString));
 
 // Add HttpClient for OneSignal and other services
 builder.Services.AddHttpClient();
