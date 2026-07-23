@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BE_PetWeb_API.Migrations
 {
     [DbContext(typeof(PetWebContext))]
-    [Migration("20260723130236_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260723142803_PostgresInitial")]
+    partial class PostgresInitial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
