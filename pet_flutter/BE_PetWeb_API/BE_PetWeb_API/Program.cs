@@ -35,7 +35,7 @@ builder.Services.AddControllers()
 
 // Add DbContext
 builder.Services.AddDbContext<PetWebContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("PetWebConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PetWebConnection")));
 
 // Add HttpClient for OneSignal and other services
 builder.Services.AddHttpClient();
