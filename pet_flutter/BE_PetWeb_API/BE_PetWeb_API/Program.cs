@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
+// Cấu hình Npgsql cho phép lưu DateTime không phải UTC (vì codebase cũ dùng SQL Server)
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Cấu hình logging chi tiết hơn
