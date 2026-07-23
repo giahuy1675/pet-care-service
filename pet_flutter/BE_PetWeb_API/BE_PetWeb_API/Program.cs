@@ -274,7 +274,7 @@ app.MapHealthChecks("/api/health");
 // SPA fallback - serve index.html for any non-API, non-file routes (React Router)
 app.MapFallbackToFile("index.html");
 
-// Tự động tạo tài khoản Admin nếu chưa có
+// Tự động tạo tài khoản Admin và Auto-Migrate Database
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -282,6 +282,9 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<PetWebContext>();
         
+        // Tự động apply các migrations (Tạo bảng trong database mới như Neon)
+        context.Database.Migrate();
+
         // Kiểm tra xem đã có admin nào chưa
         if (!context.Users.Any(u => u.Role == "Admin"))
         {
