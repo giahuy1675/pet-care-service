@@ -43,19 +43,19 @@ public partial class Order
     public string RecipientPhone { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? OrderDate { get; set; }
 
     [Required]
-    [Column(TypeName = "decimal(10, 2)")]
+    
     public decimal TotalAmount { get; set; }
 
-    [Column(TypeName = "decimal(10, 2)")]
+    
     public decimal ShippingFee { get; set; } = 0;
 
     [Required]
     [MaxLength(20)]
-    [Column(TypeName = "nvarchar(20)")]
+    
     public string Status { get; set; } = OrderStatus.ChoXuLy.ToString();
 
     [Required]
@@ -63,18 +63,18 @@ public partial class Order
 
     [Required]
     [MaxLength(20)]
-    [Column(TypeName = "nvarchar(20)")]
+    
     public string PaymentMethod { get; set; }
 
     [Required]
     [MaxLength(20)]
-    [Column(TypeName = "nvarchar(20)")]
+    
     public string PaymentStatus { get; set; } = Models.PaymentStatus.ChoThanhToan.ToString();
 
     public string? Notes { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? UpdatedAt { get; set; }
 
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();

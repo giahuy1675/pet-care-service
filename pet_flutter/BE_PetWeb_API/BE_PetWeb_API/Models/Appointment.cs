@@ -26,28 +26,28 @@ public partial class Appointment
     public int? StaffId { get; set; }
 
     [Required]
-    [Column(TypeName = "datetime")]
+    
     public DateTime AppointmentDate { get; set; }
 
-    [Column(TypeName = "datetime")]
+    
     public DateTime? EndTime { get; set; }
 
     [Required]
     [MaxLength(20)]
-    [Column(TypeName = "nvarchar(20)")]
+    
     public string Status { get; set; } = "Scheduled";
 
     public string? Notes { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? CreatedAt { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? UpdatedAt { get; set; }
 
-    [Column(TypeName = "datetime")]
+    
     public DateTime? CancelledAt { get; set; }
 
     public virtual Pet Pet { get; set; }

@@ -17,13 +17,13 @@ public partial class PetGallery
 
     [Required]
     [MaxLength(255)]
-    [Column(TypeName = "nvarchar(255)")]
+    
     public string ImageUrl { get; set; }
 
     public string? Caption { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? UploadDate { get; set; }
 
     public virtual Pet Pet { get; set; }

@@ -22,7 +22,7 @@ public partial class Comment
     public string Content { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? CommentDate { get; set; }
 
     public bool? IsApproved { get; set; } = true;

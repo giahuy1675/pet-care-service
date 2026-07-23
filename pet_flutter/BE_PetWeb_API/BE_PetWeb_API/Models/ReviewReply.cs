@@ -21,11 +21,11 @@ public partial class ReviewReply
     public string ReplyContent { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? ReplyDate { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? UpdatedAt { get; set; }
 
     public virtual Review Review { get; set; }

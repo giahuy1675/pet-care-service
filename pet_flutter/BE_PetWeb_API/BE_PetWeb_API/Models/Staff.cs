@@ -16,22 +16,22 @@ public partial class Staff
 
     [Required]
     [MaxLength(100)]
-    [Column(TypeName = "nvarchar(100)")]
+    
     public string Specialization { get; set; }
 
     public string? Bio { get; set; }
 
     public int? Experience { get; set; }
 
-    [Column(TypeName = "decimal(3, 2)")]
+    
     public decimal? Rating { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? CreatedAt { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? UpdatedAt { get; set; }
 
     public bool? IsActive { get; set; }

@@ -18,7 +18,7 @@ public partial class MedicalRecord
     public int? StaffId { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? RecordDate { get; set; }
 
     [Required]

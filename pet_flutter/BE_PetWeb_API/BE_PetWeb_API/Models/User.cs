@@ -12,48 +12,48 @@ public partial class User
 
     [Required]
     [MaxLength(50)]
-    [Column(TypeName = "nvarchar(50)")]
+    
     public string Username { get; set; }
 
     [Required]
     [MaxLength(100)]
-    [Column(TypeName = "nvarchar(100)")]
+    
     public string Email { get; set; }
 
     [Required]
     [MaxLength(255)]
-    [Column(TypeName = "nvarchar(255)")]
+    
     public string Password { get; set; }
 
     [Required]
     [MaxLength(100)]
-    [Column(TypeName = "nvarchar(100)")]
+    
     public string FullName { get; set; }
 
     [MaxLength(20)]
-    [Column(TypeName = "nvarchar(20)")]
+    
     public string? Phone { get; set; }
 
     public string? Address { get; set; }
 
     [MaxLength(255)]
-    [Column(TypeName = "nvarchar(255)")]
+    
     public string? Avatar { get; set; }
 
     [MaxLength(20)]
-    [Column(TypeName = "nvarchar(20)")]
+    
     public string? Role { get; set; }
 
-    [Column(TypeName = "datetime")]
+    
     public DateTime? CreatedAt { get; set; }
 
-    [Column(TypeName = "datetime")]
+    
     public DateTime? UpdatedAt { get; set; }
 
     public bool? IsActive { get; set; }
 
     [MaxLength(255)]
-    [Column(TypeName = "nvarchar(255)")]
+    
     public string? FcmToken { get; set; }
 
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();

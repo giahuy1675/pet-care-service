@@ -12,33 +12,33 @@ public partial class Service
 
     [Required]
     [MaxLength(100)]
-    [Column(TypeName = "nvarchar(100)")]
+    
     public string Name { get; set; }
 
     [Required]
     public string Description { get; set; }
 
     [Required]
-    [Column(TypeName = "decimal(10, 2)")]
+    
     public decimal Price { get; set; }
 
     public int Duration { get; set; }
 
     [Required]
     [MaxLength(20)]
-    [Column(TypeName = "nvarchar(20)")]
+    
     public string Category { get; set; }
 
     [MaxLength(255)]
-    [Column(TypeName = "nvarchar(255)")]
+    
     public string? Photo { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? CreatedAt { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? UpdatedAt { get; set; }
 
     public bool? IsActive { get; set; } = true;

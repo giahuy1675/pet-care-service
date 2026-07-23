@@ -32,11 +32,11 @@ public partial class Review
 
     public string? Comment { get; set; }
 
-    [Column(TypeName = "nvarchar(max)")]
+    
     public string? Images { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? ReviewDate { get; set; }
 
     public virtual Appointment Appointment { get; set; }

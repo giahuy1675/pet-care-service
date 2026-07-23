@@ -19,15 +19,15 @@ public partial class CartItem
     public int Quantity { get; set; }
 
     [MaxLength(100)]
-    [Column(TypeName = "nvarchar(100)")]
+    
     public string? Option { get; set; } // Lưu tùy chọn sản phẩm nếu có
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? CreatedAt { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? UpdatedAt { get; set; }
 
     // Navigation properties

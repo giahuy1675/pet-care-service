@@ -14,11 +14,11 @@ public partial class ProductImage
 
     [Required]
     [MaxLength(255)]
-    [Column(TypeName = "nvarchar(255)")]
+    
     public string ImageUrl { get; set; }
 
     [MaxLength(100)]
-    [Column(TypeName = "nvarchar(100)")]
+    
     public string? AltText { get; set; }
 
     public int DisplayOrder { get; set; } = 0;
@@ -26,7 +26,7 @@ public partial class ProductImage
     public bool IsPrimary { get; set; } = false;
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? CreatedAt { get; set; }
 
     [ForeignKey("ProductId")]

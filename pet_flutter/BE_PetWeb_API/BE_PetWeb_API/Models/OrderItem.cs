@@ -22,15 +22,15 @@ public partial class OrderItem
     public int Quantity { get; set; }
 
     [Required]
-    [Column(TypeName = "decimal(10, 2)")]
+    
     public decimal Price { get; set; }
 
     [Required]
-    [Column(TypeName = "decimal(10, 2)")]
+    
     public decimal Subtotal { get; set; }
 
     [MaxLength(100)]
-    [Column(TypeName = "nvarchar(100)")]
+    
     public string? ProductOption { get; set; }
 
     public virtual Order Order { get; set; }

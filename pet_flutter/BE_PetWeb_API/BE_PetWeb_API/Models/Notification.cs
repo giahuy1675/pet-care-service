@@ -16,7 +16,7 @@ public partial class Notification
 
     [Required]
     [MaxLength(100)]
-    [Column(TypeName = "nvarchar(100)")]
+    
     public string Title { get; set; }
 
     [Required]
@@ -24,13 +24,13 @@ public partial class Notification
 
     [Required]
     [MaxLength(50)]
-    [Column(TypeName = "nvarchar(50)")]
+    
     public string Type { get; set; }
 
     public bool? IsRead { get; set; } = false;
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    [Column(TypeName = "datetime")]
+    
     public DateTime? CreatedAt { get; set; }
 
     public virtual User User { get; set; }

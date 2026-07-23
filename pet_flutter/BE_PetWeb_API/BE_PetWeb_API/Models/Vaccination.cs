@@ -16,7 +16,7 @@ public partial class Vaccination
 
     [Required]
     [MaxLength(100)]
-    [Column(TypeName = "nvarchar(100)")]
+    
     public string VaccineName { get; set; }
 
     [Required]
