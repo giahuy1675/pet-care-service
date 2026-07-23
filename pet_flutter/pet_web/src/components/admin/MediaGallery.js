@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Upload, message, Tabs, Spin, List, Card, Button, Input } from 'antd';
+import CustomSpinner from '../common/CustomSpinner';
 import { PlusOutlined, SearchOutlined, DeleteOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import axiosClient from '../../utils/axiosClient';
@@ -291,7 +292,7 @@ const MediaGallery = ({ visible, onCancel, onSelect, multiple = false }) => {
           
           {loading ? (
             <div style={{ textAlign: 'center', padding: 20 }}>
-              <Spin />
+              <CustomSpinner />
             </div>
           ) : filteredGalleryItems.length > 0 ? (
             <List

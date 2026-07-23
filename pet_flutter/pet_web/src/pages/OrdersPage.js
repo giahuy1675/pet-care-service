@@ -146,7 +146,7 @@ const HeaderGlow = styled.div`
 const HeaderTitle = styled(Title)`
   margin-bottom: 10px !important;
   font-weight: 800 !important;
-  color: #1a3d7c !important;
+  color: #0958d9 !important;
   letter-spacing: -0.5px !important;
   text-transform: uppercase !important;
   position: relative;
@@ -160,14 +160,14 @@ const HeaderTitle = styled(Title)`
     transform: translateX(-50%);
     width: 80px;
     height: 3px;
-    background-color: #2a6ac8;
+    background-color: #1677ff;
     border-radius: 3px;
   }
 `;
 
 const HeaderIcon = styled(motion.div)`
   font-size: 80px;
-  color: #2a6ac8;
+  color: #1677ff;
   margin: 0 auto 20px;
   width: 120px;
   height: 120px;
@@ -191,7 +191,7 @@ const HeaderIcon = styled(motion.div)`
   
   .anticon {
     font-size: 60px;
-    color: #2a6ac8;
+    color: #1677ff;
   }
 `;
 
@@ -288,7 +288,7 @@ const TabsContainer = styled(Card)`
     padding: 12px 20px !important;
     margin: 0 8px 0 0 !important;
     transition: all 0.3s ease !important;
-    background-color: #f5f7ff !important;
+    background-color: #fafafa !important;
     border: none !important;
     
     &:hover {
@@ -300,7 +300,7 @@ const TabsContainer = styled(Card)`
     background-color: white !important;
     
     .ant-tabs-tab-btn {
-      color: #2a6ac8 !important;
+      color: #1677ff !important;
       font-weight: 600 !important;
     }
   }
@@ -322,7 +322,7 @@ const TabsContainer = styled(Card)`
   }
   
   .ant-tabs-ink-bar {
-    background-color: #2a6ac8;
+    background-color: #1677ff;
     height: 3px;
     border-radius: 3px;
   }
@@ -357,8 +357,8 @@ const LuxurySelect = styled(Select)`
   
   &:hover .ant-select-selector,
   &.ant-select-focused .ant-select-selector {
-    border-color: #2a6ac8 !important;
-    box-shadow: 0 8px 20px rgba(42, 106, 200, 0.15) !important;
+    border-color: #1677ff !important;
+    box-shadow: 0 8px 20px rgba(22, 119, 255, 0.15) !important;
   }
 `;
 
@@ -370,8 +370,8 @@ const LuxuryDatePicker = styled(RangePicker)`
   
   &:hover,
   &.ant-picker-focused {
-    border-color: #2a6ac8 !important;
-    box-shadow: 0 8px 20px rgba(42, 106, 200, 0.15) !important;
+    border-color: #1677ff !important;
+    box-shadow: 0 8px 20px rgba(22, 119, 255, 0.15) !important;
   }
   
   .ant-picker-input {
@@ -384,14 +384,14 @@ const FilterButton = styled(Button)`
   border-radius: 12px !important;
   font-size: 16px !important;
   font-weight: 600 !important;
-  background-color: #2a6ac8 !important;
+  background-color: #1677ff !important;
   border: none !important;
-  box-shadow: 0 8px 20px rgba(42, 106, 200, 0.2) !important;
+  box-shadow: 0 8px 20px rgba(22, 119, 255, 0.2) !important;
   
   &:hover {
     transform: translateY(-3px) !important;
-    box-shadow: 0 12px 25px rgba(42, 106, 200, 0.3) !important;
-    background-color: #1a3d7c !important;
+    box-shadow: 0 12px 25px rgba(22, 119, 255, 0.3) !important;
+    background-color: #0958d9 !important;
   }
   
   &:active {
@@ -410,7 +410,7 @@ const TableCard = styled(motion.div)`
   }
   
   .ant-table-thead > tr > th {
-    background-color: #f5f7ff !important;
+    background-color: #fafafa !important;
     font-weight: 600;
     padding: 16px 20px;
     
@@ -436,15 +436,15 @@ const TableCard = styled(motion.div)`
 const OrderCode = styled.div`
   font-family: 'Roboto Mono', monospace;
   font-weight: 600;
-  color: #2a6ac8;
-  background-color: rgba(42, 106, 200, 0.08);
+  color: #1677ff;
+  background-color: rgba(22, 119, 255, 0.08);
   padding: 6px 10px;
   border-radius: 8px;
   display: inline-block;
   transition: all 0.3s;
   
   &:hover {
-    background-color: rgba(42, 106, 200, 0.15);
+    background-color: rgba(22, 119, 255, 0.15);
     transform: translateY(-2px);
   }
 `;
@@ -455,7 +455,7 @@ const CustomerInfo = styled.div`
   
   .customer-avatar {
     margin-right: 10px;
-    background-color: #2a6ac8;
+    background-color: #1677ff;
     
     .anticon {
       color: white;
@@ -473,8 +473,8 @@ const OrderDate = styled.div`
   
   .date-icon {
     margin-right: 10px;
-    color: #2a6ac8;
-    background-color: rgba(42, 106, 200, 0.08);
+    color: #1677ff;
+    background-color: rgba(22, 119, 255, 0.08);
     width: 28px;
     height: 28px;
     display: flex;
@@ -486,8 +486,8 @@ const OrderDate = styled.div`
 
 const OrderAmount = styled.div`
   font-weight: 700;
-  color: #2a6ac8;
-  background-color: rgba(42, 106, 200, 0.08);
+  color: #1677ff;
+  background-color: rgba(22, 119, 255, 0.08);
   padding: 6px 12px;
   border-radius: 8px;
   display: inline-block;
@@ -513,12 +513,12 @@ const ActionButtons = styled(Space)`
   }
   
   .view-btn {
-    background-color: #2a6ac8;
+    background-color: #1677ff;
     color: white;
     
     &:hover {
-      box-shadow: 0 8px 15px rgba(42, 106, 200, 0.25);
-      background-color: #1a3d7c;
+      box-shadow: 0 8px 15px rgba(22, 119, 255, 0.25);
+      background-color: #0958d9;
     }
   }
   
@@ -594,17 +594,17 @@ const EmptyStateCard = styled(Card)`
     padding: 0 30px;
     font-size: 16px;
     font-weight: 600;
-    background-color: #2a6ac8;
+    background-color: #1677ff;
     border: none;
-    box-shadow: 0 10px 20px rgba(42, 106, 200, 0.2);
+    box-shadow: 0 10px 20px rgba(22, 119, 255, 0.2);
     position: relative;
     overflow: hidden;
     z-index: 1;
     
     &:hover {
       transform: translateY(-5px);
-      box-shadow: 0 15px 30px rgba(42, 106, 200, 0.3);
-      background-color: #1a3d7c;
+      box-shadow: 0 15px 30px rgba(22, 119, 255, 0.3);
+      background-color: #0958d9;
     }
     
     &::before {
@@ -859,7 +859,7 @@ const OrdersPage = () => {
         title: 'Tổng đơn hàng',
         value: orderStats.total,
         icon: <ShoppingOutlined />,
-        color: '#2a6ac8',
+        color: '#1677ff',
         percent: 100
       },
       {
@@ -1066,39 +1066,14 @@ const OrdersPage = () => {
   return (
     <PageContainer>
       <HeaderSection
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        style={{ textAlign: 'left', marginBottom: 24 }}
       >
-        <HeaderGlow />
-        <HeaderIcon
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ 
-            type: "spring",
-            stiffness: 260,
-            damping: 20,
-            delay: 0.1
-          }}
-          whileHover={{ 
-            rotate: [0, -10, 10, -10, 0],
-            transition: { duration: 0.5 }
-          }}
-        >
-          <Badge count={orders.length} overflowCount={99}>
-            <ShoppingOutlined />
-          </Badge>
-        </HeaderIcon>
-        
-        <HeaderTitle level={2}>
+        <HeaderTitle level={2} style={{ margin: 0 }}>
           {isAdmin ? 'Quản lý đơn hàng' : 'Đơn hàng của tôi'}
         </HeaderTitle>
-        
-        <HeaderSubtitle>
-          {isAdmin 
-            ? 'Xem và quản lý tất cả đơn hàng trên hệ thống. Dễ dàng theo dõi trạng thái và cập nhật thông tin đơn hàng.' 
-            : 'Xem và theo dõi các đơn hàng của bạn. Kiểm tra trạng thái và lịch sử mua sắm một cách dễ dàng.'}
-        </HeaderSubtitle>
       </HeaderSection>
       
       {error && (

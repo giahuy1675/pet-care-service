@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   Row, Col, Typography, Button, Spin, Card, Empty, 
@@ -456,7 +456,7 @@ const PetDetailPage = () => {
     
     // Check if the path is in the format '/uploads/pets/filename.png'
     if (photoPath.includes('/uploads/pets/')) {
-      const baseURL = process.env.REACT_APP_BASE_URL || 'https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net';
+      const baseURL = axiosClient.defaults.baseURL.replace('/api', '');
       return `${baseURL}${photoPath}`;
     }
     

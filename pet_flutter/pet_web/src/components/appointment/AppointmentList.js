@@ -1,3 +1,4 @@
+import CustomSpinner from '../common/CustomSpinner';
 import React, { useState, useEffect } from 'react';
 import { 
   Layout, 
@@ -1000,7 +1001,7 @@ const AppointmentList = () => {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
-        <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
+        <CustomSpinner indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
       </div>
     );
   }

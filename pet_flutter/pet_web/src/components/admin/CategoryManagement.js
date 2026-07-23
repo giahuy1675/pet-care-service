@@ -45,16 +45,11 @@ const { confirm } = Modal;
 
 // Styled Components
 const CategoryManagementContainer = styled.div`
-  padding: 24px;
   background: #f5f5f5;
   min-height: 100vh;
   
   .page-header {
-    background: white;
-    padding: 24px;
-    border-radius: 8px;
     margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     
     .header-title {
       display: flex;
@@ -404,11 +399,15 @@ const CategoryManagement = () => {
       key: 'productCount',
       width: 120,
       align: 'center',
-      render: (count) => (
-        <Tag color="blue" icon={<AppstoreOutlined />}>
-          {count || 0}
-        </Tag>
-      )
+      render: (count) => {
+        const validCount = parseInt(count, 10);
+        const displayCount = isNaN(validCount) ? 0 : validCount;
+        return (
+          <Tag color="blue">
+            {displayCount}
+          </Tag>
+        );
+      }
     },
     {
       title: 'Trạng thái',

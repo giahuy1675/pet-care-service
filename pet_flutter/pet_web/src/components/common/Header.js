@@ -1,7 +1,8 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import cartService from '../../services/cartService';
+import { BASE_URL } from '../../config/api';
 import styled, { keyframes, css } from 'styled-components';
 import { motion } from 'framer-motion';
 
@@ -21,6 +22,7 @@ import {
   ConfigProvider,
   theme
 } from 'antd';
+import { HappyProvider } from '@ant-design/happy-work-theme';
 
 import { 
   HomeOutlined, 
@@ -55,102 +57,24 @@ const { Header: AntHeader } = Layout;
 const { Text, Title } = Typography;
 const { useToken } = theme;
 
-// Animation keyframes
-const float = keyframes`
-  0% { transform: translateY(0px) rotate(-5deg); }
-  50% { transform: translateY(-8px) rotate(-2deg); }
-  100% { transform: translateY(0px) rotate(-5deg); }
-`;
-
-const shine = keyframes`
-  0% { background-position: -100% 0; }
-  100% { background-position: 200% 0; }
-`;
-
-const pulse = keyframes`
-  0% { box-shadow: 0 0 0 0 rgba(24, 144, 255, 0.6); }
-  70% { box-shadow: 0 0 0 10px rgba(24, 144, 255, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(24, 144, 255, 0); }
-`;
-
-const scaleIn = keyframes`
-  0% { transform: scale(0.9); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-`;
-
-const morphBackground = keyframes`
-  0% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
-  50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
-  100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
-`;
-
-const gradientShift = keyframes`
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-`;
-
-const floatWithRotate = keyframes`
-  0% { transform: translateY(0px) rotate(-5deg); }
-  25% { transform: translateY(-8px) rotate(-2deg); }
-  50% { transform: translateY(-12px) rotate(0deg); }
-  75% { transform: translateY(-6px) rotate(3deg); }
-  100% { transform: translateY(0px) rotate(-5deg); }
-`;
-
-const glowPulse = keyframes`
-  0% { box-shadow: 0 0 5px rgba(24, 144, 255, 0.5), 0 0 10px rgba(24, 144, 255, 0.3); }
-  50% { box-shadow: 0 0 15px rgba(24, 144, 255, 0.8), 0 0 20px rgba(24, 144, 255, 0.5); }
-  100% { box-shadow: 0 0 5px rgba(24, 144, 255, 0.5), 0 0 10px rgba(24, 144, 255, 0.3); }
-`;
-
-const jiggle = keyframes`
-  0%, 100% { transform: rotate(-3deg); }
-  50% { transform: rotate(3deg); }
-`;
+// Animations have been removed for a simpler, cleaner design
 
 // Styled components
 const LogoWrapper = styled.div`
   background: transparent;
-  border-radius: 16px;
-  width: 45px;
-  height: 45px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 15px;
-  position: relative;
-  z-index: 1;
+  margin-right: 12px;
 `;
 
 const LogoTitle = styled(Title)`
   margin: 0 !important;
-  font-weight: 800 !important;
-  background: linear-gradient(45deg, ${props => props.theme.colorPrimary}, ${props => props.theme.colorPrimaryActive}, #4096ff, ${props => props.theme.colorPrimary}) !important;
-  background-size: 300% !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
+  font-weight: 700 !important;
+  color: ${props => props.theme.colorPrimary} !important;
   letter-spacing: 0.5px !important;
-  position: relative !important;
-  text-shadow: 0 5px 15px rgba(24, 144, 255, 0.2);
-  transform: translateZ(0);
-  
-  &::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: -2px;
-    width: 100%;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, ${props => props.theme.colorPrimary}, transparent);
-    transform: scaleX(0.3);
-    transform-origin: left;
-    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-  
-  &:hover::after {
-    transform: scaleX(0.6);
-  }
 `;
 
 const StyledBadge = styled(Badge)`
@@ -159,148 +83,76 @@ const StyledBadge = styled(Badge)`
     padding: 0 6px;
     height: 20px;
     border-radius: 10px;
-    font-weight: 700;
+    font-weight: 600;
     font-size: 12px;
-    background: linear-gradient(45deg, #ff4d4f, #ff7875);
   }
 `;
 
 const GlowButton = styled(Button)`
   &.ant-btn-primary {
-    background: linear-gradient(45deg, ${props => props.theme.colorPrimary}, ${props => props.theme.colorPrimaryActive}) !important;
-    border: none !important;
-    box-shadow: 0 8px 20px ${props => props.theme.colorPrimary}30 !important;
-    position: relative !important;
-    overflow: hidden !important;
-    z-index: 1 !important;
-    
-    &:hover {
-      transform: translateY(-5px) !important;
-      box-shadow: 0 15px 25px ${props => props.theme.colorPrimary}50 !important;
-    }
-    
-    &:active {
-      transform: translateY(-2px) !important;
-    }
+    font-weight: 500;
   }
 `;
 
 const UserAvatar = styled(Avatar)`
-  background: linear-gradient(135deg, ${props => props.theme.colorPrimary}, ${props => props.theme.colorPrimaryActive});
+  background: ${props => props.theme.colorPrimary};
   font-size: 14px;
-  font-weight: 700;
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-  position: relative;
-  z-index: 1;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    inset: -3px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, ${props => props.theme.colorPrimary}40, transparent);
-    opacity: 0;
-    transition: opacity 0.4s;
-    z-index: -1;
-    filter: blur(8px);
-  }
-  
-  &:hover {
-    transform: scale(1.15) translateY(-3px);
-    box-shadow: 0 10px 20px rgba(24, 144, 255, 0.3);
-    
-    &::after {
-      opacity: 1;
-    }
-  }
+  font-weight: 500;
 `;
 
 const UserDropdownWrapper = styled.div`
   cursor: pointer;
-  padding: 6px 10px 6px 12px;
+  padding: 4px 8px 4px 10px;
   border-radius: 40px;
-  border: 1px solid rgba(24, 144, 255, 0.15);
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  border: 1px solid ${props => props.theme.colorBorder};
+  background-color: ${props => props.theme.colorBgContainer};
+  transition: all 0.2s ease;
   
   &:hover {
     border-color: ${props => props.theme.colorPrimary};
-    background-color: rgba(240, 248, 255, 0.95);
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(24, 144, 255, 0.15);
+    background-color: ${props => props.theme.colorBgTextHover};
   }
   
   .user-name {
-    transition: all 0.3s;
+    transition: all 0.2s;
   }
   
   &:hover .user-name {
     color: ${props => props.theme.colorPrimary};
-    font-weight: 600;
   }
 `;
 
 const CartButton = styled(Button)`
-  width: 45px;
-  height: 45px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: ${props => props.theme.colorBgTextHover};
-  color: ${props => props.theme.colorPrimary};
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+  background: transparent;
+  color: ${props => props.theme.colorText};
+  transition: all 0.2s ease;
   
   &:hover {
-    transform: translateY(-5px) scale(1.1);
-    box-shadow: 0 10px 25px rgba(24, 144, 255, 0.25);
-    background: ${props => props.theme.colorPrimary}20;
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at center, ${props => props.theme.colorPrimary}40 0%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.4s;
-    z-index: 0;
-  }
-  
-  &:hover::after {
-    opacity: 1;
+    background: ${props => props.theme.colorBgTextHover};
+    color: ${props => props.theme.colorPrimary};
   }
   
   .anticon {
-    font-size: 22px;
-    z-index: 1;
-    transition: all 0.3s;
-  }
-  
-  &:hover .anticon {
-    transform: scale(1.2);
-    animation: ${jiggle} 0.6s ease-in-out;
+    font-size: 20px;
   }
 `;
 
 // Tạo một styled component riêng cho CSS global
 const GlobalStyle = styled.div`
   .user-dropdown-menu {
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
-    animation: ${scaleIn} 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
   }
   
-  /* Các styles khác */
-  @media (max-width: 768px) {
+  /* Cải thiện responsive cho màn hình tablet/mobile */
+  @media (max-width: 992px) {
     .desktop-menu {
       display: none;
     }
@@ -310,21 +162,17 @@ const GlobalStyle = styled.div`
     .user-name {
       display: none !important;
     }
-    .login-button {
-      display: none;
+    .user-name {
+      display: none !important;
     }
   }
-  
   .app-header {
-    background: rgba(255, 255, 255, 0.85) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
-    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    background: #fff !important;
+    transition: box-shadow 0.3s ease !important;
   }
   
   .app-header.scrolled {
-    background: rgba(255, 255, 255, 0.95) !important;
-    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
   }
 `;
 
@@ -413,7 +261,7 @@ const Header = () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [auth]);
+  }, [auth?.user]);
   
   // Tách riêng useEffect cho sự kiện userProfileUpdated
   useEffect(() => {
@@ -460,7 +308,7 @@ const Header = () => {
     return () => {
       window.removeEventListener('cartUpdated', handleCartUpdate);
     };
-  }, [user]);
+  }, [user?.userId]);
   
   // Handle drawer
   const toggleDrawer = () => {
@@ -573,7 +421,7 @@ const Header = () => {
     }
     
     // URL tương đối (từ server)
-    return `${process.env.REACT_APP_API_URL || '${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}'}${avatarPath.startsWith('/') ? avatarPath : '/' + avatarPath}`;
+    return `${BASE_URL}${avatarPath.startsWith('/') ? avatarPath : '/' + avatarPath}`;
   };
 
   return (
@@ -632,6 +480,7 @@ const Header = () => {
             style={{
               display: 'flex',
               alignItems: 'center',
+              flex: '0 0 auto'
             }}
           >
             <LogoWrapper theme={token}>
@@ -672,7 +521,7 @@ const Header = () => {
           </div>
           
           {/* Desktop Navigation */}
-          <div className="desktop-menu">
+          <div className="desktop-menu" style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', justifyContent: 'flex-start', padding: '0 32px' }}>
             <Menu 
               mode="horizontal" 
               selectedKeys={menuItems.filter(item => isActive(item.path)).map(item => item.path)}
@@ -680,12 +529,13 @@ const Header = () => {
                 border: 'none', 
                 backgroundColor: 'transparent',
                 fontWeight: 500,
-                fontSize: '15px'
+                fontSize: '15px',
+                width: '100%',
+                justifyContent: 'flex-start'
               }}
               items={
                 menuItems.map(item => ({
                   key: item.path,
-                  icon: item.icon,
                   label: (
                     <Link to={item.path}>
                       {item.label}
@@ -702,18 +552,25 @@ const Header = () => {
               display: 'flex',
               alignItems: 'center',
               gap: 16,
+              flex: '0 0 auto'
             }}
           >
             {/* Cart */}
             <Tooltip title="Giỏ hàng" placement="bottom">
-                              <StyledBadge count={cartItemCount || 0} size="small" offset={[-5, 5]}>
-                <CartButton
-                  type="text"
-                  icon={<ShoppingCartOutlined style={{ fontSize: 20 }} />}
-                  onClick={() => navigate('/cart')}
-                  theme={token}
-                />
-              </StyledBadge>
+              <a onClick={(e) => { e.preventDefault(); navigate('/cart'); }} style={{ display: 'flex', alignItems: 'center' }}>
+                <Badge count={cartItemCount || 0}>
+                  <Avatar 
+                    shape="square" 
+                    size="large" 
+                    icon={<ShoppingCartOutlined />} 
+                    style={{ 
+                      backgroundColor: 'transparent', 
+                      color: token.colorText,
+                      fontSize: '22px'
+                    }} 
+                  />
+                </Badge>
+              </a>
             </Tooltip>
             
             {/* User section */}
@@ -721,118 +578,33 @@ const Header = () => {
               <Dropdown 
                 menu={userDropdownItems} 
                 placement="bottomRight"
-                arrow
                 trigger={['click']}
-                dropdownRender={(menu) => (
-                  <div
-                    className="user-dropdown-menu"
-                    style={{
-                      backgroundColor: 'white',
-                      boxShadow: '0 6px 16px 0 rgba(0, 0, 0, 0.08)',
-                      borderRadius: 12,
-                      padding: 0,
-                      overflow: 'hidden',
-                      width: 300,
-                    }}
-                  >
-                    <div
-                      style={{
-                        padding: '24px',
-                        textAlign: 'center',
-                        borderBottom: `1px solid ${token.colorBorderDivider}`,
-                        background: `linear-gradient(135deg, ${token.colorBgTextHover}, #f0f7ff)`,
-                      }}
-                    >
-                      <Avatar
-                        size={64}
-                        src={getUserAvatarUrl(user.avatar)}
-                        style={{
-                          backgroundColor: token.colorPrimary,
-                          fontSize: 24,
-                          fontWeight: 600,
-                          margin: '0 auto 12px',
-                          border: `4px solid ${token.colorBgContainer}`,
-                          boxShadow: `0 4px 12px ${token.colorPrimary}30`,
-                        }}
-                      >
-                        {!user.avatar && getInitials(user.fullName || user.username)}
-                      </Avatar>
-                      <Title level={5} style={{ margin: '0 0 4px', fontWeight: 600 }}>
-                        {user.fullName || user.username}
-                      </Title>
-                      <Text type="secondary" style={{ fontSize: 14 }}>
-                        {user.email}
-                      </Text>
-                      {isAdmin && (
-                        <div style={{ marginTop: 8 }}>
-                          <Tag 
-                            color={token.colorPrimaryActive}
-                            icon={<CrownOutlined />}
-                            style={{ 
-                              borderRadius: 12,
-                              fontSize: 12,
-                              fontWeight: 600
-                            }}
-                          >
-                            Quản trị viên
-                          </Tag>
-                        </div>
-                      )}
-                    </div>
-                    {menu}
-                  </div>
-                )}
               >
-                <UserDropdownWrapper theme={token}>
-                  <Space>
-                    <UserAvatar
-                      size={32}
-                      src={getUserAvatarUrl(user.avatar)}
-                      theme={token}
-                    >
-                      {!user.avatar && getInitials(user.fullName || user.username)}
-                    </UserAvatar>
-                    <Text 
-                      style={{ 
-                        fontSize: 14, 
-                        fontWeight: 500,
-                        display: 'inline-block',
-                      }}
-                      className="user-name"
-                    >
-                      {user.fullName || user.username}
-                    </Text>
-                    <DownOutlined style={{ fontSize: 12, color: token.colorTextSecondary }} />
-                  </Space>
-                </UserDropdownWrapper>
+                <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                  <UserAvatar
+                    size={32}
+                    src={getUserAvatarUrl(user.avatar)}
+                    theme={token}
+                  >
+                    {!user.avatar && getInitials(user.fullName || user.username)}
+                  </UserAvatar>
+                </div>
               </Dropdown>
             ) : (
-              <Space size={10}>
-                <Button
-                  type="default"
-                  shape="round"
-                  onClick={() => navigate('/login')}
-                  style={{
-                    fontWeight: 500,
-                    borderColor: token.colorPrimaryBorder,
-                    color: token.colorPrimary,
-                  }}
-                  className="login-button"
-                >
-                  Đăng nhập
-                </Button>
-                <GlowButton
-                  type="primary"
-                  shape="round"
-                  onClick={() => navigate('/register')}
-                  style={{
-                    fontWeight: 500,
-                  }}
-                  className="register-button"
-                  theme={token}
-                >
-                  Đăng ký
-                </GlowButton>
+              <Space size={16}>
+                <HappyProvider>
+                  <Button onClick={() => navigate('/login')}>
+                    Đăng nhập
+                  </Button>
+                </HappyProvider>
+                <HappyProvider>
+                  <Button
+                    type="primary"
+                    onClick={() => navigate('/register')}
+                  >
+                    Đăng ký
+                  </Button>
+                </HappyProvider>
               </Space>
             )}
           </div>
@@ -883,7 +655,7 @@ const Header = () => {
               style={{
                 padding: '16px 20px',
                 textAlign: 'center',
-                background: token.colorBgTextHover,
+                background: token.colorBgContainer,
                 borderBottom: `1px solid ${token.colorBorderDivider}`,
               }}
             >
@@ -893,10 +665,8 @@ const Header = () => {
                 style={{
                   backgroundColor: token.colorPrimary,
                   fontSize: 24,
-                  fontWeight: 600,
+                  fontWeight: 500,
                   margin: '0 auto 12px',
-                  border: `4px solid ${token.colorBgContainer}`,
-                  boxShadow: `0 4px 12px ${token.colorPrimary}30`,
                 }}
               >
                 {!user.avatar && getInitials(user.fullName || user.username)}
@@ -1043,37 +813,31 @@ const Header = () => {
               </Button>
             ) : (
               <Space direction="vertical" style={{ width: '100%' }} size={12}>
-                <Button 
-                  type="primary" 
-                  block
-                  size="large"
-                  onClick={() => {
-                    navigate('/login');
-                    toggleDrawer();
-                  }}
-                  shape="round"
-                  style={{
-                    background: `linear-gradient(45deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
-                    border: 'none',
-                  }}
-                >
-                  Đăng nhập
-                </Button>
-                <Button 
-                  block 
-                  size="large"
-                  onClick={() => {
-                    navigate('/register');
-                    toggleDrawer();
-                  }}
-                  shape="round"
-                  style={{
-                    borderColor: token.colorPrimary,
-                    color: token.colorPrimary,
-                  }}
-                >
-                  Đăng ký
-                </Button>
+                <HappyProvider>
+                  <Button 
+                    block
+                    size="large"
+                    onClick={() => {
+                      navigate('/login');
+                      toggleDrawer();
+                    }}
+                  >
+                    Đăng nhập
+                  </Button>
+                </HappyProvider>
+                <HappyProvider>
+                  <Button 
+                    type="primary"
+                    block 
+                    size="large"
+                    onClick={() => {
+                      navigate('/register');
+                      toggleDrawer();
+                    }}
+                  >
+                    Đăng ký
+                  </Button>
+                </HappyProvider>
               </Space>
             )}
           </div>

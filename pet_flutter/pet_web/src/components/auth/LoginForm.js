@@ -1,3 +1,4 @@
+import CustomSpinner from '../common/CustomSpinner';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
@@ -28,6 +29,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import axiosClient from '../../utils/axiosClient';
+import { HappyProvider } from '@ant-design/happy-work-theme';
 
 const { Title, Text } = Typography;
 
@@ -74,52 +76,7 @@ const StyledFormItem = styled(Form.Item)`
   }
 `;
 
-const LoginButton = styled(Button)`
-  height: 52px;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 12px;
-  background: linear-gradient(90deg, #1890ff 0%, #52c41a 100%);
-  border: none;
-  box-shadow: 0 8px 16px rgba(24, 144, 255, 0.2);
-  transition: all 0.3s ease;
-  overflow: hidden;
-  position: relative;
-  z-index: 1;
-  
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: all 0.6s ease;
-    z-index: -1;
-  }
-  
-  &:hover {
-    background: linear-gradient(90deg, #40a9ff 0%, #73d13d 100%);
-    box-shadow: 0 10px 20px rgba(24, 144, 255, 0.3);
-    transform: translateY(-3px);
-    
-    &:before {
-      left: 100%;
-    }
-  }
-  
-  &:active {
-    background: linear-gradient(90deg, #096dd9 0%, #389e0d 100%);
-    transform: translateY(0);
-  }
-  
-  .anticon {
-    font-size: 18px;
-    margin-right: 8px;
-    vertical-align: -1px;
-  }
-`;
+
 
 const ForgotPasswordLink = styled(Text)`
   cursor: pointer;
@@ -268,9 +225,8 @@ const LoginForm = () => {
       // Giải mã token để lấy thông tin
       const decoded = jwtDecode(credentialResponse.credential);
       console.log("Google user info:", decoded);
-      
-      // Gọi API đăng nhập bên ngoài
-      const response = await axiosClient.post('/Auth/external-login', {
+      // Dùng hook externalLogin để vừa gọi API, vừa lưu localStorage, VÀ vừa cập nhật state React Context
+      const result = await externalLogin({
         provider: 'Google',
         idToken: credentialResponse.credential,
         email: decoded.email,
@@ -278,26 +234,13 @@ const LoginForm = () => {
         picture: decoded.picture
       });
       
-      // Hoặc dùng hook externalLogin nếu đã cập nhật
-      // const result = await externalLogin({
-      //   provider: 'Google',
-      //   idToken: credentialResponse.credential,
-      //   email: decoded.email,
-      //   name: decoded.name,
-      //   picture: decoded.picture
-      // });
-      
-      // Lưu token và thông tin người dùng
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      
       // Hiển thị thành công
       setSuccess(true);
       
       // Điều hướng dựa vào vai trò
       setTimeout(() => {
         // Kiểm tra vai trò TRƯỚC để admin không vào trang user
-        if (response.data.user && (response.data.user.role === 'Admin' || response.data.user.role === 'Staff')) {
+        if (result.user && (result.user.role === 'Admin' || result.user.role === 'Staff')) {
           console.log('Google login: User is Admin/Staff, redirecting to /admin');
           navigate('/admin', { replace: true });
         } else {
@@ -490,7 +433,7 @@ const LoginForm = () => {
           <SafetyOutlined style={{ fontSize: 60, marginBottom: 16 }} />
           <Title level={4} style={{ color: '#52c41a' }}>Đăng nhập thành công!</Title>
           <Text>Đang chuyển hướng đến trang chủ...</Text>
-          <Spin 
+          <CustomSpinner 
             indicator={<SpinnerIcon />} 
             style={{ marginTop: 20 }}
           />
@@ -564,16 +507,19 @@ const LoginForm = () => {
                   whileTap={!loading ? "tap" : "rest"}
                   animate={loading ? "rest" : "rest"}
                 >
-                  <LoginButton
-                    type="primary"
-                    htmlType="submit"
-                    block
-                    loading={loading}
-                    icon={loading ? <ThunderboltOutlined spin /> : <LoginOutlined />}
-                    disabled={loading}
-                  >
-                    {loading ? 'Đang xử lý...' : 'Đăng nhập'}
-                  </LoginButton>
+                  <HappyProvider>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      block
+                      loading={loading}
+                      icon={loading ? <ThunderboltOutlined spin /> : <LoginOutlined />}
+                      disabled={loading}
+                      style={{ height: '52px', fontSize: '16px', fontWeight: 600, borderRadius: '12px' }}
+                    >
+                      {loading ? 'Đang xử lý...' : 'Đăng nhập'}
+                    </Button>
+                  </HappyProvider>
                 </motion.div>
               </Form.Item>
             </motion.div>

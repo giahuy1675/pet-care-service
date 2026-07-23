@@ -1,3 +1,4 @@
+import CustomSpinner from '../../components/common/CustomSpinner';
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -573,7 +574,7 @@ const PetsPage = () => {
         
         {loading ? (
           <div style={{ textAlign: 'center', padding: '80px 0' }}>
-            <Spin size="large" />
+            <CustomSpinner size="large" />
             <div style={{ marginTop: 16 }}>
               <Text type="secondary">Đang tải danh sách thú cưng...</Text>
             </div>

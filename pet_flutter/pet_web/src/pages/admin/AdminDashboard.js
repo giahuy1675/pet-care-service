@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation, Routes, Route } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Divider, Menu, Switch } from 'antd';
+import { Divider, Menu, Switch, Breadcrumb } from 'antd';
 import styled from 'styled-components';
 import useAuth from '../../hooks/useAuth';
 import { Navigate } from 'react-router-dom';
@@ -27,6 +27,7 @@ import {
   CustomerServiceOutlined,
   DashboardOutlined,
   FileOutlined,
+  HomeOutlined,
   LinkOutlined,
   LogoutOutlined,
   MailOutlined,
@@ -164,15 +165,7 @@ const Header = styled(motion.div)`
   width: 100%;
 `;
 
-const Breadcrumb = styled.div`
-  font-size: 14px;
-  color: #707EAE;
-  
-  span:last-child {
-    color: #2B3674;
-    font-weight: 600;
-  }
-`;
+
 
 const UserInfo = styled.div`
   display: flex;
@@ -781,9 +774,38 @@ const AdminDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
           >
-            <Breadcrumb>
-              <span>Admin</span> / <span>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</span>
-            </Breadcrumb>
+            <Breadcrumb
+              items={[
+                {
+                  title: (
+                    <>
+                      <HomeOutlined />
+                      <span style={{ marginLeft: 8 }}>Admin</span>
+                    </>
+                  ),
+                },
+                {
+                  title: (() => {
+                    const tabLabels = {
+                      dashboard: 'Tổng quan',
+                      users: 'Quản lý người dùng',
+                      appointments: 'Quản lý lịch hẹn',
+                      services: 'Dịch vụ',
+                      categories: 'Danh mục',
+                      products: 'Sản phẩm',
+                      orders: 'Quản lý đơn hàng',
+                      blog: 'Quản lý Blog',
+                      reviews: 'Quản lý đánh giá',
+                      staffSchedule: 'Quản lý ca làm',
+                      createStaff: 'Tạo tài khoản nhân viên',
+                      assignStaffServices: 'Gán dịch vụ cho nhân viên',
+                      settings: 'Cài đặt'
+                    };
+                    return tabLabels[activeTab] || (activeTab.charAt(0).toUpperCase() + activeTab.slice(1));
+                  })(),
+                },
+              ]}
+            />
             <UserInfo>
               <Greeting>Xin chào, {user?.fullName || 'Admin'}</Greeting>
               <Avatar 

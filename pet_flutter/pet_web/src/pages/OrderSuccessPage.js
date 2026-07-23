@@ -1,3 +1,4 @@
+import CustomSpinner from '../components/common/CustomSpinner';
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import {
@@ -514,7 +515,7 @@ const OrderSuccessPage = () => {
   if (loading) {
     return (
       <LoadingContainer>
-        <Spin 
+        <CustomSpinner 
           indicator={<LoadingOutlined style={{ fontSize: 40 }} spin />} 
           tip="Đang tải thông tin đơn hàng..."
         />

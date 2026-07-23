@@ -44,6 +44,7 @@ import {
   Result
 } from 'antd';
 import { theme } from 'antd';
+import CustomSpinner from '../common/CustomSpinner';
 import { 
   ArrowLeftOutlined, 
   CalendarOutlined, 
@@ -2716,7 +2717,7 @@ const AppointmentForm = ({
     console.log("AppointmentForm is in initialLoading state");
     return (
       <div style={{ padding: '24px' }}>
-        <Spin size="large" />
+        <CustomSpinner size="large" />
       </div>
     );
   }

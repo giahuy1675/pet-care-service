@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Table, Button, Flex, Tag, Space, Radio, Alert, Checkbox, Dropdown, Drawer, Tabs, Spin, Empty, List, Row, Col, Divider } from 'antd';
+import { Table, Button, Flex, Tag, Space, Radio, Alert, Checkbox, Dropdown, Drawer, Tabs, Spin, Empty, List, Row, Col, Divider, Modal, Form, Input, Select, Switch, message } from 'antd';
+import CustomSpinner from '../common/CustomSpinner';
 import useAuth from '../../hooks/useAuth';
 import axiosClient from '../../utils/axiosClient';
 import petService from '../../services/petService';
@@ -88,24 +89,10 @@ const glow = keyframes`
 const UserManagementContainer = styled.div`
   width: 100%;
   max-width: 100%;
-  background: white;
-  border-radius: 16px;
-  padding: 25px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
   animation: ${fadeIn} 0.5s ease;
   overflow: hidden;
   position: relative;
   margin-bottom: 20px;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: linear-gradient(90deg, #4318FF, #868CFF);
-  }
 `;
 
 const Header = styled.div`
@@ -161,10 +148,6 @@ const FiltersContainer = styled.div`
   gap: 20px;
   margin-bottom: 30px;
   animation: ${slideUp} 0.5s ease;
-  background: white;
-  padding: 20px;
-  border-radius: 16px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   position: relative;
 
   @media (max-width: 768px) {
@@ -513,9 +496,6 @@ const FormActions = styled.div`
 const TableContainer = styled.div`
   width: 100%;
   overflow-x: auto;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
   animation: ${fadeIn} 0.6s ease;
 `;
 
@@ -814,6 +794,8 @@ const UserManagement = () => {
   
   // State cho create user modal
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm] = Form.useForm();
+  const [editForm] = Form.useForm();
   const [createFormData, setCreateFormData] = useState({
     username: '',
     password: '',
@@ -1017,6 +999,15 @@ const UserManagement = () => {
   const handleEdit = (user) => {
     setCurrentUser(user);
     setFormData({
+      username: user.username,
+      email: user.email,
+      fullName: user.fullName,
+      phone: user.phone || '',
+      address: user.address || '',
+      role: user.role,
+      isActive: user.isActive
+    });
+    editForm.setFieldsValue({
       username: user.username,
       email: user.email,
       fullName: user.fullName,
@@ -1411,151 +1402,86 @@ const UserManagement = () => {
           </RoleFilter>
         </FiltersContainer>
 
-        <AnimatePresence>
-          {editMode && currentUser && (
-            <EditFormOverlay
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+        <Modal
+            title={<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><EditOutlined /> Chỉnh sửa người dùng: <span style={{color: '#1890ff'}}>{currentUser?.username}</span></div>}
+            open={editMode}
+            onCancel={handleCancel}
+            onOk={() => editForm.submit()}
+            confirmLoading={loading}
+            okText="Lưu thay đổi"
+            cancelText="Hủy bỏ"
+            width={600}
+            centered
+          >
+            <Form
+              form={editForm}
+              layout="vertical"
+              onFinish={async (values) => {
+                try {
+                  setLoading(true);
+                  const updatedData = {
+                    UserId: currentUser.userId,
+                    Email: values.email,
+                    FullName: values.fullName,
+                    Phone: values.phone,
+                    Address: values.address,
+                    Role: values.role,
+                    IsActive: values.isActive
+                  };
+                  await axiosClient.put(`/Users/${currentUser.userId}`, updatedData);
+                  fetchUsers();
+                  handleCancel();
+                  showToast('Cập nhật người dùng thành công', 'success');
+                } catch (err) {
+                  showToast('Không thể cập nhật người dùng', 'error');
+                } finally {
+                  setLoading(false);
+                }
+              }}
             >
-              <EditForm
-                initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 50, scale: 0.9 }}
-                transition={{ 
-                  type: "spring", 
-                  stiffness: 300, 
-                  damping: 30 
-                }}
-              >
-                <button className="close-button" onClick={handleCancel}>
-                  <CloseOutlined />
-                </button>
-                <h2>
-                  Chỉnh sửa người dùng
-                  <span className="username-badge">{currentUser.username}</span>
-                </h2>
-                <FormGrid>
-                  <div className="form-group">
-                    <label>
-                      <UserOutlined /> Tên đăng nhập
-                    </label>
-                    <input
-                      type="text"
-                      name="username"
-                      value={formData.username}
-                      onChange={handleChange}
-                      disabled
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>
-                      <MailOutlined /> Email
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>
-                      <UserOutlined /> Họ và tên
-                    </label>
-                    <input
-                      type="text"
-                      name="fullName"
-                      value={formData.fullName}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>
-                      <PhoneOutlined /> Điện thoại
-                    </label>
-                    <input
-                      type="text"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  
-                  <div className="form-group full-width">
-                    <label>
-                      <HomeOutlined /> Địa chỉ
-                    </label>
-                    <input
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>
-                      <SafetyOutlined /> Vai trò
-                    </label>
-                    <select
-                      name="role"
-                      value={formData.role}
-                      onChange={handleChange}
-                    >
-                      <option value="Customer">Khách hàng</option>
-                      <option value="Admin">Quản trị viên</option>
-                      <option value="Staff">Nhân viên</option>
-                    </select>
-                  </div>
-                  
-                  <div className="form-group checkbox">
-                    <Flex align="center">
-                      <Checkbox
-                        name="isActive"
-                        checked={formData.isActive}
-                        styles={checkboxStyles}
-                        onChange={(e) =>
-                          handleChange({
-                            target: {
-                              name: 'isActive',
-                              type: 'checkbox',
-                              checked: e.target.checked,
-                            },
-                          })
-                        }
-                      >
-                        Đang hoạt động
-                      </Checkbox>
-                    </Flex>
-                  </div>
-                </FormGrid>
-                
-                <FormActions>
-                  <Button onClick={handleCancel} icon={<CloseOutlined />}>
-                    Hủy bỏ
-                  </Button>
-                  <Button
-                    type="primary"
-                    icon={<CheckOutlined />}
-                    loading={loading}
-                    onClick={handleSave}
-                    style={{
-                      background: 'linear-gradient(135deg, #4318FF, #868CFF)',
-                      border: 'none'
-                    }}
-                  >
-                    Lưu thay đổi
-                  </Button>
-                </FormActions>
-              </EditForm>
-            </EditFormOverlay>
-          )}
-        </AnimatePresence>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item name="username" label="Tên đăng nhập">
+                    <Input disabled prefix={<UserOutlined />} />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email', message: 'Vui lòng nhập email hợp lệ' }]}>
+                    <Input prefix={<MailOutlined />} />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="fullName" label="Họ và tên" rules={[{ required: true, message: 'Vui lòng nhập họ và tên' }]}>
+                    <Input prefix={<UserOutlined />} />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="phone" label="Số điện thoại">
+                    <Input prefix={<PhoneOutlined />} />
+                  </Form.Item>
+                </Col>
+                <Col span={24}>
+                  <Form.Item name="address" label="Địa chỉ">
+                    <Input prefix={<HomeOutlined />} />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="role" label="Vai trò" rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}>
+                    <Select>
+                      <Select.Option value="Customer">Khách hàng</Select.Option>
+                      <Select.Option value="Admin">Quản trị viên</Select.Option>
+                      <Select.Option value="Staff">Nhân viên</Select.Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="isActive" label="Trạng thái" valuePropName="checked">
+                    <Switch checkedChildren="Đang hoạt động" unCheckedChildren="Vô hiệu hóa" />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Form>
+          </Modal>
 
         {filteredUsers.length === 0 && !loading ? (
           <EmptyStateCard
@@ -1625,7 +1551,7 @@ const UserManagement = () => {
                     key: '1',
                     label: 'Thông tin',
                     children: detailLoading ? (
-                      <div style={{ textAlign: 'center', padding: '32px 0' }}><Spin /></div>
+                      <div style={{ textAlign: 'center', padding: '32px 0' }}><CustomSpinner /></div>
                     ) : (
                       <>
                         <Row gutter={16}>
@@ -1646,7 +1572,7 @@ const UserManagement = () => {
                     key: '2',
                     label: `Lịch hẹn (${detailAppointments.length})`,
                     children: detailLoading ? (
-                      <div style={{ textAlign: 'center', padding: '32px 0' }}><Spin /></div>
+                      <div style={{ textAlign: 'center', padding: '32px 0' }}><CustomSpinner /></div>
                     ) : detailAppointments.length === 0 ? (
                       <Empty description="Chưa có lịch hẹn" />
                     ) : (
@@ -1732,7 +1658,7 @@ const UserManagement = () => {
                     key: '3',
                     label: `Thú cưng (${detailPets.length})`,
                     children: detailLoading ? (
-                      <div style={{ textAlign: 'center', padding: '32px 0' }}><Spin /></div>
+                      <div style={{ textAlign: 'center', padding: '32px 0' }}><CustomSpinner /></div>
                     ) : detailPets.length === 0 ? (
                       <Empty description="Chưa có thú cưng" />
                     ) : (
@@ -1840,288 +1766,113 @@ const UserManagement = () => {
       </UserManagementContainer>
       
       {/* Modal tạo người dùng mới */}
-      {showCreateModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000,
-          padding: '20px'
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '16px',
-            width: '100%',
-            maxWidth: '600px',
-            maxHeight: '90vh',
-            overflow: 'auto',
-            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
-            position: 'relative'
-          }}>
-            {/* Header */}
-            <div style={{
-              padding: '24px',
-              borderBottom: '1px solid #f0f0f0',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              position: 'sticky',
-              top: 0,
-              background: 'white',
-              zIndex: 1
-            }}>
-              <h2 style={{ margin: 0, color: '#52c41a', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <PlusOutlined /> Tạo người dùng mới
-              </h2>
-              <button
-                onClick={() => {
-                  setShowCreateModal(false);
-                  setCreateFormData({
-                    username: '',
-                    password: '',
-                    confirmPassword: '',
-                    email: '',
-                    fullName: '',
-                    phone: '',
-                    address: '',
-                    role: 'Customer'
-                  });
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '24px',
-                  cursor: 'pointer',
-                  color: '#999',
-                  lineHeight: 1
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Body */}
-            <div style={{ padding: '32px' }}>
-              <div style={{ marginBottom: '24px' }}>
-                <h3 style={{ marginBottom: '20px', color: '#333', fontSize: '16px' }}>
-                  Thông tin tài khoản
-                </h3>
-                
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-                    Tên đăng nhập: <span style={{ color: 'red' }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={createFormData.username}
-                    onChange={(e) => setCreateFormData({ ...createFormData, username: e.target.value })}
-                    placeholder="Nhập tên đăng nhập"
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: '2px solid #d9d9d9',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-                    Mật khẩu: <span style={{ color: 'red' }}>*</span>
-                  </label>
-                  <input
-                    type="password"
-                    value={createFormData.password}
-                    onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
-                    placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: '2px solid #d9d9d9',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-                    Xác nhận mật khẩu: <span style={{ color: 'red' }}>*</span>
-                  </label>
-                  <input
-                    type="password"
-                    value={createFormData.confirmPassword}
-                    onChange={(e) => setCreateFormData({ ...createFormData, confirmPassword: e.target.value })}
-                    placeholder="Nhập lại mật khẩu"
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: '2px solid #d9d9d9',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '24px' }}>
-                <h3 style={{ marginBottom: '20px', color: '#333', fontSize: '16px' }}>
-                  Thông tin cá nhân
-                </h3>
-
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-                    Họ và tên: <span style={{ color: 'red' }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={createFormData.fullName}
-                    onChange={(e) => setCreateFormData({ ...createFormData, fullName: e.target.value })}
-                    placeholder="Nhập họ và tên"
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: '2px solid #d9d9d9',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-                    Email: <span style={{ color: 'red' }}>*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={createFormData.email}
-                    onChange={(e) => setCreateFormData({ ...createFormData, email: e.target.value })}
-                    placeholder="Nhập địa chỉ email"
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: '2px solid #d9d9d9',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-                    Số điện thoại:
-                  </label>
-                  <input
-                    type="tel"
-                    value={createFormData.phone}
-                    onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
-                    placeholder="Nhập số điện thoại"
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: '2px solid #d9d9d9',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-                    Địa chỉ:
-                  </label>
-                  <textarea
-                    value={createFormData.address}
-                    onChange={(e) => setCreateFormData({ ...createFormData, address: e.target.value })}
-                    placeholder="Nhập địa chỉ"
-                    rows="3"
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: '2px solid #d9d9d9',
-                      fontSize: '14px',
-                      boxSizing: 'border-box',
-                      resize: 'vertical'
-                    }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-                    Vai trò: <span style={{ color: 'red' }}>*</span>
-                  </label>
-                  <select
-                    value={createFormData.role}
-                    onChange={(e) => setCreateFormData({ ...createFormData, role: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: '2px solid #d9d9d9',
-                      fontSize: '14px',
-                      boxSizing: 'border-box',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <option value="Customer">Khách hàng</option>
-                    <option value="Staff">Nhân viên</option>
-                    <option value="Admin">Quản trị viên</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Buttons */}
-              <Flex gap="small" justify="flex-end">
-                <Button
-                  onClick={() => {
-                    setShowCreateModal(false);
-                    setCreateFormData({
-                      username: '',
-                      password: '',
-                      confirmPassword: '',
-                      email: '',
-                      fullName: '',
-                      phone: '',
-                      address: '',
-                      role: 'Customer'
-                    });
-                  }}
-                >
-                  Hủy
-                </Button>
-                <Button
-                  type="primary"
-                  icon={createLoading ? <SyncOutlined spin /> : <CheckOutlined />}
-                  loading={createLoading}
-                  onClick={handleCreateUser}
-                  style={{
-                    background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
-                    border: 'none'
-                  }}
-                >
-                  {createLoading ? 'Đang tạo...' : 'Tạo người dùng'}
-                </Button>
-              </Flex>
-            </div>
-          </div>
-        </div>
-      )}
       
-      {/* Modal và các thành phần khác */}
+      <Modal
+        title={<div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#52c41a' }}><PlusOutlined /> Tạo người dùng mới</div>}
+        open={showCreateModal}
+        onCancel={() => { setShowCreateModal(false); createForm.resetFields(); }}
+        onOk={() => createForm.submit()}
+        confirmLoading={createLoading}
+        okText="Tạo người dùng"
+        cancelText="Hủy"
+        width={600}
+        centered
+      >
+        <Form
+          form={createForm}
+          layout="vertical"
+          onFinish={async (values) => {
+            try {
+              setCreateLoading(true);
+              const newUserData = {
+                username: values.username,
+                password: values.password,
+                email: values.email,
+                fullName: values.fullName,
+                phone: values.phone || '',
+                address: values.address || '',
+                role: values.role
+              };
+              await axiosClient.post('/Auth/register', newUserData);
+              showToast('Tạo người dùng thành công!', 'success');
+              setShowCreateModal(false);
+              createForm.resetFields();
+              fetchUsers();
+            } catch (err) {
+              showToast(err.response?.data || 'Không thể tạo người dùng. Vui lòng thử lại.', 'error');
+            } finally {
+              setCreateLoading(false);
+            }
+          }}
+          initialValues={{ role: 'Customer' }}
+        >
+          <h3 style={{ marginBottom: '16px', color: '#333', fontSize: '16px', borderBottom: '1px solid #f0f0f0', paddingBottom: '8px' }}>Thông tin tài khoản</h3>
+          <Form.Item name="username" label="Tên đăng nhập" rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập' }]}>
+            <Input placeholder="Nhập tên đăng nhập" />
+          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="password" label="Mật khẩu" rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 6, message: 'Tối thiểu 6 ký tự' }]}>
+                <Input.Password placeholder="Nhập mật khẩu" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item 
+                name="confirmPassword" 
+                label="Xác nhận mật khẩu" 
+                dependencies={['password']}
+                rules={[
+                  { required: true, message: 'Vui lòng xác nhận mật khẩu' },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value || getFieldValue('password') === value) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'));
+                    },
+                  }),
+                ]}
+              >
+                <Input.Password placeholder="Nhập lại mật khẩu" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <h3 style={{ margin: '16px 0', color: '#333', fontSize: '16px', borderBottom: '1px solid #f0f0f0', paddingBottom: '8px' }}>Thông tin cá nhân</h3>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="fullName" label="Họ và tên" rules={[{ required: true, message: 'Vui lòng nhập họ và tên' }]}>
+                <Input placeholder="Nhập họ và tên" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email', message: 'Vui lòng nhập email hợp lệ' }]}>
+                <Input placeholder="Nhập địa chỉ email" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="phone" label="Số điện thoại">
+                <Input placeholder="Nhập số điện thoại" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="role" label="Vai trò" rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}>
+                <Select>
+                  <Select.Option value="Customer">Khách hàng</Select.Option>
+                  <Select.Option value="Admin">Quản trị viên</Select.Option>
+                  <Select.Option value="Staff">Nhân viên</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+              <Form.Item name="address" label="Địa chỉ">
+                <Input.TextArea rows={3} placeholder="Nhập địa chỉ" />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Modal>
+{/* Modal và các thành phần khác */}
     </div>
   );
 };

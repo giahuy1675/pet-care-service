@@ -1,4 +1,5 @@
-﻿import axiosClient from './axiosClient';
+import axiosClient from './axiosClient';
+import { BASE_URL, getFullImageUrl } from '../config/api';
 
 /**
  * Utility function to get the complete image URL for display
@@ -20,11 +21,11 @@ export const getImageUrl = (photoPath, defaultImage = null) => {
   if (photoPath.includes('pets')) {
     // Check if the path is already in the full format '/uploads/pets/...'
     if (photoPath.includes('/uploads/pets/')) {
-      return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${photoPath}`;
+      return `${BASE_URL}${photoPath}`;
     } else {
       // If it's just a filename, add the full path
       const fileName = photoPath.split('/').pop(); // Get just the filename
-      return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}/uploads/pets/${fileName}`;
+      return `${BASE_URL}/uploads/pets/${fileName}`;
     }
   }
   
@@ -56,11 +57,11 @@ export const getPetImageUrl = (photoPath) => {
   
   // Process different path formats
   if (photoPath.includes('/uploads/pets/')) {
-    return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${photoPath}`;
+    return `${BASE_URL}${photoPath}`;
   } else {
     // If it's just a filename or an incomplete path
     const fileName = photoPath.split('/').pop(); // Get just the filename
-    return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}/uploads/pets/${fileName}`;
+    return `${BASE_URL}/uploads/pets/${fileName}`;
   }
 };
 
@@ -81,14 +82,14 @@ export const getProductImageUrl = (photoPath) => {
   
   // Process different path formats for products
   if (photoPath.includes('/uploads/products/')) {
-    return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${photoPath}`;
+    return `${BASE_URL}${photoPath}`;
   } else if (photoPath.includes('products/')) {
     // If path is like 'products/filename.jpg'
-    return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}/uploads/${photoPath}`;
+    return `${BASE_URL}/uploads/${photoPath}`;
   } else {
     // If it's just a filename, assume it's in products folder
     const fileName = photoPath.split('/').pop(); // Get just the filename
-    return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}/uploads/products/${fileName}`;
+    return `${BASE_URL}/uploads/products/${fileName}`;
   }
 };
 
@@ -119,13 +120,13 @@ export const getReviewImageUrl = (imagePath) => {
   
   // Process different path formats for reviews
   if (imagePath.includes('/uploads/reviews/')) {
-    return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${imagePath}`;
+    return `${BASE_URL}${imagePath}`;
   } else if (imagePath.includes('reviews/')) {
     // If path is like 'reviews/filename.jpg'
-    return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}/uploads/${imagePath}`;
+    return `${BASE_URL}/uploads/${imagePath}`;
   } else {
     // If it's just a filename, assume it's in reviews folder
     const fileName = imagePath.split('/').pop(); // Get just the filename
-    return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}/uploads/reviews/${fileName}`;
+    return `${BASE_URL}/uploads/reviews/${fileName}`;
   }
 }; 

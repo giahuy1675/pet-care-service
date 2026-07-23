@@ -1,4 +1,4 @@
-﻿import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   List,
   Card,
@@ -30,6 +30,7 @@ import {
 import { AuthContext } from '../../context/AuthContext';
 import reviewService from '../../services/reviewService';
 import ReviewForm from './ReviewForm';
+import { BASE_URL } from '../../config/api';
 
 import styled from 'styled-components';
 import moment from 'moment';
@@ -379,7 +380,7 @@ const ReviewList = ({ productId, reviews = [], onReviewUpdate, sortBy, onSortCha
                           console.log('Processing image path:', imagePath);
                           const imageUrl = imagePath.startsWith('http') 
                             ? imagePath 
-                            : `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${imagePath}`;
+                            : `${BASE_URL}${imagePath}`;
                           
                           console.log('Final image URL:', imageUrl);
                           return (

@@ -1,3 +1,4 @@
+import CustomSpinner from '../common/CustomSpinner';
 import React, { useState, useEffect } from 'react';
 import { 
   Layout, 
@@ -743,7 +744,7 @@ const AppointmentCalendar = () => {
         
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '100px 0' }}>
-            <Spin size="large" tip="Đang tải lịch hẹn..." />
+            <CustomSpinner size="large" tip="Đang tải lịch hẹn..." />
           </div>
         ) : error ? (
           <Alert

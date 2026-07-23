@@ -1,3 +1,4 @@
+import CustomSpinner from '../components/common/CustomSpinner';
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import cartService from '../services/cartService';
@@ -617,7 +618,7 @@ const ProductsPage = () => {
     return (
       <StyledContent>
         <LoadingContainer>
-          <Spin size="large" />
+          <CustomSpinner size="large" />
           <Title level={3} className="loading-text">
             Đang tải sản phẩm...
           </Title>
@@ -682,36 +683,15 @@ const ProductsPage = () => {
         </Title>
         
         <SearchContainer>
-          <div className="custom-search-wrapper">
-            <input
-              type="text"
-              className="custom-search-input"
-              placeholder="Tìm kiếm sản phẩm..."
-              value={filters.searchText}
-              onChange={(e) => handleFilterChange('searchText', e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleSearch(filters.searchText);
-                }
-              }}
-            />
-            {filters.searchText && (
-              <button
-                className="custom-search-clear"
-                onClick={() => handleFilterChange('searchText', '')}
-                title="Xóa tìm kiếm"
-              >
-                ✕
-              </button>
-            )}
-            <button
-              className="custom-search-button"
-              onClick={() => handleSearch(filters.searchText)}
-            >
-              <SearchOutlined />
-              Tìm kiếm
-            </button>
-          </div>
+          <Input.Search
+            size="large"
+            placeholder="Tìm kiếm sản phẩm..."
+            value={filters.searchText}
+            onChange={(e) => handleFilterChange('searchText', e.target.value)}
+            onSearch={(value) => handleSearch(value)}
+            allowClear
+            style={{ maxWidth: 600 }}
+          />
         </SearchContainer>
 
         <FilterRow gutter={[16, 16]}>

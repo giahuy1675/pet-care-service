@@ -750,12 +750,12 @@ const StaffAccountCreation = () => {
                 <label>
                   <EditOutlined /> Chuyên môn <span className="required">*</span>
                 </label>
-                <input
-                  type="text"
+                <Input
                   name="specialization"
                   value={formData.specialization}
                   onChange={handleInputChange}
                   placeholder="VD: Chăm sóc thú cưng, Bác sĩ thú y, ..."
+                  size="large"
                 />
                 {errors.specialization && <span style={{color: '#FF5252', fontSize: '13px'}}>{errors.specialization}</span>}
               </FormGroup>
@@ -764,13 +764,14 @@ const StaffAccountCreation = () => {
                 <label>
                   <InfoCircleOutlined /> Kinh nghiệm (năm)
                 </label>
-                <input
+                <Input
                   type="number"
                   name="experience"
                   value={formData.experience}
                   onChange={handleInputChange}
                   placeholder="Nhập số năm kinh nghiệm"
                   min="0"
+                  size="large"
                 />
               </FormGroup>
 
@@ -778,11 +779,13 @@ const StaffAccountCreation = () => {
                 <label>
                   <EditOutlined /> Giới thiệu bản thân
                 </label>
-                <textarea
+                <Input.TextArea
                   name="bio"
                   value={formData.bio}
                   onChange={handleInputChange}
                   placeholder="Mô tả ngắn về bản thân, kinh nghiệm, kỹ năng..."
+                  rows={4}
+                  size="large"
                 />
               </FormGroup>
 

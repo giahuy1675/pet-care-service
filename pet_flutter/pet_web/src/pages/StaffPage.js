@@ -1,3 +1,4 @@
+import CustomSpinner from '../components/common/CustomSpinner';
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { 
@@ -1250,7 +1251,7 @@ const StaffPage = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <Spin size="large" tip="Đang tải..." />
+          <CustomSpinner size="large" tip="Đang tải..." />
           <LoadingTitle level={3}>
             Đang tải thông tin đội ngũ chuyên gia
           </LoadingTitle>

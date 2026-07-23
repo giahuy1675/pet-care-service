@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
+import CustomSpinner from '../common/CustomSpinner';
+import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
 import useAuth from '../../hooks/useAuth';
@@ -73,10 +74,6 @@ const slideUp = keyframes`
 // Styled Components
 const ProductManagementContainer = styled.div`
   width: 100%;
-  padding: 24px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.04);
   animation: ${fadeIn} 0.5s ease;
   overflow: hidden;
 `;
@@ -150,7 +147,7 @@ const EmptyStateWrapper = styled.div`
   border: 1px dashed #d9d9d9;
   margin: 20px 0;
   
-  .anticon {
+  .empty-icon {
     font-size: 48px;
     color: #1890ff;
     margin-bottom: 16px;
@@ -772,7 +769,7 @@ const ProductManagement = () => {
 
   const EmptyState = () => (
     <EmptyStateWrapper>
-      <InboxOutlined style={{ fontSize: '54px', color: '#bfbfbf', marginBottom: '16px' }} />
+      <InboxOutlined className="empty-icon" style={{ fontSize: '54px', color: '#bfbfbf', marginBottom: '16px' }} />
       <Title level={4}>Không tìm thấy sản phẩm nào</Title>
       <Text type="secondary" style={{ marginBottom: '20px' }}>
         {searchTerm || filterCategory 
@@ -862,7 +859,7 @@ const ProductManagement = () => {
 
         {loading && products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '50px 0' }}>
-            <Spin size="large" indicator={<LoadingOutlined style={{ fontSize: 36 }} spin />} />
+            <CustomSpinner size="large" indicator={<LoadingOutlined style={{ fontSize: 36 }} spin />} />
             <div style={{ marginTop: '16px' }}>Đang tải dữ liệu sản phẩm...</div>
           </div>
         ) : filteredProducts.length === 0 ? (

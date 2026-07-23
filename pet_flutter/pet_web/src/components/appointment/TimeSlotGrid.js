@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useState, useCallback, useRef } from 'react';
 import { Card, Badge, Empty, Spin } from 'antd';
+import CustomSpinner from '../common/CustomSpinner';
 import { CheckCircleFilled } from '@ant-design/icons';
 import styled from 'styled-components';
 import dayjs from '../../utils/dayjs';
@@ -871,7 +872,7 @@ const TimeSlotGrid = ({
     return (
       <Card title="Chọn khung giờ">
         <div style={{ textAlign: 'center', padding: '40px' }}>
-          <Spin size="large" />
+          <CustomSpinner size="large" />
           <div style={{ marginTop: 16 }}>Đang tải khung giờ...</div>
         </div>
       </Card>

@@ -465,15 +465,11 @@ const PetForm = ({ onSubmit, initialValues = {}, isEditing = false }) => {
             onChange={handleUploadChange}
             accept="image/*"
           >
-            <motion.div whileHover={{ scale: 1.02 }}>
-              <UploadButton icon={<UploadOutlined />}>
-                <div style={{ marginBottom: 8 }}>
-                  <UploadOutlined style={{ fontSize: 24 }} />
-                </div>
-                <Text strong>Tải ảnh lên</Text>
-                <Text type="secondary" style={{ fontSize: 12 }}>JPG, PNG, GIF</Text>
-              </UploadButton>
-            </motion.div>
+            <div>
+              <UploadOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+              <div style={{ marginTop: 8, fontWeight: 500 }}>Tải ảnh lên</div>
+              <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>JPG, PNG, GIF</div>
+            </div>
           </Upload>
         </Form.Item>
       </FormSection>

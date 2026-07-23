@@ -29,7 +29,7 @@ const Toast = ({ show, message, type, onClose }) => {
     <div className={`toast toast-${type}`}>
       <div className="toast-content">
         <span>{message}</span>
-        <button onClick={onClose} className="toast-close">×</button>
+        <Button type="text" onClick={onClose} icon={<CloseOutlined />} size="small" style={{ color: 'white' }} />
       </div>
     </div>
   );

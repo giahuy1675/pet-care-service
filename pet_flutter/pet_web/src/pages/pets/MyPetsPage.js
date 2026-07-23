@@ -89,34 +89,12 @@ const PageContainer = styled.div`
 
 const DashboardHeader = styled.div`
   position: relative;
-  padding: 40px;
-  border-radius: 24px;
-  background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+  padding: 32px 40px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   margin-bottom: 40px;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: -80px;
-    right: -80px;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(24, 144, 255, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
-    border-radius: 50%;
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -50px;
-    left: -50px;
-    width: 250px;
-    height: 250px;
-    background: radial-gradient(circle, rgba(82, 196, 26, 0.06) 0%, rgba(0, 0, 0, 0) 70%);
-    border-radius: 50%;
-  }
 `;
 
 const GlassmorphicCard = styled(Card)`
@@ -166,29 +144,15 @@ const HeaderContent = styled.div`
 const StyledAvatar = styled(Avatar)`
   width: 96px;
   height: 96px;
-  border-radius: 24px;
-  background: linear-gradient(135deg, #1890ff, #096dd9);
-  box-shadow: 0 12px 24px rgba(24, 144, 255, 0.3);
+  border-radius: 16px;
+  background: #e6f4ff;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    width: 150%;
-    height: 150%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    transform: translateX(-100%);
-    animation: shimmer 2s infinite;
-  }
   
   .anticon {
     font-size: 48px;
-    color: white;
-    z-index: 1;
+    color: #1677ff;
   }
   
   @media (max-width: 576px) {
@@ -201,38 +165,11 @@ const StyledAvatar = styled(Avatar)`
 `;
 
 const CreatePetButton = styled(Button)`
-  height: 52px;
-  padding: 0 28px;
-  border-radius: 14px;
-  font-weight: 600;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: 8px;
+  font-weight: 500;
   font-size: 16px;
-  background: linear-gradient(90deg, #1890ff, #096dd9);
-  border: none;
-  box-shadow: 0 10px 20px rgba(24, 144, 255, 0.25);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: all 0.6s ease;
-  }
-  
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 15px 25px rgba(24, 144, 255, 0.35);
-    background: linear-gradient(90deg, #40a9ff, #1890ff);
-    
-    &::before {
-      left: 100%;
-    }
-  }
   
   .anticon {
     font-size: 18px;
@@ -331,52 +268,26 @@ const EmptyIconWrapper = styled.div`
 `;
 
 const GradientTitle = styled(Title)`
-  background: linear-gradient(90deg, #1890ff, #096dd9);
-  background-size: 200% 200%;
-  animation: ${gradientMove} 4s ease infinite;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   margin-bottom: 8px !important;
-  position: relative;
-  display: inline-block;
-  font-weight: 700 !important;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 4px;
-    width: 60px;
-    background: linear-gradient(90deg, #1890ff, #096dd9);
-    border-radius: 4px;
-  }
+  font-weight: 600 !important;
+  color: #262626 !important;
 `;
 
 const FloatingTag = styled(Tag)`
   display: inline-flex;
   align-items: center;
   margin-top: 16px;
-  padding: 8px 16px;
-  font-size: 14px;
+  padding: 4px 12px;
+  font-size: 13px;
   font-weight: 500;
-  border-radius: 30px;
-  background: linear-gradient(90deg, #1890ff, #096dd9);
-  background-size: 200% 200%;
-  animation: ${shimmer} 3s linear infinite;
-  border: none;
-  color: white;
-  box-shadow: 0 8px 16px rgba(9, 109, 217, 0.2);
-  transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 12px 20px rgba(9, 109, 217, 0.3);
-  }
+  border-radius: 16px;
+  border: 1px solid #d9d9d9;
+  background: #fafafa;
+  color: #595959;
   
   .anticon {
-    margin-right: 8px;
-    font-size: 16px;
+    margin-right: 6px;
+    font-size: 14px;
   }
 `;
 
@@ -912,15 +823,15 @@ const MyPetsPage = () => {
               </Text>
               
               <div>
-                <FloatingTag>
+                <FloatingTag color="blue">
                   <FireOutlined />
                   Thú cưng yêu thích
                 </FloatingTag>
-                <FloatingTag color="#ff7a45" style={{ marginLeft: 12, background: 'linear-gradient(90deg, #ff7a45, #fa541c)' }}>
+                <FloatingTag color="orange" style={{ marginLeft: 12 }}>
                   <StarOutlined />
                   Dịch vụ hot
                 </FloatingTag>
-                <FloatingTag color="#722ed1" style={{ marginLeft: 12, background: 'linear-gradient(90deg, #722ed1, #531dab)' }}>
+                <FloatingTag color="purple" style={{ marginLeft: 12 }}>
                   <ThunderboltOutlined />
                   Tư vấn 24/7
                 </FloatingTag>

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -14,6 +14,7 @@ import ContactPage from './pages/ContactPage';
 import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { API_URL } from './config/api';
 // Import các trang Order
 import OrdersPage from './pages/OrdersPage';
 import OrderDetailPage from './pages/OrderDetailPage';
@@ -72,46 +73,6 @@ const AppContent = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  
-  const handleGoogleSuccess = async (credentialResponse) => {
-    try {
-      setLoading(true);
-      
-      // Giải mã token để lấy thông tin
-      const decoded = jwtDecode(credentialResponse.credential);
-      
-      // Gọi API với URL đầy đủ và format giống như đã test trong Postman
-      const response = await axios.post('${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Auth/external-login', {
-        provider: 'Google',
-        idToken: credentialResponse.credential, // Token từ Google
-        email: decoded.email,
-        name: decoded.name || "User",
-        picture: decoded.picture || ""
-      });
-      
-      // Xử lý response (giống như bạn đã nhận được trong Postman)
-      const { token, user } = response.data;
-      
-      // Lưu token và thông tin người dùng
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      // Chuyển hướng trang
-      setSuccess(true);
-      setTimeout(() => {
-        if (user && user.role === 'Admin') {
-          navigate('/admin');
-        } else {
-          navigate('/');
-        }
-      }, 800);
-      
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('Đăng nhập thất bại: ' + (error.response?.data || error.message));
-      setLoading(false);
-    }
-  };
 
   return (
     <NotificationProvider>
@@ -306,46 +267,6 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-
-  const handleGoogleSuccess = async (credentialResponse) => {
-    try {
-      setLoading(true);
-      
-      // Giải mã token để lấy thông tin
-      const decoded = jwtDecode(credentialResponse.credential);
-      
-      // Gọi API với URL đầy đủ
-      const response = await axios.post('${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Auth/external-login', {
-        provider: 'Google',
-        idToken: credentialResponse.credential,
-        email: decoded.email,
-        name: decoded.name || "User",
-        picture: decoded.picture || ""
-      });
-      
-      // Xử lý response
-      const { token, user } = response.data;
-      
-      // Lưu token và thông tin người dùng
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      // Chuyển hướng trang
-      setSuccess(true);
-      setTimeout(() => {
-        if (user && user.role === 'Admin') {
-          window.location.href = '/admin';
-        } else {
-          window.location.href = '/';
-        }
-      }, 800);
-      
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('Đăng nhập thất bại: ' + (error.response?.data || error.message));
-      setLoading(false);
-    }
-  };
 
   // ===== KHỞI TẠO SYNCMANAGER =====
   useEffect(() => {

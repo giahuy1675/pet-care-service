@@ -1,7 +1,9 @@
-﻿import React, { useState, useEffect } from 'react';
+import CustomSpinner from '../components/common/CustomSpinner';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import cartService from '../services/cartService';
 import { getProductImageUrl } from '../utils/imageUtils';
+import { API_URL } from '../config/api';
 import {
   Layout,
   Typography,
@@ -454,7 +456,7 @@ const CartPage = () => {
       
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Cart/items/${cartItemId}`, {
+      const response = await fetch(`${API_URL}/Cart/items/${cartItemId}`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json',
@@ -496,7 +498,7 @@ const CartPage = () => {
       
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Cart/clear`, {
+      const response = await fetch(`${API_URL}/Cart/clear`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json',
@@ -585,7 +587,7 @@ const CartPage = () => {
     return (
       <StyledContent>
         <div style={{ textAlign: 'center', padding: '60px 0' }}>
-          <Spin size="large" />
+          <CustomSpinner size="large" />
           <div style={{ marginTop: 16 }}>
             <Text>Đang tải giỏ hàng...</Text>
           </div>

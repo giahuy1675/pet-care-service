@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect, useContext } from 'react';
+import CustomSpinner from '../common/CustomSpinner';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Card,
   Table,
@@ -40,6 +41,7 @@ import { AuthContext } from '../../context/AuthContext';
 import adminReviewService from '../../services/adminReviewService';
 import moment from 'moment';
 import styled from 'styled-components';
+import { BASE_URL } from '../../config/api';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -110,10 +112,10 @@ const AdminReviewManagement = () => {
     }
     
     if (imagePath.startsWith('/')) {
-      return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${imagePath}`;
+      return `${BASE_URL}${imagePath}`;
     }
     
-    return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}/uploads/reviews/${imagePath}`;
+    return `${BASE_URL}/uploads/reviews/${imagePath}`;
   };
 
   useEffect(() => {
@@ -418,7 +420,7 @@ const AdminReviewManagement = () => {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 0' }}>
-        <Spin size="large" tip="Đang tải dữ liệu..." />
+        <CustomSpinner size="large" tip="Đang tải dữ liệu..." />
       </div>
     );
   }

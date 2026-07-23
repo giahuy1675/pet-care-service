@@ -1,7 +1,8 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Select, Button, Form, Switch, TimePicker, Card, message, Spin, Row, Col, Tabs, Input } from 'antd';
 import staffService from '../../services/staffService';
 import dayjs from 'dayjs';
+import { API_URL } from '../../config/api';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -75,7 +76,7 @@ const StaffScheduleManager = () => {
           // Thử gọi trực tiếp để debug
           console.log('Thử gọi API trực tiếp...');
           try {
-            const directResponse = await fetch('${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Staff', {
+            const directResponse = await fetch(`${API_URL}/Staff`, {
               headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/json'

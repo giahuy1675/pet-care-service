@@ -1,7 +1,9 @@
+import CustomSpinner from '../components/common/CustomSpinner';
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import cartService from '../services/cartService';
+import { getUserProfile } from '../services/userService';
 import { getProductImageUrl } from '../utils/imageUtils';
 import {
   Typography,
@@ -406,7 +408,7 @@ const EmptyContainer = styled.div`
 
 const CheckoutPage = () => {
   const [form] = Form.useForm();
-  const { currentUser } = useContext(AuthContext);
+  const { user: currentUser } = useContext(AuthContext);
   const [cart, setCart] = useState({ cartItems: [], total: 0 });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -461,14 +463,31 @@ const CheckoutPage = () => {
       return;
     }
     
-    // Tự động map thông tin user vào form
+    // Tự động map thông tin user vào form từ AuthContext
     if (currentUser) {
+      console.log('Mapping currentUser to Checkout form:', currentUser);
       form.setFieldsValue({
-        recipientName: currentUser?.fullName || '',
+        recipientName: currentUser?.fullName || currentUser?.username || '',
         recipientPhone: currentUser?.phone || '',
         shippingAddress: currentUser?.address || '',
         note: ''
       });
+      
+      // Fetch full profile để đảm bảo lấy được phone/address mới nhất từ DB
+      if (currentUser.userId || currentUser.id) {
+        const id = currentUser.userId || currentUser.id;
+        getUserProfile(id).then(profile => {
+          if (profile) {
+            // Chỉ cập nhật những trường còn trống trong form
+            const currentValues = form.getFieldsValue();
+            form.setFieldsValue({
+              recipientName: currentValues.recipientName || profile.fullName || profile.username || '',
+              recipientPhone: currentValues.recipientPhone || profile.phone || '',
+              shippingAddress: currentValues.shippingAddress || profile.address || '',
+            });
+          }
+        }).catch(err => console.error('Lỗi khi fetch profile trong Checkout:', err));
+      }
     }
   }, [cart.cartItems, navigate, currentUser, form, loading]);
 
@@ -541,7 +560,7 @@ const CheckoutPage = () => {
       >
         <StyledContent>
           <div style={{ textAlign: 'center', padding: '60px 0' }}>
-            <Spin size="large" />
+            <CustomSpinner size="large" />
             <div style={{ marginTop: 16 }}>
               <Text>Đang tải thông tin giỏ hàng...</Text>
             </div>

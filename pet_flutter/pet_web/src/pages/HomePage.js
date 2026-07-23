@@ -6,6 +6,7 @@ import FAQSection from '../components/FAQSection';
 import ChatbotSupport from '../components/ChatbotSupport';
 import ServiceSection from '../components/ServiceSection';
 import BlogSection from '../components/BlogSection';
+import BorderBeam from '../components/common/BorderBeam';
 import { 
   Layout,
   Typography, 
@@ -95,7 +96,7 @@ const ImageSlideshow = () => {
   const SlideContent = ({ slide, index }) => (
     <div style={{ 
       position: 'relative',
-      height: '550px',
+      height: '460px',
       backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url(${slide.image})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
@@ -192,7 +193,9 @@ const ImageSlideshow = () => {
   return (
     <div style={{ 
       position: 'relative',
-      marginBottom: '84px'
+      maxWidth: '1200px',
+      margin: '24px auto 84px',
+      padding: '0 16px'
     }}>
       <Carousel
         autoplay
@@ -437,17 +440,7 @@ const StatsSection = () => {
               onMouseEnter={() => setHoveredStat(index)}
               onMouseLeave={() => setHoveredStat(null)}
             >
-              <Avatar
-                size={90}
-                icon={stat.icon}
-                style={{
-                  backgroundColor: hoveredStat === index ? token.colorPrimary : `${token.colorPrimary}CC`,
-                  boxShadow: `0 12px 20px ${token.colorPrimary}40`,
-                  marginBottom: '20px',
-                  fontSize: '36px',
-                  transition: 'all 0.3s ease'
-                }}
-              />
+
               <Statistic 
                 value={animatedValues[index]} 
                 suffix="+"
@@ -499,94 +492,38 @@ const StyledCard = ({ icon, title, description, buttonText, buttonLink }) => {
   const [isHovered, setIsHovered] = useState(false);
   
   return (
-    <Card
-      hoverable
-      style={{
-        height: '100%',
-        overflow: 'hidden',
-        borderRadius: '18px',
-        boxShadow: isHovered 
-          ? `0 20px 40px rgba(0, 0, 0, 0.12), 0 0 0 2px ${token.colorPrimary}30` 
-          : '0 6px 20px rgba(0, 0, 0, 0.07)',
-        transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        display: 'flex',
-        flexDirection: 'column',
-        border: 'none',
-        transform: isHovered ? 'translateY(-12px)' : 'translateY(0)'
-      }}
-      bodyStyle={{
-        padding: '40px 30px',
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column'
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div style={{ 
-        marginBottom: '24px',
-        position: 'relative'
-      }}>
-        <div style={{
-          width: '70px',
-          height: '70px',
-          borderRadius: '20px',
-          background: isHovered 
-            ? `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})` 
-            : token.colorPrimaryBg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.4s ease',
-          transform: isHovered ? 'rotate(10deg)' : 'rotate(0)',
-          boxShadow: isHovered 
-            ? `0 12px 20px ${token.colorPrimary}50` 
-            : 'none',
-          position: 'relative',
+    <BorderBeam duration={3} color={token.colorPrimary} borderRadius="18px" innerRadius="16px">
+      <Card
+        hoverable
+        style={{
+          height: '100%',
           overflow: 'hidden',
-        }}>
-          <Avatar
-            icon={icon}
-            size={50}
-            style={{
-              backgroundColor: 'transparent',
-              color: isHovered ? 'white' : token.colorPrimary,
-              transition: 'all 0.3s',
-              zIndex: 2
-            }}
-          />
-          {isHovered && (
-            <div style={{
-              position: 'absolute',
-              width: '120%',
-              height: '120%',
-              background: 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%)',
-              animation: 'ripple 1.5s infinite',
-              zIndex: 1
-            }} />
-          )}
-        </div>
-        
-        <div style={{
-          position: 'absolute',
-          bottom: '-5px',
-          left: '10px',
-          width: '20px',
-          height: '20px',
-          borderRadius: '50%',
-          background: isHovered ? token.colorPrimaryBg : 'transparent',
-          transition: 'all 0.4s ease',
-          opacity: isHovered ? 1 : 0
-        }} />
-      </div>
-      
+          borderRadius: '16px',
+          boxShadow: isHovered 
+            ? `0 12px 24px rgba(0, 0, 0, 0.08)` 
+            : '0 4px 12px rgba(0, 0, 0, 0.04)',
+          transition: 'all 0.3s ease',
+          display: 'flex',
+          flexDirection: 'column',
+          border: 'none',
+          background: '#ffffff', 
+        }}
+        bodyStyle={{
+          padding: '30px',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+
       <Title 
         level={4} 
         style={{ 
-          marginBottom: '16px', 
+          marginBottom: '12px', 
           color: isHovered ? token.colorPrimary : token.colorTextHeading,
-          transition: 'all 0.3s',
-          fontSize: '22px'
+          transition: 'color 0.3s',
         }}
       >
         {title}
@@ -594,11 +531,9 @@ const StyledCard = ({ icon, title, description, buttonText, buttonLink }) => {
       
       <Paragraph 
         style={{ 
-          marginBottom: '28px', 
+          marginBottom: '24px', 
           color: token.colorTextSecondary, 
-          fontSize: '16px', 
           flex: 1,
-          lineHeight: 1.7
         }}
       >
         {description}
@@ -607,40 +542,17 @@ const StyledCard = ({ icon, title, description, buttonText, buttonLink }) => {
       {buttonText && buttonLink && (
         <Button
           type="primary"
-          size="large"
-          icon={<ArrowRightOutlined style={{ 
-            opacity: isHovered ? 1 : 0, 
-            transform: isHovered ? 'translateX(0)' : 'translateX(-10px)',
-            transition: 'all 0.3s ease',
-            position: 'absolute',
-            right: isHovered ? '20px' : '30px'
-          }} />}
           style={{
             marginTop: 'auto',
-            borderRadius: '12px',
-            background: isHovered 
-              ? `linear-gradient(45deg, ${token.colorPrimary}, ${token.colorPrimaryActive})` 
-              : `linear-gradient(45deg, ${token.colorPrimary}E0, ${token.colorPrimaryActive}E0)`,
-            border: 'none',
-            boxShadow: isHovered 
-              ? `0 8px 20px ${token.colorPrimary}50` 
-              : `0 4px 12px ${token.colorPrimary}30`,
-            transition: 'all 0.3s',
-            position: 'relative',
-            overflow: 'hidden'
+            borderRadius: '8px',
+            alignSelf: 'flex-start'
           }}
         >
-          <Link to={buttonLink} style={{ 
-            color: 'white',
-            padding: isHovered ? '0 28px 0 12px' : '0 12px',
-            transition: 'all 0.3s ease',
-            display: 'block'
-          }}>
-            {buttonText}
-          </Link>
+          <Link to={buttonLink}>{buttonText}</Link>
         </Button>
       )}
-    </Card>
+      </Card>
+    </BorderBeam>
   );
 };
 
@@ -784,16 +696,7 @@ const ReviewsSection = () => {
                 }}
                 bodyStyle={{ padding: '40px 32px' }}
               >
-                <MessageOutlined 
-                  style={{ 
-                    fontSize: '42px', 
-                    color: token.colorPrimary, 
-                    opacity: 0.15,
-                    position: 'absolute',
-                    top: 25,
-                    left: 25
-                  }} 
-                />
+
                 
                 <div style={{ 
                   position: 'relative', 
@@ -853,19 +756,7 @@ const ReviewsSection = () => {
                       </div>
                     </div>
                     
-                    <Badge 
-                      count={<HeartFilled style={{ color: '#ff4d4f' }} />} 
-                      style={{
-                        backgroundColor: 'white',
-                        boxShadow: '0 3px 8px rgba(0,0,0,0.1)',
-                        padding: '8px 12px',
-                        borderRadius: '20px'
-                      }}
-                    >
-                      <Text style={{ paddingRight: '8px', fontWeight: 500 }}>
-                        Khách hàng yêu thích
-                      </Text>
-                    </Badge>
+
                   </div>
                 </div>
               </Card>
@@ -1078,19 +969,7 @@ const WhyChooseUsSection = () => {
               className="feature-card"
             >
               <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <Avatar
-                  icon={reason.icon}
-                  size={56}
-                  style={{
-                    backgroundColor: `${token.colorPrimary}15`,
-                    color: token.colorPrimary,
-                    marginRight: '20px',
-                    marginTop: '4px',
-                    fontSize: '26px',
-                    transition: 'all 0.3s'
-                  }}
-                  className="feature-icon"
-                />
+
                 
                 <div>
                   <Title level={4} style={{ 

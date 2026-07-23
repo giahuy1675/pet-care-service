@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { 
   Box, Typography, Paper, Grid, Button, Divider, Chip, Card, CardMedia, 
   Avatar, useTheme, alpha, IconButton, Tooltip, Fade, Grow, Container
@@ -57,13 +57,13 @@ const PetDetail = ({ pet, onDelete }) => {
     try {
       // Nếu đường dẫn có dạng /uploads/pets/
       if (photoPath.includes('/uploads/pets/')) {
-        return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${photoPath}`;
+        return `${axiosClient.defaults.baseURL.replace('/api', '')}${photoPath}`;
       }
       
       // Nếu chỉ là tên file
       const fileName = photoPath.split('/').pop();
       if (fileName === photoPath) {
-        return `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}/uploads/pets/${fileName}`;
+        return `${axiosClient.defaults.baseURL.replace('/api', '')}/uploads/pets/${fileName}`;
       }
       
       // Trường hợp khác, sử dụng baseURL của axiosClient

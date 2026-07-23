@@ -1,10 +1,11 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button, Space, Flex, Tag, Alert, Descriptions, Tabs, Statistic } from 'antd';
+import { Button, Space, Flex, Tag, Alert, Descriptions, Tabs, Statistic, Input, Select, Modal, Form, Radio, Card, Row, Col, Upload, Typography } from 'antd';
 import StatusTag from '../common/StatusTag';
 import axiosClient from '../../utils/axiosClient';
 import serviceService from '../../services/serviceService';
+import { BASE_URL } from '../../config/api';
 import { 
   PlusOutlined, 
   SearchOutlined, 
@@ -30,25 +31,8 @@ import {
 // Styled Components
 const ServiceManagementContainer = styled.div`
   width: 100%;
-  background: white;
-  border-radius: 24px;
-  padding: 32px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
   animation: fadeIn 0.5s ease;
-  overflow: hidden;
   position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 5px;
-    background: linear-gradient(90deg, #1890ff 0%, #36cfc9 50%, #1890ff 100%);
-    background-size: 200% 100%;
-    animation: shimmer 3s infinite linear;
-  }
 
   h1 {
     font-size: 32px;
@@ -140,41 +124,9 @@ const LegacyButton = styled.button`
   }
 `;
 
-const SearchBox = styled.div`
-  position: relative;
+const SearchContainer = styled.div`
   flex: 1;
   max-width: 400px;
-
-  input {
-    width: 100%;
-    padding: 14px 20px 14px 50px;
-    border: 2px solid #e8e8e8;
-    border-radius: 12px;
-    font-size: 14px;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    color: #1f1f1f;
-    background: white;
-
-    &:focus {
-      outline: none;
-      border-color: #1890ff;
-      box-shadow: 0 0 0 4px rgba(24, 144, 255, 0.15);
-    }
-  }
-
-  .anticon-search {
-    position: absolute;
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #8c8c8c;
-    font-size: 18px;
-    transition: all 0.3s ease;
-  }
-  
-  &:focus-within .anticon-search {
-    color: #1890ff;
-  }
 `;
 
 const LoadingContainer = styled.div`
@@ -299,232 +251,6 @@ const ServiceCategorySection = styled.div`
   }
 `;
 
-const ServiceGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 25px;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-  
-  /* Thêm staggered animation */
-  & > * {
-    opacity: 0;
-    animation: cardAppear 0.5s ease forwards;
-  }
-  
-  & > *:nth-child(1) { animation-delay: 0.1s; }
-  & > *:nth-child(2) { animation-delay: 0.2s; }
-  & > *:nth-child(3) { animation-delay: 0.3s; }
-  & > *:nth-child(4) { animation-delay: 0.4s; }
-  & > *:nth-child(5) { animation-delay: 0.5s; }
-  & > *:nth-child(6) { animation-delay: 0.6s; }
-  
-  @keyframes cardAppear {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-`;
-
-// Cập nhật ServiceCard để thêm hiệu ứng parallax khi hover
-const ServiceCard = styled(motion.div)`
-  background: white;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  will-change: transform, box-shadow;
-  transform: perspective(1000px) rotateX(0) rotateY(0);
-  position: relative;
-  isolation: isolate;
-
-  &:hover {
-    transform: perspective(1000px) translateY(-15px) rotateX(2deg) rotateY(-2deg);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
-  }
-  
-  &:hover::before {
-    opacity: 1;
-  }
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      45deg,
-      rgba(67, 24, 255, 0.03) 0%,
-      rgba(134, 140, 255, 0.03) 100%
-    );
-    border-radius: 20px;
-    z-index: -1;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-`;
-
-const ServiceImage = styled.div`
-  height: 180px;
-  background: #F4F7FE;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .no-image {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: #707EAE;
-
-    .anticon {
-      font-size: 40px;
-      margin-bottom: 10px;
-    }
-  }
-`;
-
-// Cập nhật ServiceInfo để hiển thị giá và thời gian đẹp hơn
-const ServiceInfo = styled.div`
-  padding: 20px;
-
-  h3 {
-    margin: 0 0 10px 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: #2B3674;
-    position: relative;
-    display: inline-block;
-    
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: -3px;
-      left: 0;
-      width: 40px;
-      height: 2px;
-      background: linear-gradient(90deg, #304FFE, transparent);
-      transition: width 0.3s ease;
-    }
-  }
-
-  ${ServiceCard}:hover h3::after {
-    width: 100%;
-  }
-
-  .service-description {
-    color: #707EAE;
-    font-size: 14px;
-    margin-bottom: 15px;
-    height: 60px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-  }
-
-  .service-details {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
-    align-items: center;
-
-    .price {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-
-      span {
-        background: linear-gradient(135deg, #05CD99 0%, #00A3FF 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 700;
-        font-size: 17px;
-      }
-      
-      .anticon {
-        color: #05CD99;
-        font-size: 16px;
-        animation: pulse 2s infinite;
-      }
-      
-      @keyframes pulse {
-        0% { opacity: 0.7; }
-        50% { opacity: 1; }
-        100% { opacity: 0.7; }
-      }
-    }
-
-    .duration {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: #707EAE;
-
-      span {
-        font-weight: 500;
-      }
-      
-      .anticon {
-        color: #707EAE;
-        font-size: 15px;
-      }
-    }
-  }
-`;
-
-// trạng thái dùng chung component StatusTag (giả lập variant như demo)
-
-const CardActions = styled.div`
-  display: flex;
-  border-top: 1px solid #E6E9F0;
-  
-  button {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    font-weight: 500;
-    color: #707EAE;
-    transition: all 0.3s;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    
-    &:hover {
-      background: #F4F7FE;
-    }
-    
-    &.button-edit:hover {
-      color: #304FFE;
-    }
-    
-    &.button-delete:hover {
-      color: #FF5252;
-    }
-    
-    &:first-child {
-      border-right: 1px solid #E6E9F0;
-    }
-  }
-`;
-
-// Thêm component mới: FilterBar để lọc dịch vụ theo danh mục
 const FilterBar = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -595,143 +321,7 @@ const StatCard = styled.div`
   }
 `;
 
-const ModalOverlay = styled(motion.div)`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow-y: auto;
-  padding: 30px;
-`;
 
-const Modal = styled(motion.div)`
-  background: white;
-  width: 90%;
-  max-width: 900px;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(67, 24, 255, 0.05);
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 5px;
-    background: linear-gradient(90deg, #304FFE, #304FFE);
-    z-index: 1;
-  }
-`;
-
-// Thêm các styled component cho form và modal ở phần styled components
-const ModalHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 30px;
-  border-bottom: 1px solid #E6E9F0;
-  
-  h2 {
-    font-size: 22px;
-    font-weight: 600;
-    color: #2B3674;
-    margin: 0;
-  }
-`;
-
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  color: #707EAE;
-  cursor: pointer;
-  font-size: 18px;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  
-  &:hover {
-    background: #F4F7FE;
-    color: #304FFE;
-  }
-`;
-
-const ModalContent = styled.div`
-  padding: 30px;
-  overflow-y: auto;
-  max-height: calc(90vh - 80px);
-`;
-
-const FormGroup = styled.div`
-  margin-bottom: 25px;
-  
-  label {
-    display: block;
-    margin-bottom: 10px;
-    font-weight: 500;
-    color: #2B3674;
-    font-size: 14px;
-  }
-  
-  input, textarea, select {
-    width: 100%;
-    padding: 14px;
-    border: 2px solid #e6e9f0;
-    border-radius: 14px;
-    font-size: 14px;
-    transition: all 0.3s;
-    background: #F9FAFC;
-    color: #2B3674;
-    
-    &:focus {
-      outline: none;
-      border-color: #304FFE;
-      box-shadow: 0 0 0 4px rgba(67, 24, 255, 0.15);
-      background: white;
-    }
-  }
-  
-  textarea {
-    resize: vertical;
-    min-height: 100px;
-  }
-  
-  .toggle-group {
-    display: flex;
-    gap: 10px;
-  }
-`;
-
-const FormRow = styled.div`
-  display: flex;
-  gap: 20px;
-  margin-bottom: 25px;
-  
-  @media (max-width: 768px) {
-    flex-direction: column;
-    gap: 25px;
-  }
-  
-  ${FormGroup} {
-    flex: 1;
-    margin-bottom: 0;
-  }
-`;
 
 const FormActions = styled.div`
   display: flex;
@@ -789,48 +379,7 @@ const ToggleButton = styled.button`
   }
 `;
 
-const ImageUpload = styled.div`
-  .upload-area {
-    width: 100%;
-    height: 200px;
-    border: 2px dashed #e6e9f0;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s;
-    background: #F9FAFC;
-    overflow: hidden;
-    position: relative;
-    
-    &:hover {
-      border-color: #304FFE;
-      background: rgba(67, 24, 255, 0.05);
-    }
-    
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-    
-    .upload-icon {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      color: #707EAE;
-      
-      .anticon {
-        font-size: 32px;
-        margin-bottom: 10px;
-      }
-    }
-  }
-`;
+
 
 const ToastContainer = styled.div`
   position: fixed;
@@ -1036,6 +585,7 @@ const parseCurrency = (formattedValue) => {
 
 // Định nghĩa component ServiceManagement
 const ServiceManagement = () => {
+  const [form] = Form.useForm();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1097,7 +647,7 @@ const ServiceManagement = () => {
           const photoPath = service.photo.startsWith('/') ? service.photo : `/${service.photo}`;
           return {
             ...service,
-            photo: `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${photoPath}`
+            photo: `${BASE_URL}${photoPath}`
           };
         }
         return service;
@@ -1134,6 +684,8 @@ const ServiceManagement = () => {
     setEditMode(false);
     setCurrentService(null);
     setShowForm(true);
+  
+    form.resetFields();
   };
 
   const showToast = (message, type) => {
@@ -1145,7 +697,7 @@ const ServiceManagement = () => {
 
   // Cập nhật handleSubmit để xử lý ảnh đúng cách
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     
     // Validate form
     if (!formData.name.trim() || !formData.description.trim() || !formData.category || !formData.price || !formData.duration) {
@@ -1185,7 +737,7 @@ const ServiceManagement = () => {
         } else if (response.photo && !response.photo.startsWith('http') && !response.photo.startsWith('data:')) {
           // Đảm bảo URL ảnh trả về từ API có tiền tố đúng
           const photoPath = response.photo.startsWith('/') ? response.photo : `/${response.photo}`;
-          response.photo = `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${photoPath}`;
+          response.photo = `${BASE_URL}${photoPath}`;
         }
         
         // Update state
@@ -1202,7 +754,7 @@ const ServiceManagement = () => {
         // Đảm bảo URL ảnh trả về từ API có tiền tố đúng
         if (response.photo && !response.photo.startsWith('http') && !response.photo.startsWith('data:')) {
           const photoPath = response.photo.startsWith('/') ? response.photo : `/${response.photo}`;
-          response.photo = `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${photoPath}`;
+          response.photo = `${BASE_URL}${photoPath}`;
         }
         
         // Add to state
@@ -1288,24 +840,24 @@ const ServiceManagement = () => {
 
   // Thêm hàm handleEdit trong component ServiceManagement
   const handleEdit = (service) => {
-    // Đảm bảo URL ảnh đã có tiền tố đúng
     const currentService = { ...service };
     if (currentService.photo && !currentService.photo.startsWith('http') && !currentService.photo.startsWith('data:')) {
       const photoPath = currentService.photo.startsWith('/') ? currentService.photo : `/${currentService.photo}`;
-      currentService.photo = `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${photoPath}`;
+      currentService.photo = `${BASE_URL}${photoPath}`;
     }
 
     setCurrentService(currentService);
-    setFormData({
-      name: currentService.name || '',
-      description: currentService.description || '',
-      category: currentService.category || '',
-      price: currentService.price || '',
-      duration: currentService.duration || '',
-      isActive: currentService.isActive === undefined ? true : currentService.isActive
-    });
     setEditMode(true);
     setShowForm(true);
+
+    form.setFieldsValue({
+      name: currentService.name,
+      description: currentService.description,
+      category: currentService.category,
+      price: currentService.price ? currentService.price.toString() : '',
+      duration: currentService.duration,
+      isActive: currentService.isActive
+    });
   };
 
   // Thêm hàm handleDelete trong component ServiceManagement
@@ -1405,10 +957,15 @@ const ServiceManagement = () => {
         </div>
 
         {/* Tabs giống footer của PageHeader */}
-        <Tabs defaultActiveKey="all" size="small" style={{ marginTop: 16 }}>
-          <Tabs.TabPane tab="Tất cả dịch vụ" key="all" />
-          <Tabs.TabPane tab="Dịch vụ đang hoạt động" key="active" />
-        </Tabs>
+        <Tabs 
+          defaultActiveKey="all" 
+          size="small" 
+          style={{ marginTop: 16 }}
+          items={[
+            { key: 'all', label: 'Tất cả dịch vụ' },
+            { key: 'active', label: 'Dịch vụ đang hoạt động' }
+          ]}
+        />
       </div>
       
       <ActionBar>
@@ -1430,94 +987,32 @@ const ServiceManagement = () => {
           </Button>
         </Flex>
         
-        <SearchBox>
-          <input
-            type="text"
+        <SearchContainer>
+          <Input
             placeholder="Tìm kiếm dịch vụ..."
             value={searchTerm}
             onChange={handleSearchChange}
+            prefix={<SearchOutlined style={{ color: '#8c8c8c', marginRight: 8 }} />}
+            size="large"
+            style={{ borderRadius: '12px' }}
           />
-          <SearchOutlined className="search-icon" />
-        </SearchBox>
+        </SearchContainer>
       </ActionBar>
       
-      {/* Filter Tags */}
-      <FilterTagsWrapper>
-        <Tag.CheckableTag
-          checked={filterCategory === 'All'}
-          onChange={() => setFilterCategory('All')}
-          style={{
-            borderRadius: 999,
-            padding: '6px 18px',
-            fontWeight: 500,
-            background: filterCategory === 'All' ? 'linear-gradient(135deg,#305CFF,#4A8DFF)' : '#f5f7ff',
-            color: filterCategory === 'All' ? '#fff' : '#4b5c9a',
-            border: 'none',
-          }}
-        >
-          Tất cả
-        </Tag.CheckableTag>
-
-        <Tag.CheckableTag
-          checked={filterCategory === 'Grooming'}
-          onChange={() => setFilterCategory('Grooming')}
-          style={{
-            borderRadius: 999,
-            padding: '6px 18px',
-            fontWeight: 500,
-            background: filterCategory === 'Grooming' ? '#f0f5ff' : '#f5f7ff',
-            color: filterCategory === 'Grooming' ? '#305CFF' : '#4b5c9a',
-            border: 'none',
-          }}
-        >
-          Chăm sóc & Làm đẹp
-        </Tag.CheckableTag>
-
-        <Tag.CheckableTag
-          checked={filterCategory === 'Healthcare'}
-          onChange={() => setFilterCategory('Healthcare')}
-          style={{
-            borderRadius: 999,
-            padding: '6px 18px',
-            fontWeight: 500,
-            background: filterCategory === 'Healthcare' ? '#f0fff2' : '#f5f7ff',
-            color: filterCategory === 'Healthcare' ? '#52c41a' : '#4b5c9a',
-            border: 'none',
-          }}
-        >
-          Y tế & Sức khỏe
-        </Tag.CheckableTag>
-
-        <Tag.CheckableTag
-          checked={filterCategory === 'Training'}
-          onChange={() => setFilterCategory('Training')}
-          style={{
-            borderRadius: 999,
-            padding: '6px 18px',
-            fontWeight: 500,
-            background: filterCategory === 'Training' ? '#fff7e6' : '#f5f7ff',
-            color: filterCategory === 'Training' ? '#fa8c16' : '#4b5c9a',
-            border: 'none',
-          }}
-        >
-          Huấn luyện
-        </Tag.CheckableTag>
-
-        <Tag.CheckableTag
-          checked={filterCategory === 'Boarding'}
-          onChange={() => setFilterCategory('Boarding')}
-          style={{
-            borderRadius: 999,
-            padding: '6px 18px',
-            fontWeight: 500,
-            background: filterCategory === 'Boarding' ? '#fff0f6' : '#f5f7ff',
-            color: filterCategory === 'Boarding' ? '#eb2f96' : '#4b5c9a',
-            border: 'none',
-          }}
-        >
-          Trông giữ qua đêm
-        </Tag.CheckableTag>
-      </FilterTagsWrapper>
+      {/* Filter Tabs */}
+      <Tabs
+        activeKey={filterCategory}
+        onChange={(key) => setFilterCategory(key)}
+        style={{ marginBottom: 24 }}
+        indicator={{ size: (origin) => origin - 20, align: 'center' }}
+        items={[
+          { key: 'All', label: 'Tất cả' },
+          { key: 'Grooming', label: 'Chăm sóc & Làm đẹp' },
+          { key: 'Healthcare', label: 'Y tế & Sức khỏe' },
+          { key: 'Training', label: 'Huấn luyện' },
+          { key: 'Boarding', label: 'Trông giữ qua đêm' },
+        ]}
+      />
       
       {/* Loading và error states */}
       {loading && (
@@ -1549,50 +1044,51 @@ const ServiceManagement = () => {
               <h2 className="category-title">
                 {getCategoryIcon(category)} {getCategoryLabel(category)}
               </h2>
-              <ServiceGrid>
+              <Row gutter={[24, 24]}>
                 {servicesByCategory[category].map(service => (
-                  <ServiceCard 
-                    key={service.serviceId}
-                    whileHover={{ y: -10 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    <ServiceImage>
-                      {service.photo ? (
-                        <img src={service.photo} alt={service.name} />
-                      ) : (
-                        <div className="no-image">
-                          <PictureOutlined />
-                          <span>Không có ảnh</span>
+                  <Col xs={24} sm={12} md={8} lg={6} key={service.serviceId}>
+                    <Card
+                      hoverable
+                      bordered={false}
+                      style={{ 
+                        height: '100%', 
+                        borderRadius: 20, 
+                        overflow: 'hidden', 
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+                        transition: 'all 0.3s ease'
+                      }}
+                      bodyStyle={{ padding: 24 }}
+                      cover={
+                        <div style={{ position: 'relative', height: 200, overflow: 'hidden', background: '#f8f9fa' }}>
+                          {service.photo ? (
+                            <img draggable={false} alt={service.name} src={service.photo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#bfbfbf' }}>
+                              <PictureOutlined style={{ fontSize: 48, marginBottom: 12 }} />
+                              <div>Không có ảnh</div>
+                            </div>
+                          )}
+                          <div style={{ position: 'absolute', top: 12, right: 12 }}>
+                            <Tag 
+                              color={service.isActive ? '#52c41a' : '#ff4d4f'} 
+                              style={{ 
+                                margin: 0, 
+                                borderRadius: 12, 
+                                padding: '4px 12px', 
+                                fontWeight: 600,
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                                border: 'none'
+                              }}
+                            >
+                              {service.isActive ? 'Đang hoạt động' : 'Ngừng hoạt động'}
+                            </Tag>
+                          </div>
                         </div>
-                      )}
-                    </ServiceImage>
-                    <ServiceInfo>
-                      <h3>{service.name}</h3>
-                      <p className="service-description">{service.description}</p>
-                      <div className="service-details">
-                        <span className="price">
-                          <DollarOutlined /> 
-                          <span>{service.price?.toLocaleString('vi-VN')} VNĐ</span>
-                        </span>
-                        <span className="duration">
-                          <ClockCircleOutlined /> 
-                          <span>{service.duration} phút</span>
-                        </span>
-                      </div>
-                      <StatusTag
-                        color={service.isActive ? 'success' : 'error'}
-                        icon={service.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
-                        variant="solid"
-                        style={{ marginBottom: 15 }}
-                      >
-                        {service.isActive ? 'Đang hoạt động' : 'Ngừng hoạt động'}
-                      </StatusTag>
-                    </ServiceInfo>
-                    <CardActions>
-                      <Space size="small">
-                        <Button
-                          type="primary"
-                          icon={<EditOutlined />}
+                      }
+                      actions={[
+                        <Button 
+                          type="text" 
+                          icon={<EditOutlined />} 
                           loading={buttonLoadings[`edit-${service.serviceId}`]}
                           onClick={() => {
                             setButtonLoadings(prev => ({ ...prev, [`edit-${service.serviceId}`]: true }));
@@ -1601,12 +1097,14 @@ const ServiceManagement = () => {
                               setButtonLoadings(prev => ({ ...prev, [`edit-${service.serviceId}`]: false }));
                             }, 500);
                           }}
+                          style={{ color: '#1890ff', fontWeight: 500 }}
                         >
                           Sửa
-                        </Button>
-                        <Button
-                          danger
-                          icon={<DeleteOutlined />}
+                        </Button>,
+                        <Button 
+                          type="text" 
+                          danger 
+                          icon={<DeleteOutlined />} 
                           loading={buttonLoadings[`delete-${service.serviceId}`]}
                           onClick={() => {
                             setButtonLoadings(prev => ({ ...prev, [`delete-${service.serviceId}`]: true }));
@@ -1615,231 +1113,189 @@ const ServiceManagement = () => {
                               setButtonLoadings(prev => ({ ...prev, [`delete-${service.serviceId}`]: false }));
                             }, 500);
                           }}
+                          style={{ fontWeight: 500 }}
                         >
                           Xóa
                         </Button>
-                      </Space>
-                    </CardActions>
-                  </ServiceCard>
+                      ]}
+                    >
+                      <Card.Meta
+                        title={
+                          <Typography.Title level={4} style={{ color: '#2B3674', margin: 0, fontWeight: 700 }}>
+                            {service.name}
+                          </Typography.Title>
+                        }
+                        description={
+                          <Flex vertical gap="middle" style={{ marginTop: 12 }}>
+                            <Typography.Paragraph 
+                              ellipsis={{ rows: 2 }} 
+                              style={{ color: '#707EAE', margin: 0, minHeight: 44, fontSize: 15 }}
+                            >
+                              {service.description}
+                            </Typography.Paragraph>
+                            <Flex justify="space-between" align="center" style={{ padding: '12px 16px', background: '#f5f7ff', borderRadius: 12 }}>
+                              <Typography.Text style={{ color: '#305CFF', fontWeight: 700, fontSize: 16 }}>
+                                <DollarOutlined /> {service.price?.toLocaleString('vi-VN')} đ
+                              </Typography.Text>
+                              <Typography.Text style={{ color: '#707EAE', fontWeight: 500 }}>
+                                <ClockCircleOutlined /> {service.duration}'
+                              </Typography.Text>
+                            </Flex>
+                          </Flex>
+                        }
+                      />
+                    </Card>
+                  </Col>
                 ))}
-              </ServiceGrid>
+              </Row>
             </ServiceCategorySection>
           ))}
         </>
       )}
 
       {/* Modal form thêm/sửa dịch vụ */}
-      {showForm && (
-        <ModalOverlay
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+      <Modal
+        title={editMode ? 'Cập nhật dịch vụ' : 'Thêm dịch vụ mới'}
+        open={showForm}
+        onCancel={() => setShowForm(false)}
+        onOk={() => form.submit()}
+        confirmLoading={loading}
+        okText={editMode ? 'Cập nhật' : 'Thêm mới'}
+        cancelText="Hủy"
+        width={900}
+        destroyOnClose
+      >
+        <Form 
+          form={form}
+          layout="vertical" 
+          onFinish={(values) => {
+            // Update formData state to be compatible with existing handleSubmit logic
+            setFormData({
+              name: values.name,
+              description: values.description,
+              category: values.category,
+              price: values.price,
+              duration: values.duration,
+              isActive: values.isActive
+            });
+            // Fake event to bypass e.preventDefault
+            setTimeout(() => handleSubmit({ preventDefault: () => {} }), 0);
+          }}
+          initialValues={{ isActive: true, category: '' }}
         >
-          <Modal
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 50, opacity: 0 }}
-          >
-            <ModalHeader>
-              <h2>{editMode ? 'Cập nhật dịch vụ' : 'Thêm dịch vụ mới'}</h2>
-              <CloseButton onClick={() => setShowForm(false)}>
-                <CloseOutlined />
-              </CloseButton>
-            </ModalHeader>
-            <ModalContent>
-              <form onSubmit={handleSubmit}>
-                <FormGroup>
-                  <label>Tên dịch vụ</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    placeholder="Nhập tên dịch vụ"
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <label>Mô tả</label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    placeholder="Nhập mô tả dịch vụ"
-                    rows={4}
-                  />
-                </FormGroup>
-                <FormRow>
-                  <FormGroup>
-                    <label>Danh mục</label>
-                    <select
-                      value={formData.category}
-                      onChange={(e) => setFormData({...formData, category: e.target.value})}
-                    >
-                      <option value="">-- Chọn danh mục --</option>
-                      <option value="Grooming">Chăm sóc & Làm đẹp</option>
-                      <option value="Healthcare">Y tế & Sức khỏe</option>
-                      <option value="Training">Huấn luyện</option>
-                      <option value="Boarding">Trông giữ qua đêm</option>
-                      <option value="DayCare">Trông giữ ban ngày</option>
-                      <option value="Other">Dịch vụ khác</option>
-                    </select>
-                  </FormGroup>
-                  <FormGroup>
-                    <label>Trạng thái</label>
-                    <div className="toggle-group">
-                      <ToggleButton 
-                        active={formData.isActive} 
-                        onClick={() => setFormData({...formData, isActive: true})}
-                      >
-                        <CheckCircleOutlined /> Hoạt động
-                      </ToggleButton>
-                      <ToggleButton 
-                        active={!formData.isActive} 
-                        onClick={() => setFormData({...formData, isActive: false})}
-                      >
-                        <CloseCircleOutlined /> Không hoạt động
-                      </ToggleButton>
-                    </div>
-                  </FormGroup>
-                </FormRow>
-                <FormRow>
-                  <FormGroup>
-                    <label>Giá (VNĐ)</label>
-                    <input
-                      type="text"
-                      value={formatCurrency(formData.price)}
-                      onChange={(e) => {
-                        const numericValue = parseCurrency(e.target.value);
-                        setFormData({...formData, price: numericValue});
-                      }}
-                      placeholder="Nhập giá dịch vụ (VNĐ)"
-                    />
-                  </FormGroup>
-                  <FormGroup>
-                    <label>Thời gian (phút)</label>
-                    <input
-                      type="number"
-                      value={formData.duration}
-                      onChange={(e) => setFormData({...formData, duration: e.target.value})}
-                      placeholder="Nhập thời gian thực hiện"
-                      min="0"
-                    />
-                  </FormGroup>
-                </FormRow>
-                <FormGroup>
-                  <label>Hình ảnh</label>
-                  <ImageUpload>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      style={{ display: 'none' }}
-                      accept="image/*"
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files[0]) {
-                          const file = e.target.files[0];
-                          setNewImage(file);
-                          const reader = new FileReader();
-                          reader.onload = function(evt) {
-                            document.getElementById('imagePreview').src = evt.target.result;
-                            document.getElementById('imagePreview').style.display = 'block';
-                            document.getElementById('uploadIcon').style.display = 'none';
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
-                    <div 
-                      className="upload-area"
-                      onClick={() => fileInputRef.current.click()}
-                    >
-                      {editMode && currentService.photo && !newImage ? (
-                        <img 
-                          src={currentService.photo} 
-                          alt="Preview" 
-                          id="imagePreview" 
-                          style={{ display: 'block' }}
-                        />
-                      ) : (
-                        <>
-                          <img 
-                            src="" 
-                            alt="Preview" 
-                            id="imagePreview" 
-                            style={{ display: 'none' }}
-                          />
-                          <div id="uploadIcon" className="upload-icon">
-                            <UploadOutlined />
-                            <span>Nhấn để tải lên hoặc kéo thả</span>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </ImageUpload>
-                </FormGroup>
-                <FormActions>
-                  <Flex gap="small" justify="flex-end">
-                    <Button onClick={() => setShowForm(false)}>
-                      Hủy
-                    </Button>
-                    <Button
-                      type="primary"
-                      icon={loading ? <SyncOutlined spin /> : null}
-                      loading={loading}
-                      htmlType="submit"
-                    >
-                      {editMode ? 'Cập nhật' : 'Thêm mới'}
-                    </Button>
-                  </Flex>
-                </FormActions>
-              </form>
-            </ModalContent>
-          </Modal>
-        </ModalOverlay>
-      )}
+          <Form.Item name="name" label="Tên dịch vụ" rules={[{ required: true, message: 'Vui lòng nhập tên dịch vụ' }]}>
+            <Input placeholder="Nhập tên dịch vụ" size="large" />
+          </Form.Item>
+          
+          <Form.Item name="description" label="Mô tả" rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}>
+            <Input.TextArea placeholder="Nhập mô tả dịch vụ" rows={4} size="large" />
+          </Form.Item>
+          
+          <Row gutter={24}>
+            <Col span={12}>
+              <Form.Item name="category" label="Danh mục" rules={[{ required: true, message: 'Vui lòng chọn danh mục' }]}>
+                <Select
+                  style={{ width: '100%', height: '40px' }}
+                  options={[
+                    { value: '', label: '-- Chọn danh mục --', disabled: true },
+                    { value: 'Grooming', label: 'Chăm sóc & Làm đẹp' },
+                    { value: 'Healthcare', label: 'Y tế & Sức khỏe' },
+                    { value: 'Training', label: 'Huấn luyện' },
+                    { value: 'Boarding', label: 'Trông giữ qua đêm' },
+                    { value: 'DayCare', label: 'Trông giữ ban ngày' },
+                    { value: 'Other', label: 'Dịch vụ khác' },
+                  ]}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="isActive" label="Trạng thái">
+                <Radio.Group
+                  block
+                  options={[
+                    { label: <><CheckCircleOutlined /> Hoạt động</>, value: true },
+                    { label: <><CloseCircleOutlined /> Không hoạt động</>, value: false },
+                  ]}
+                  optionType="button"
+                  buttonStyle="solid"
+                  size="large"
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          
+          <Row gutter={24}>
+            <Col span={12}>
+              <Form.Item name="price" label="Giá (VNĐ)" rules={[{ required: true, message: 'Vui lòng nhập giá' }]}>
+                <Input placeholder="Nhập giá dịch vụ (VNĐ)" size="large" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="duration" label="Thời gian (phút)" rules={[{ required: true, message: 'Vui lòng nhập thời gian' }]}>
+                <Input type="number" placeholder="Nhập thời gian thực hiện" min="0" size="large" />
+              </Form.Item>
+            </Col>
+          </Row>
+          
+          <Form.Item label="Hình ảnh">
+            <Upload
+              listType="picture-card"
+              showUploadList={false}
+              beforeUpload={(file) => {
+                setNewImage(file);
+                return false;
+              }}
+            >
+              {newImage || (editMode && currentService?.photo) ? (
+                <img 
+                  id="img-preview"
+                  src={newImage ? URL.createObjectURL(newImage) : currentService.photo} 
+                  alt="preview" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
+              ) : (
+                <div>
+                  <UploadOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+                  <div style={{ marginTop: 8 }}>Tải ảnh lên</div>
+                </div>
+              )}
+            </Upload>
+          </Form.Item>
+        </Form>
+      </Modal>
 
       {/* Modal xác nhận xóa */}
-      {confirmDelete && (
-        <ModalOverlay
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <Modal
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            style={{ maxWidth: '500px' }}
-          >
-            <ModalHeader>
-              <h2>Xác nhận xóa</h2>
-              <CloseButton onClick={() => setConfirmDelete(null)}>
-                <CloseOutlined />
-              </CloseButton>
-            </ModalHeader>
-            <ModalContent style={{ textAlign: 'center', padding: '30px 20px' }}>
-              <div className="confirm-icon">
-                <ExclamationCircleOutlined style={{ fontSize: '60px', color: '#FF5252' }} />
-              </div>
-              <p style={{ fontSize: '16px', margin: '20px 0' }}>
-                Bạn có chắc chắn muốn xóa dịch vụ này? Hành động này không thể hoàn tác.
-              </p>
-              <FormActions>
-                <Flex gap="small" justify="flex-end">
-                  <Button onClick={() => setConfirmDelete(null)}>
-                    Hủy
-                  </Button>
-                  <Button
-                    danger
-                    icon={loading ? <SyncOutlined spin /> : <DeleteOutlined />}
-                    loading={loading}
-                    onClick={confirmDeleteService}
-                  >
-                    Xóa
-                  </Button>
-                </Flex>
-              </FormActions>
-            </ModalContent>
-          </Modal>
-        </ModalOverlay>
-      )}
+      <Modal
+        title="Xác nhận xóa"
+        open={!!confirmDelete}
+        onCancel={() => setConfirmDelete(null)}
+        footer={null}
+      >
+        <div style={{ textAlign: 'center', padding: '30px 20px' }}>
+          <div className="confirm-icon">
+            <ExclamationCircleOutlined style={{ fontSize: '60px', color: '#FF5252' }} />
+          </div>
+          <p style={{ fontSize: '16px', margin: '20px 0' }}>
+            Bạn có chắc chắn muốn xóa dịch vụ này? Hành động này không thể hoàn tác.
+          </p>
+          <Flex gap="small" justify="flex-end" style={{ marginTop: 24 }}>
+            <Button onClick={() => setConfirmDelete(null)}>
+              Hủy
+            </Button>
+            <Button
+              danger
+              icon={loading ? <SyncOutlined spin /> : null}
+              loading={loading}
+              onClick={() => {
+                handleDelete(confirmDelete);
+                setConfirmDelete(null);
+              }}
+            >
+              Xác nhận xóa
+            </Button>
+          </Flex>
+        </div>
+      </Modal>
 
       {/* Toast notification - dùng Ant Design Alert giống UserManagement */}
       <AnimatePresence>

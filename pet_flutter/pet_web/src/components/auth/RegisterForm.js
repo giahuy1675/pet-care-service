@@ -35,6 +35,7 @@ import {
 } from '@ant-design/icons';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
+import { HappyProvider } from '@ant-design/happy-work-theme';
 
 const { Title, Text, Paragraph } = Typography;
 const { Step } = Steps;
@@ -112,52 +113,7 @@ const StyledFormItem = styled(Form.Item)`
   }
 `;
 
-const RegisterButton = styled(Button)`
-  height: 52px;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 12px;
-  background: linear-gradient(90deg, #1890ff 0%, #52c41a 100%);
-  border: none;
-  box-shadow: 0 8px 16px rgba(24, 144, 255, 0.2);
-  transition: all 0.3s ease;
-  overflow: hidden;
-  position: relative;
-  z-index: 1;
-  
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: all 0.6s ease;
-    z-index: -1;
-  }
-  
-  &:hover {
-    background: linear-gradient(90deg, #40a9ff 0%, #73d13d 100%);
-    box-shadow: 0 10px 20px rgba(24, 144, 255, 0.3);
-    transform: translateY(-3px);
-    
-    &:before {
-      left: 100%;
-    }
-  }
-  
-  &:active {
-    background: linear-gradient(90deg, #096dd9 0%, #389e0d 100%);
-    transform: translateY(0);
-  }
-  
-  .anticon {
-    font-size: 18px;
-    margin-right: 8px;
-    vertical-align: -1px;
-  }
-`;
+
 
 const StyledAlert = styled(Alert)`
   margin-bottom: 24px;
@@ -796,15 +752,18 @@ const RegisterForm = () => {
               style={{ marginTop: 40 }}
             >
               <Form.Item>
-                <RegisterButton
-                  type="primary"
-                  htmlType="submit"
-                  block
-                  loading={loading}
-                  icon={loading ? <LoadingOutlined /> : <RocketOutlined />}
-                >
-                  {loading ? 'Đang xử lý...' : 'Đăng ký tài khoản'}
-                </RegisterButton>
+                <HappyProvider>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    block
+                    loading={loading}
+                    icon={loading ? <LoadingOutlined /> : <RocketOutlined />}
+                    style={{ height: '52px', fontSize: '16px', fontWeight: 600, borderRadius: '12px' }}
+                  >
+                    {loading ? 'Đang xử lý...' : 'Đăng ký tài khoản'}
+                  </Button>
+                </HappyProvider>
               </Form.Item>
             </motion.div>
           </Form>

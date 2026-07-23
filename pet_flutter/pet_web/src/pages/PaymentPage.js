@@ -1,3 +1,4 @@
+import CustomSpinner from '../components/common/CustomSpinner';
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import cartService from '../services/cartService';
@@ -501,7 +502,7 @@ const PaymentPage = () => {
     return (
       <StyledContent>
         <div style={{ textAlign: 'center', padding: '60px 0' }}>
-          <Spin size="large" />
+          <CustomSpinner size="large" />
           <div style={{ marginTop: 16 }}>
             <Text>Đang tải thông tin thanh toán...</Text>
           </div>

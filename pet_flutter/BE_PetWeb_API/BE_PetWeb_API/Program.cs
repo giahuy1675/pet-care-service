@@ -1,4 +1,4 @@
-﻿using BE_PetWeb_API.Extensions;
+using BE_PetWeb_API.Extensions;
 using BE_PetWeb_API.Middleware;
 using BE_PetWeb_API.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -273,5 +273,48 @@ app.MapHealthChecks("/api/health");
 
 // SPA fallback - serve index.html for any non-API, non-file routes (React Router)
 app.MapFallbackToFile("index.html");
+
+// Tự động tạo tài khoản Admin nếu chưa có
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<PetWebContext>();
+        
+        // Kiểm tra xem đã có admin nào chưa
+        if (!context.Users.Any(u => u.Role == "Admin"))
+        {
+            // Mã hóa mật khẩu
+            using var hmac = new System.Security.Cryptography.HMACSHA256();
+            var passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes("admin123"));
+            string hashedPassword = Convert.ToBase64String(passwordHash) + ":" + Convert.ToBase64String(hmac.Key);
+
+            var admin = new User
+            {
+                Username = "admin",
+                Email = "admin@petservice.com",
+                Password = hashedPassword,
+                FullName = "Administrator",
+                Phone = "0123456789",
+                Address = "Việt Nam",
+                Avatar = "default-avatar.png",
+                Role = "Admin",
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                IsActive = true
+            };
+            
+            context.Users.Add(admin);
+            context.SaveChanges();
+            app.Logger.LogInformation("Đã tự động tạo tài khoản Admin (admin/admin123) thành công!");
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Đã xảy ra lỗi khi tạo tài khoản Admin tự động.");
+    }
+}
 
 app.Run();

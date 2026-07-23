@@ -6,7 +6,7 @@ import { Editor } from 'react-draft-wysiwyg';
 import draftToHtml from 'draftjs-to-html';
 import htmlToDraft from 'html-to-draftjs';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
-import { Button, Space, Flex, ConfigProvider, Pagination } from 'antd';
+import { Button, Space, Flex, ConfigProvider, Pagination, Modal, Form, Input, Select, Upload, message, Row, Col } from 'antd';
 import { HappyProvider } from '@ant-design/happy-work-theme';
 
 import { 
@@ -31,9 +31,6 @@ import useAuth from '../../hooks/useAuth';
 const BlogManagementContainer = styled.div`
   width: 100%;
   background: #f8fafc;
-  border-radius: 12px;
-  padding: 25px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.03);
 `;
 
 const Header = styled.div`
@@ -403,202 +400,6 @@ const Loader = styled.div`
 `;
 
 // Form Components
-const Modal = styled(motion.div)`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(3px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  padding: 20px;
-`;
-
-const ModalContent = styled(motion.div)`
-  background-color: white;
-  border-radius: 15px;
-  width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
-  
-  &::-webkit-scrollbar {
-    width: 10px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-    border-radius: 10px;
-  }
-  
-  &::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
-  }
-`;
-
-const ModalHeader = styled.div`
-  padding: 20px 25px;
-  border-bottom: 1px solid #edf2f7;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: sticky;
-  top: 0;
-  background: white;
-  border-radius: 15px 15px 0 0;
-  z-index: 10;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-  
-  h3 {
-    margin: 0;
-    font-size: 20px;
-    color: #2d3748;
-    font-weight: 700;
-  }
-  
-  button {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #a0aec0;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-    
-    &:hover {
-      color: #e53e3e;
-      background: #fff5f5;
-      transform: rotate(90deg);
-    }
-  }
-`;
-
-const Form = styled.form`
-  padding: 25px;
-`;
-
-const FormGroup = styled.div`
-  margin-bottom: 25px;
-  
-  label {
-    display: block;
-    margin-bottom: 10px;
-    font-weight: 600;
-    color: #2d3748;
-    font-size: 15px;
-  }
-  
-  input, textarea, select {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    font-size: 15px;
-    transition: all 0.3s;
-    background-color: #f7fafc;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
-    
-    &:focus {
-      outline: none;
-      border-color: #4299e1;
-      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
-      background-color: #fff;
-    }
-  }
-  
-  textarea {
-    min-height: 180px;
-    resize: vertical;
-    line-height: 1.6;
-  }
-  
-  select {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-position: right 12px center;
-    background-repeat: no-repeat;
-    background-size: 16px;
-    padding-right: 40px;
-  }
-  
-  .error {
-    color: #e53e3e;
-    font-size: 13px;
-    margin-top: 6px;
-    display: flex;
-    align-items: center;
-    
-    &:before {
-      content: "⚠";
-      margin-right: 6px;
-    }
-  }
-`;
-
-const ImagePreview = styled.div`
-  margin-top: 15px;
-  background: white;
-  border-radius: 10px;
-  padding: 10px;
-  border: 1px solid #e2e8f0;
-  display: inline-block;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  
-  img {
-    width: 250px;
-    height: 140px;
-    border-radius: 6px;
-    object-fit: contain;
-  }
-  
-  .file-name {
-    margin-top: 8px;
-    font-size: 13px;
-    color: #4a5568;
-    font-weight: 500;
-  }
-`;
-
-const FormActions = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 35px;
-  padding-top: 20px;
-  border-top: 1px solid #edf2f7;
-`;
-
-const DeleteConfirmation = styled.div`
-  padding: 20px;
-  text-align: center;
-  
-  p {
-    margin-bottom: 20px;
-    color: #555;
-  }
-  
-  .actions {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-  }
-`;
-
 const Toast = styled.div`
   position: fixed;
   top: 20px;
@@ -657,37 +458,30 @@ const EditorContainer = styled.div`
   margin-bottom: 25px;
   
   .rdw-editor-wrapper {
-    border-radius: 10px;
     overflow: hidden;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
   }
   
   .rdw-editor-toolbar {
     background: #f8fafb;
     border: none;
     border-bottom: 1px solid #e2e8f0;
-    padding: 12px;
   }
   
   .rdw-option-wrapper {
     border: 1px solid #e2e8f0;
-    border-radius: 4px;
   }
   
   .rdw-option-active {
     background: #ebf8ff;
-    box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
   }
   
   .rdw-dropdown-wrapper {
     border: 1px solid #e2e8f0;
-    border-radius: 6px;
   }
   
   .rdw-editor-main {
     min-height: 300px;
-    padding: 15px 20px;
     font-family: 'Roboto', sans-serif;
     line-height: 1.6;
     color: #4a5568;
@@ -701,7 +495,6 @@ const EditorContainer = styled.div`
       width: 960px;
       height: 539px;
       object-fit: contain;
-      border-radius: 8px;
     }
     
     /* Style cho container chứa video và ảnh */
@@ -716,7 +509,6 @@ const EditorContainer = styled.div`
       max-width: 100%;
       width: 960px;
       height: 539px;
-      border-radius: 8px;
       margin: 0 auto;
       display: block;
     }
@@ -794,6 +586,7 @@ const createVideoHtml = (embedUrl) => {
 };
 
 const BlogManagement = () => {
+  const [form] = Form.useForm();
   const { user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1003,6 +796,7 @@ const BlogManagement = () => {
   
   // Cập nhật hàm resetForm để reset editorState
   const resetForm = () => {
+    form.resetFields();
     setFormData({
       title: '',
       content: '',
@@ -1409,40 +1203,33 @@ const BlogManagement = () => {
         </ActionButtons>
       </Header>
       
-      <SearchBar>
-        <input 
-          type="text"
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', alignItems: 'center' }}>
+        <Input.Search
           placeholder="Tìm kiếm bài viết..."
+          allowClear
+          enterButton="Tìm kiếm"
+          size="large"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          onSearch={handleSearch}
+          style={{ flex: 1 }}
         />
-        <Button
-          type="primary"
-          icon={<SearchOutlined />}
-          onClick={handleSearch}
-        >
-          Tìm kiếm
-        </Button>
-      </SearchBar>
-      
-      <FilterSection>
-        <FilterContainer>
-          <StatusFilter>
-            <label htmlFor="statusFilter">Trạng thái:</label>
-            <select 
-              id="statusFilter" 
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-            >
-              <option value="all">Tất cả</option>
-              <option value="Published">Đã xuất bản</option>
-              <option value="Draft">Bản nháp</option>
-              <option value="Archived">Đã lưu trữ</option>
-            </select>
-          </StatusFilter>
-        </FilterContainer>
-      </FilterSection>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontWeight: 500, color: '#4a5568' }}>Trạng thái:</span>
+          <Select
+            value={filter}
+            onChange={(value) => setFilter(value)}
+            size="large"
+            style={{ width: 160 }}
+            options={[
+              { value: 'all', label: 'Tất cả' },
+              { value: 'Published', label: 'Đã xuất bản' },
+              { value: 'Draft', label: 'Bản nháp' },
+              { value: 'Archived', label: 'Đã lưu trữ' },
+            ]}
+          />
+        </div>
+      </div>
       
       {error && (
         <div className="error-message">
@@ -1552,49 +1339,48 @@ const BlogManagement = () => {
         </>
       )}
       
+      
       {/* Form Modal */}
-      {showForm && (
-        <Modal
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+      <Modal
+        title={<div style={{ fontSize: '18px', fontWeight: 'bold' }}>{currentPost ? 'Chỉnh sửa bài viết' : 'Tạo bài viết mới'}</div>}
+        open={showForm}
+        onCancel={resetForm}
+        onOk={() => form.submit()}
+        confirmLoading={loading}
+        width={1000}
+        centered
+        okText={currentPost ? 'Cập nhật' : 'Tạo bài viết'}
+        cancelText="Hủy"
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={async (values) => {
+            // Logic form is handled by passing values to the existing handleSubmit logic
+            const fakeEvent = { preventDefault: () => {} };
+            // We'll sync the values back to formData for handleSubmit
+            setFormData(prev => ({ ...prev, ...values }));
+            setTimeout(() => handleSubmit(fakeEvent), 0);
+          }}
+          initialValues={{ category: 'general', status: 'Draft' }}
         >
-          <ModalContent
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 15 }}
-          >
-            <ModalHeader>
-              <h3>{currentPost ? 'Chỉnh sửa bài viết' : 'Tạo bài viết mới'}</h3>
-              <Button type="text" icon={<CloseOutlined />} onClick={resetForm} />
-            </ModalHeader>
-            
-            <Form onSubmit={handleSubmit}>
-              <FormGroup>
-                <label htmlFor="title">Tiêu đề *</label>
-                <input 
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                />
-                {formErrors.title && <div className="error">{formErrors.title}</div>}
-              </FormGroup>
+          <Row gutter={24}>
+            <Col span={16}>
+              <Form.Item name="title" label="Tiêu đề" rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}>
+                <Input placeholder="Nhập tiêu đề bài viết" size="large" onChange={(e) => setFormData({...formData, title: e.target.value})} />
+              </Form.Item>
               
-              <FormGroup>
-                <label htmlFor="content">Nội dung *</label>
-                
-                <MediaButtons>
-                  <MediaButton onClick={handleOpenImageTool}>
-                    <PictureOutlined className="icon" /> Thêm ảnh
-                  </MediaButton>
-                  <MediaButton onClick={handleInsertVideo}>
-                    <VideoCameraOutlined className="icon" /> Thêm video
-                  </MediaButton>
-                </MediaButtons>
-                
-                <EditorContainer>
+              <Form.Item label="Nội dung" required>
+                <div style={{ border: '1px solid #d9d9d9', borderRadius: '8px', padding: '10px' }}>
+                  <MediaButtons>
+                    <MediaButton onClick={handleOpenImageTool} type="button">
+                      <PictureOutlined className="icon" /> Thêm ảnh
+                    </MediaButton>
+                    <MediaButton onClick={handleInsertVideo} type="button">
+                      <VideoCameraOutlined className="icon" /> Thêm video
+                    </MediaButton>
+                  </MediaButtons>
+                  
                   <Editor
                     editorState={editorState}
                     onEditorStateChange={handleEditorChange}
@@ -1603,162 +1389,76 @@ const BlogManagement = () => {
                     toolbarClassName="toolbar-class"
                     toolbar={{
                       options: ['inline', 'blockType', 'fontSize', 'list', 'textAlign', 'colorPicker', 'link', 'emoji', 'image', 'history'],
-                      inline: {
-                        options: ['bold', 'italic', 'underline', 'strikethrough'],
-                      },
-                      blockType: {
-                        options: ['Normal', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'Blockquote'],
-                      },
                       image: {
                         uploadCallback: uploadImageCallback,
                         alt: { present: true, mandatory: false },
                         previewImage: true,
-                        inputAccept: 'image/jpeg,image/jpg,image/png,image/gif',
-                        defaultSize: {
-                          height: '539px',
-                          width: '960px',
-                        },
                         alignmentEnabled: true,
-                        className: 'blog-image',
-                        wrapperClassName: 'image-container',
                       },
                     }}
                     placeholder="Nhập nội dung bài viết của bạn tại đây..."
                   />
-                  {formErrors.content && <div className="error-message">{formErrors.content}</div>}
-                </EditorContainer>
-              </FormGroup>
-              
-              <FormGroup>
-                <label htmlFor="category">Danh mục</label>
-                <select 
-                  id="category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                >
-                  <option value="general">Tổng hợp</option>
-                  <option value="dogs">Chó</option>
-                  <option value="cats">Mèo</option>
-                  <option value="birds">Chim</option>
-                  <option value="other">Khác</option>
-                </select>
-              </FormGroup>
-              
-              <FormGroup>
-                <label htmlFor="tags">Thẻ (phân tách bằng dấu phẩy)</label>
-                <input 
-                  type="text"
-                  id="tags"
-                  name="tags"
-                  value={formData.tags}
-                  onChange={handleInputChange}
-                  placeholder="Ví dụ: chăm sóc, sức khỏe, dinh dưỡng"
-                />
-              </FormGroup>
-              
-              <FormGroup>
-                <label htmlFor="status">Trạng thái:</label>
-                <select 
-                  id="status" 
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                >
-                  <option value="Draft">Bản nháp</option>
-                  <option value="Published">Xuất bản</option>
-                  <option value="Archived">Lưu trữ</option>
-                </select>
-              </FormGroup>
-              
-              <FormGroup>
-                <label htmlFor="featuredImage">Ảnh đại diện</label>
-                <input 
-                  type="file"
-                  id="featuredImage"
-                  name="featuredImage"
-                  onChange={handleFileChange}
-                  accept="image/*"
-                />
-                
-                {imagePreview && (
-                  <ImagePreview>
-                    <img src={imagePreview.src} alt="Preview" />
-                    <div className="file-name">
-                      {imagePreview.isExisting 
-                        ? 'Ảnh hiện tại (giữ nguyên nếu không chọn ảnh mới)' 
-                        : imagePreview.name}
-                    </div>
-                    
-                    {imagePreview.isExisting && (
-                      <div style={{ color: '#666', fontSize: '13px', marginTop: '5px' }}>
-                        Để giữ nguyên ảnh này, không cần chọn file mới
-                      </div>
-                    )}
-                  </ImagePreview>
-                )}
-              </FormGroup>
-              
-              <FormActions>
-                <Button onClick={resetForm}>
-                  Hủy
-                </Button>
-                <HappyProvider>
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    disabled={loading}
-                    icon={<SendOutlined />}
-                  >
-                    {loading ? 'Đang lưu...' : currentPost ? 'Cập nhật' : 'Tạo bài viết'}
-                  </Button>
-                </HappyProvider>
-              </FormActions>
-            </Form>
-          </ModalContent>
-        </Modal>
-      )}
-      
-      {/* Delete Confirmation */}
-      {showDeleteConfirm && (
-        <Modal
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <ModalContent
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", damping: 15 }}
-            style={{ maxWidth: '500px' }}
-          >
-            <ModalHeader>
-              <h3>Xác nhận xóa</h3>
-              <button onClick={() => setShowDeleteConfirm(false)}>&times;</button>
-            </ModalHeader>
+                </div>
+                {formErrors.content && <div style={{ color: '#ff4d4f', marginTop: '5px' }}>{formErrors.content}</div>}
+              </Form.Item>
+            </Col>
             
-            <DeleteConfirmation>
-              <p>Bạn có chắc chắn muốn xóa bài viết <strong>"{currentPost?.title}"</strong>? Hành động này không thể khôi phục.</p>
-              
-              <div className="actions">
-                <Button onClick={() => setShowDeleteConfirm(false)}>
-                  Hủy
-                </Button>
-                <Button
-                  type="primary"
-                  danger
-                  onClick={handleDelete}
-                  disabled={loading}
-                  icon={<DeleteOutlined />}
-                >
-                  {loading ? 'Đang xóa...' : 'Xóa'}
-                </Button>
+            <Col span={8}>
+              <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #edf2f7' }}>
+                <Form.Item name="status" label="Trạng thái">
+                  <Select onChange={(val) => setFormData({...formData, status: val})}>
+                    <Select.Option value="Draft">Bản nháp</Select.Option>
+                    <Select.Option value="Published">Xuất bản</Select.Option>
+                    <Select.Option value="Archived">Lưu trữ</Select.Option>
+                  </Select>
+                </Form.Item>
+                
+                <Form.Item name="category" label="Danh mục">
+                  <Select onChange={(val) => setFormData({...formData, category: val})}>
+                    <Select.Option value="general">Tổng hợp</Select.Option>
+                    <Select.Option value="dogs">Chó</Select.Option>
+                    <Select.Option value="cats">Mèo</Select.Option>
+                    <Select.Option value="birds">Chim</Select.Option>
+                    <Select.Option value="other">Khác</Select.Option>
+                  </Select>
+                </Form.Item>
+                
+                <Form.Item name="tags" label="Thẻ (tags)">
+                  <Input placeholder="phân tách bằng dấu phẩy" onChange={(e) => setFormData({...formData, tags: e.target.value})} />
+                </Form.Item>
+                
+                <Form.Item label="Ảnh đại diện">
+                  <Input type="file" onChange={handleFileChange} accept="image/*" />
+                  {imagePreview && (
+                    <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                      <img src={imagePreview.src} alt="Preview" style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '8px' }} />
+                      <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>{imagePreview.isExisting ? 'Ảnh hiện tại' : imagePreview.name}</div>
+                    </div>
+                  )}
+                </Form.Item>
               </div>
-            </DeleteConfirmation>
-          </ModalContent>
-        </Modal>
-      )}
-    </BlogManagementContainer>
+            </Col>
+          </Row>
+        </Form>
+      </Modal>
+      
+
+      {/* Delete Confirmation */}
+      <Modal
+        title={<><ExclamationCircleOutlined style={{ color: '#ff4d4f', marginRight: '8px' }} /> Xác nhận xóa</>}
+        open={showDeleteConfirm}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onOk={handleDelete}
+        confirmLoading={loading}
+        okText="Xóa"
+        okButtonProps={{ danger: true }}
+        cancelText="Hủy"
+        centered
+      >
+        <p>Bạn có chắc chắn muốn xóa bài viết <strong>"{currentPost?.title}"</strong>? Hành động này không thể khôi phục.</p>
+      </Modal>
+      
+</BlogManagementContainer>
   );
 };
 

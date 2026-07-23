@@ -15,7 +15,6 @@ import dayjs from 'dayjs';
 const { RangePicker } = DatePicker;
 
 const DashboardContainer = styled.div`
-  padding: 30px;
   background: #f7faff;
   min-height: 100vh;
 `;

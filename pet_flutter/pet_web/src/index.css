@@ -67,8 +67,8 @@ body {
 }
 
 /* Thêm vào file CSS chính */
-.admin-content-container, 
-.main-content, 
+.admin-content-container,
+.main-content,
 .content-wrapper {
   width: 100% !important;
   max-width: 100% !important;

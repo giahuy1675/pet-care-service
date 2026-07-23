@@ -34,7 +34,7 @@ import {
   FileTextOutlined,
   DownOutlined
 } from '@ant-design/icons';
-import { Alert, Badge, Dropdown, Space, Table as AntTable, Pagination as AntPagination, Tag, Modal, Button as AntButton, Descriptions, Tabs, Statistic } from 'antd';
+import { Drawer, Divider, Row, Col, Card, Alert, Badge, Dropdown, Space, Table as AntTable, Pagination as AntPagination, Tag, Modal, Button as AntButton, Descriptions, Tabs, Statistic, Input, DatePicker, Select, Flex } from 'antd';
 import dayjs from '../../utils/dayjs'; // Using configured dayjs with plugins
 
 // Thêm import appointmentService
@@ -69,30 +69,38 @@ const DEFAULT_SERVICE_DURATION = 30; // Thời lượng dịch vụ mặc địn
 
 const { TabPane } = Tabs;
 
-// Thêm các styled components
 const AppointmentContainer = styled.div`
+  .site-description-item-profile-wrapper {
+    font-size: 14px;
+    line-height: 22px;
+    margin-bottom: 7px;
+    color: rgba(0, 0, 0, 0.65);
+  }
+  .site-description-item-profile-p-label {
+    display: inline-block;
+    margin-right: 8px;
+    color: rgba(0, 0, 0, 0.85);
+  }
+  .site-description-item-profile-p {
+    font-size: 16px;
+    color: rgba(0, 0, 0, 0.85);
+    line-height: 24px;
+    display: block;
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+  .cursor-pointer {
+    cursor: pointer;
+  }
+  .cursor-pointer:hover {
+    background-color: #f7faff !important;
+  }
   width: 100%;
   background: #f7faff;
-  border-radius: 20px;
-  padding: 30px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
   animation: fadeIn 0.5s ease;
   overflow: hidden;
   position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 5px;
-    background: linear-gradient(90deg, #304FFE 0%, #304FFE 50%, #304FFE 100%);
-    background-size: 200% 100%;
-    animation: shimmer 3s infinite linear;
-  }
-
-  h1 {
+h1 {
     font-size: 32px;
     font-weight: 700;
     color: #2B3674;
@@ -183,10 +191,6 @@ const FilterContainer = styled.div`
   gap: 20px;
   margin-bottom: 35px;
   align-items: center;
-  background: white;
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.03);
 `;
 
 const SearchBox = styled.div`
@@ -309,16 +313,12 @@ const StatusFilter = styled.div`
 
 const TableContainer = styled.div`
   overflow-x: auto;
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.03);
   
   table {
     width: 100%;
     border-collapse: collapse;
     
     th, td {
-      padding: 18px 20px;
       text-align: left;
       border-bottom: 1px solid #f0f0f0;
     }
@@ -343,12 +343,10 @@ const TableContainer = styled.div`
     tbody tr:hover {
       background: #F9FAFC;
       transform: translateY(-1px);
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
     }
     
     .no-data {
       text-align: center;
-      padding: 50px;
       color: #707EAE;
     }
   }
@@ -1142,6 +1140,21 @@ const isWithinBusinessHours = (time) => {
     console.error("Lỗi khi kiểm tra giờ làm việc:", error);
     return false;
   }
+};
+
+
+const DescriptionItem = ({ title, content }) => (
+  <div className="site-description-item-profile-wrapper" style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+    <span className="site-description-item-profile-p-label">{title}:</span>
+    <span style={{ flex: 1, wordBreak: 'break-word' }}>{content}</span>
+  </div>
+);
+
+const getPetAge = (pet) => {
+  if (!pet || (!pet.dateOfBirth && !pet.DateOfBirth)) return 'N/A';
+  const dob = pet.dateOfBirth || pet.DateOfBirth;
+  const age = dayjs().diff(dayjs(dob), 'year');
+  return age >= 0 ? age : 'N/A';
 };
 
 const AppointmentManagement = () => {
@@ -3504,42 +3517,40 @@ const AppointmentManagement = () => {
         </div>
       )}
       
-      <FilterContainer>
-        <SearchBox>
-          <SearchOutlined />
-          <input
-            type="text"
+      <div style={{ marginBottom: 24, padding: 24, background: 'white', borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+        <Flex gap="middle" wrap="wrap" align="center">
+          <Input.Search
             placeholder="Tìm kiếm theo tên, số điện thoại, email hoặc ghi chú"
+            allowClear
+            size="large"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ width: 400, flex: '1 1 300px' }}
           />
-        </SearchBox>
-        
-        <DateFilter>
-          <CalendarOutlined />
-          <input
-            type="date"
-            value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
+          <DatePicker
+            size="large"
+            value={filterDate ? dayjs(filterDate) : null}
+            onChange={(date, dateString) => setFilterDate(dateString)}
+            placeholder="Chọn ngày"
+            style={{ width: 180 }}
           />
-        </DateFilter>
-        
-        <StatusFilter>
-          <FilterOutlined />
-          <select 
-            value={filterStatus} 
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="">Tất cả trạng thái</option>
-            <option value="Pending">Đang chờ</option>
-            <option value="Scheduled">Đã đặt lịch</option>
-            <option value="Confirmed">Đã xác nhận</option>
-            <option value="Completed">Đã hoàn thành</option>
-            <option value="No-Show">Không đến</option>
-            <option value="Cancelled">Đã hủy</option>
-          </select>
-        </StatusFilter>
-      </FilterContainer>
+          <Select
+            size="large"
+            value={filterStatus}
+            onChange={(value) => setFilterStatus(value)}
+            style={{ width: 200 }}
+            options={[
+              { value: '', label: 'Tất cả trạng thái' },
+              { value: 'Pending', label: 'Đang chờ' },
+              { value: 'Scheduled', label: 'Đã đặt lịch' },
+              { value: 'Confirmed', label: 'Đã xác nhận' },
+              { value: 'Completed', label: 'Đã hoàn thành' },
+              { value: 'No-Show', label: 'Không đến' },
+              { value: 'Cancelled', label: 'Đã hủy' }
+            ]}
+          />
+        </Flex>
+      </div>
 
       {editMode && currentAppointment && (
         <Modal
@@ -3779,252 +3790,252 @@ const AppointmentManagement = () => {
         </Modal>
       )}
 
-      <TableContainer>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Ngày & Giờ</th>
-              <th>Khách hàng</th>
-              <th>Thú cưng</th>
-              <th>Dịch vụ</th>
-              <th>Nhân viên</th>
-              <th>Trạng thái</th>
-              <th>Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredAppointments.length > 0 ? (
-              currentAppointments.map(appointment => (
-                <tr 
-                  key={appointment.appointmentId}
-                  onClick={() => handleViewDetail(appointment)}
-                  style={{ cursor: 'pointer' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f7faff'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ''}
+            <div style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+        <AntTable 
+          dataSource={currentAppointments}
+          rowKey="appointmentId"
+          pagination={false}
+          loading={loading}
+          locale={{ emptyText: 'Không tìm thấy lịch hẹn nào' }}
+          rowClassName={() => 'cursor-pointer'}
+          onRow={(record) => ({
+            onClick: () => handleViewDetail(record),
+          })}
+        >
+          <AntTable.Column title="ID" dataIndex="appointmentId" key="appointmentId" />
+          
+          <AntTable.Column 
+            title="Ngày & Giờ" 
+            key="datetime" 
+            render={(_, record) => (
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontWeight: '600', color: '#2B3674' }}>{formatDate(record.appointmentDate)}</span>
+                <span style={{ color: '#707EAE', fontSize: '13px' }}>
+                  {formatTime(record.appointmentDate)} - {formatEndTime(
+                    record.appointmentDate, 
+                    getServiceDuration(record.serviceId, services) + BUFFER_TIME_MINUTES
+                  )}
+                </span>
+                {(record.status === 'Completed' || record.status === 'Cancelled' || record.status === 'No-Show') && (
+                  <div style={{ 
+                    marginTop: '5px', 
+                    padding: '5px 8px', 
+                    fontSize: '11px', 
+                    background: 'rgba(0, 0, 0, 0.03)', 
+                    borderRadius: '6px',
+                    fontStyle: 'italic',
+                    color: record.status === 'Completed' ? '#05CD99' : 
+                            record.status === 'Cancelled' ? '#FF5252' : '#fa8c16'
+                  }}>
+                    {getStatusNotification(record.status, record.appointmentDate)}
+                  </div>
+                )}
+              </div>
+            )} 
+          />
+
+          <AntTable.Column 
+            title="Khách hàng" 
+            key="customer" 
+            render={(_, record) => (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#2B3674', fontWeight: 500 }}>
+                <UserOutlined style={{ color: '#304FFE' }} />
+                {getUserName(record.userId)}
+              </div>
+            )} 
+          />
+
+          <AntTable.Column 
+            title="Thú cưng" 
+            key="pet" 
+            render={(_, record) => (
+              <span style={{ fontWeight: 500, color: '#4a5568' }}>{getPetName(record.petId)}</span>
+            )}
+          />
+
+          <AntTable.Column 
+            title="Dịch vụ" 
+            key="service" 
+            render={(_, record) => (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, color: '#2B3674' }}>
+                  <ShopOutlined style={{ color: '#304FFE' }} />
+                  {getServiceName(record.serviceId)}
+                </div>
+                <div style={{ fontSize: '12px', color: '#707EAE', display: 'flex', flexDirection: 'column' }}>
+                  <span>Thời lượng: {getServiceDuration(record.serviceId, services)} phút</span>
+                  <span>Buffer: {BUFFER_TIME_MINUTES} phút</span>
+                </div>
+              </div>
+            )} 
+          />
+
+          <AntTable.Column 
+            title="Nhân viên" 
+            key="staff" 
+            render={(_, record) => (
+              isUnassignedAppointment(record) ? (
+                <Tag
+                  color="warning"
+                  icon={<WarningOutlined />}
+                  style={{ borderRadius: 8, padding: '4px 10px', cursor: 'pointer', fontWeight: 500 }}
+                  onClick={(e) => { e.stopPropagation(); handleUnassignedAppointmentClick(record); }}
                 >
-                  <td>{appointment.appointmentId}</td>
-                  <td>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontWeight: '500' }}>{formatDate(appointment.appointmentDate)}</span>
-                      <span style={{ color: '#707EAE', fontSize: '13px' }}>
-                        {formatTime(appointment.appointmentDate)} - {formatEndTime(
-                          appointment.appointmentDate, 
-                          getServiceDuration(appointment.serviceId, services) + BUFFER_TIME_MINUTES
-                        )}
-                      </span>
-                      {/* Thêm thông báo dựa trên trạng thái */}
-                      {(appointment.status === 'Completed' || appointment.status === 'Cancelled' || appointment.status === 'No-Show') && (
-                        <div style={{ 
-                          marginTop: '5px', 
-                          padding: '5px 8px', 
-                          fontSize: '11px', 
-                          background: 'rgba(0, 0, 0, 0.03)', 
-                          borderRadius: '6px',
-                          fontStyle: 'italic',
-                          color: appointment.status === 'Completed' ? '#05CD99' : 
-                                  appointment.status === 'Cancelled' ? '#FF5252' : '#fa8c16'
-                        }}>
-                          {getStatusNotification(appointment.status, appointment.appointmentDate)}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <UserOutlined style={{ color: '#707EAE' }} />
-                      {getUserName(appointment.userId)}
-                    </div>
-                  </td>
-                  <td>{getPetName(appointment.petId)}</td>
-                  <td>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <ShopOutlined style={{ color: '#707EAE' }} />
-                        {getServiceName(appointment.serviceId)}
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#707EAE', display: 'flex', flexDirection: 'column' }}>
-                        <span>Thời lượng: {getServiceDuration(appointment.serviceId, services)} phút</span>
-                        <span>Buffer time: {BUFFER_TIME_MINUTES} phút</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    {isUnassignedAppointment(appointment) ? (
-                      <Tag
-                        color="warning"
-                        icon={<WarningOutlined />}
-                        style={staffTagStyle}
-                        onClick={() => handleUnassignedAppointmentClick(appointment)}
-                      >
-                        Chưa có nhân viên
-                      </Tag>
-                    ) : (
-                      <Tag
-                        color="success"
-                        icon={<TeamOutlined />}
-                        style={staffTagStyle}
-                      >
-                        Đã gán nhân viên
-                      </Tag>
-                    )}
-                  </td>
-                  <td>
-                    {(() => {
-                      const { color, icon, text } = getStatusTagProps(
-                        statusEnToVi[appointment.status] || appointment.status,
-                      );
-                      return (
-                        <Tag
-                          color={color}
-                          icon={icon}
-                          style={{ borderRadius: 999, padding: '4px 12px', fontWeight: 500 }}
-                        >
-                          {text}
-                        </Tag>
-                      );
-                    })()}
-                  </td>
-                  <td onClick={(e) => e.stopPropagation()}>
-                    <Dropdown
-                      menu={{
-                        items: (() => {
-                          const items = [];
+                  Chưa phân công
+                </Tag>
+              ) : (
+                <Tag
+                  color="success"
+                  icon={<TeamOutlined />}
+                  style={{ borderRadius: 8, padding: '4px 10px', fontWeight: 500 }}
+                >
+                  Đã phân công
+                </Tag>
+              )
+            )} 
+          />
 
-                          if (isUnassignedAppointment(appointment)) {
-                            items.push({
-                              key: 'assign',
-                              label: (
-                                <span onClick={() => handleUnassignedAppointmentClick(appointment)}>
-                                  <TeamOutlined style={{ marginRight: 8 }} />
-                                  Gán nhân viên
-                                </span>
-                              ),
-                            });
-                          }
+          <AntTable.Column 
+            title="Trạng thái" 
+            key="status" 
+            render={(_, record) => {
+              const { color, icon, text } = getStatusTagProps(
+                statusEnToVi[record.status] || record.status,
+              );
+              return (
+                <Tag
+                  color={color}
+                  icon={icon}
+                  style={{ borderRadius: 20, padding: '4px 12px', fontWeight: 600, fontSize: 13 }}
+                >
+                  {text}
+                </Tag>
+              );
+            }} 
+          />
 
-                          if (canEditAppointment(appointment)) {
-                            items.push({
-                              key: 'edit',
-                              label: (
-                                <span onClick={() => handleEdit(appointment)}>
-                                  <EditOutlined style={{ marginRight: 8 }} />
-                                  Sửa
-                                </span>
-                              ),
-                            });
-                          }
+          <AntTable.Column 
+            title="Thao tác" 
+            key="action" 
+            render={(_, record) => {
+              const items = [];
 
-                          if (appointment.status === 'Pending' || appointment.status === 'Scheduled') {
-                            items.push({
-                              key: 'confirm',
-                              label: (
-                                <span
-                                  onClick={() =>
-                                    updateAppointmentStatus(appointment.appointmentId, 'Đã xác nhận')
-                                  }
-                                >
-                                  <CheckOutlined style={{ marginRight: 8 }} />
-                                  Xác nhận
-                                </span>
-                              ),
-                            });
-                          }
+              if (isUnassignedAppointment(record)) {
+                items.push({
+                  key: 'assign',
+                  label: (
+                    <span onClick={(e) => { e.stopPropagation(); handleUnassignedAppointmentClick(record); }}>
+                      <TeamOutlined style={{ marginRight: 8 }} />
+                      Gán nhân viên
+                    </span>
+                  ),
+                });
+              }
 
-                          if (appointment.status === 'Confirmed') {
-                            items.push(
-                              {
-                                key: 'complete',
-                                label: (
-                                  <span
-                                    onClick={() =>
-                                      updateAppointmentStatus(
-                                        appointment.appointmentId,
-                                        'Đã hoàn thành',
-                                      )
-                                    }
-                                  >
-                                    <CheckCircleOutlined style={{ marginRight: 8 }} />
-                                    Hoàn thành
-                                  </span>
-                                ),
-                              },
-                              {
-                                key: 'noShow',
-                                label: (
-                                  <span
-                                    onClick={() =>
-                                      updateAppointmentStatus(appointment.appointmentId, 'Không đến')
-                                    }
-                                  >
-                                    <WarningOutlined style={{ marginRight: 8 }} />
-                                    Không đến
-                                  </span>
-                                ),
-                              },
-                            );
-                          }
+              if (canEditAppointment(record)) {
+                items.push({
+                  key: 'edit',
+                  label: (
+                    <span onClick={(e) => { e.stopPropagation(); handleEdit(record); }}>
+                      <EditOutlined style={{ marginRight: 8 }} />
+                      Sửa
+                    </span>
+                  ),
+                });
+              }
 
-                          if (
-                            canCancelAppointment(appointment) &&
-                            (appointment.status === 'Scheduled' ||
-                              appointment.status === 'Confirmed' ||
-                              appointment.status === 'Pending')
-                          ) {
-                            items.push({
-                              key: 'cancel',
-                              danger: true,
-                              label: (
-                                <span
-                                  onClick={() =>
-                                    updateAppointmentStatus(appointment.appointmentId, 'Đã hủy')
-                                  }
-                                >
-                                  <CloseOutlined style={{ marginRight: 8 }} />
-                                  Hủy
-                                </span>
-                              ),
-                            });
-                          }
-
-                          return items;
-                        })(),
+              if (record.status === 'Pending' || record.status === 'Scheduled') {
+                items.push({
+                  key: 'confirm',
+                  label: (
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateAppointmentStatus(record.appointmentId, 'Đã xác nhận');
                       }}
                     >
-                      <a
-                        href="#"
-                        onClick={(e) => e.preventDefault()}
-                        style={{ color: '#304FFE', fontWeight: 500 }}
+                      <CheckOutlined style={{ marginRight: 8 }} />
+                      Xác nhận
+                    </span>
+                  ),
+                });
+              }
+
+              if (record.status === 'Confirmed') {
+                items.push(
+                  {
+                    key: 'complete',
+                    label: (
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateAppointmentStatus(
+                            record.appointmentId,
+                            'Đã hoàn thành',
+                          );
+                        }}
                       >
-                        <Space>
-                          Thao tác
-                          <DownOutlined />
-                        </Space>
-                      </a>
-                    </Dropdown>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="8" className="no-data">
-                  {loading ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                      <SyncOutlined spin />
-                      Đang tải lịch hẹn...
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 0' }}>
-                      <InfoCircleOutlined style={{ fontSize: '40px', color: '#707EAE', marginBottom: '15px' }} />
-                      Không tìm thấy lịch hẹn nào
-                    </div>
-                  )}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </TableContainer>
+                        <CheckCircleOutlined style={{ marginRight: 8 }} />
+                        Hoàn thành
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'noShow',
+                    label: (
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateAppointmentStatus(record.appointmentId, 'Không đến');
+                        }}
+                      >
+                        <WarningOutlined style={{ marginRight: 8 }} />
+                        Không đến
+                      </span>
+                    ),
+                  },
+                );
+              }
+
+              if (
+                canCancelAppointment(record) &&
+                (record.status === 'Scheduled' ||
+                  record.status === 'Confirmed' ||
+                  record.status === 'Pending')
+              ) {
+                items.push({
+                  key: 'cancel',
+                  danger: true,
+                  label: (
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateAppointmentStatus(record.appointmentId, 'Đã hủy');
+                      }}
+                    >
+                      <CloseOutlined style={{ marginRight: 8 }} />
+                      Hủy
+                    </span>
+                  ),
+                });
+              }
+
+              return (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <Dropdown menu={{ items }} trigger={['click']}>
+                    <AntButton type="text" style={{ color: '#304FFE', fontWeight: 600 }}>
+                      <Space>
+                        Thao tác
+                        <DownOutlined style={{ fontSize: 10 }} />
+                      </Space>
+                    </AntButton>
+                  </Dropdown>
+                </div>
+              );
+            }} 
+          />
+        </AntTable>
+      </div>
 
       {/* Phân trang dùng Ant Design Pagination */}
       {filteredAppointments.length > 0 && (
@@ -5522,216 +5533,114 @@ const AppointmentManagement = () => {
         </div>
       </Modal>
 
-      {/* Modal xem chi tiết lịch hẹn */}
-      {showDetailModal && detailAppointment && (
-        <DetailModalOverlay onClick={handleCloseDetailModal}>
-          <DetailModalContent onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px', width: '90%' }}>
-            <div className="modal-header">
-              <h2><InfoCircleOutlined /> Chi tiết lịch hẹn #{detailAppointment.appointmentId}</h2>
-              <button className="close-button" onClick={handleCloseDetailModal}>
-                <CloseOutlined />
-              </button>
-            </div>
+                        {/* Drawer xem chi tiết lịch hẹn */}
+      <Drawer
+        width={900}
+        placement="right"
+        closable={false}
+        onClose={handleCloseDetailModal}
+        open={showDetailModal && !!detailAppointment}
+      >
+        {detailAppointment ? (
+          <>
+            <p className="site-description-item-profile-p" style={{ marginBottom: 24 }}>
+              Chi tiết lịch hẹn #{detailAppointment.appointmentId}
+            </p>
             
-            <div className="modal-body" style={{ padding: '30px' }}>
-              {!detailAppointment ? (
-                <div style={{ textAlign: 'center', padding: '40px' }}>
-                  <SyncOutlined spin style={{ fontSize: '40px', color: '#304FFE' }} />
-                  <p style={{ marginTop: '20px', color: '#707EAE' }}>Đang tải thông tin...</p>
-                </div>
-              ) : (
-                <>
-                  {/* Thông tin khách hàng */}
-                  <div style={{ 
-                    background: '#304FFE',
-                    padding: '20px',
-                    borderRadius: '12px',
-                    color: 'white',
-                    marginBottom: '20px'
-                  }}>
-                    <h3 style={{ margin: '0 0 15px 0', color: 'white', fontSize: '18px' }}>
-                      <UserOutlined /> Thông tin khách hàng
-                    </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                      <div>
-                        <div style={{ opacity: 0.9, fontSize: '13px', marginBottom: '5px' }}>Tên khách hàng</div>
-                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
-                          {detailAppointment.user?.fullName || users.find(u => u.userId === detailAppointment.userId)?.fullName || 'N/A'}
-                        </div>
-                      </div>
-                      <div>
-                        <div style={{ opacity: 0.9, fontSize: '13px', marginBottom: '5px' }}>Số điện thoại</div>
-                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
-                          {detailAppointment.user?.phone || users.find(u => u.userId === detailAppointment.userId)?.phone || 'N/A'}
-                        </div>
-                      </div>
-                      <div>
-                        <div style={{ opacity: 0.9, fontSize: '13px', marginBottom: '5px' }}>Email</div>
-                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
-                          {detailAppointment.user?.email || users.find(u => u.userId === detailAppointment.userId)?.email || 'N/A'}
-                        </div>
-                      </div>
-                      <div>
-                        <div style={{ opacity: 0.9, fontSize: '13px', marginBottom: '5px' }}>Địa chỉ</div>
-                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
-                          {detailAppointment.user?.address || users.find(u => u.userId === detailAppointment.userId)?.address || 'N/A'}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Thông tin thú cưng */}
-                  <div style={{ 
-                    background: '#FF6B9D',
-                    padding: '20px',
-                    borderRadius: '12px',
-                    color: 'white',
-                    marginBottom: '20px'
-                  }}>
-                    <h3 style={{ margin: '0 0 15px 0', color: 'white', fontSize: '18px' }}>
-                      🐾 Thông tin thú cưng
-                    </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                      <div>
-                        <div style={{ opacity: 0.9, fontSize: '13px', marginBottom: '5px' }}>Tên thú cưng</div>
-                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
-                          {detailAppointment.pet?.name || pets.find(p => p.petId === detailAppointment.petId)?.name || 'N/A'}
-                        </div>
-                      </div>
-                      <div>
-                        <div style={{ opacity: 0.9, fontSize: '13px', marginBottom: '5px' }}>Giống</div>
-                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
-                          {detailAppointment.pet?.breed || pets.find(p => p.petId === detailAppointment.petId)?.breed || 'N/A'}
-                        </div>
-                      </div>
-                      <div>
-                        <div style={{ opacity: 0.9, fontSize: '13px', marginBottom: '5px' }}>Tuổi</div>
-                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
-                          {detailAppointment.pet?.age || pets.find(p => p.petId === detailAppointment.petId)?.age || 'N/A'} tuổi
-                        </div>
-                      </div>
-                      <div>
-                        <div style={{ opacity: 0.9, fontSize: '13px', marginBottom: '5px' }}>Cân nặng</div>
-                        <div style={{ fontWeight: 'bold', fontSize: '15px' }}>
-                          {detailAppointment.pet?.weight || pets.find(p => p.petId === detailAppointment.petId)?.weight || 'N/A'} kg
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Thông tin lịch hẹn */}
-              {detailAppointment && (
-                <div style={{ 
-                  background: '#f7faff',
-                  padding: '20px',
-                  borderRadius: '12px',
-                  border: '2px solid #e8f0fe'
-                }}>
-                  <h3 style={{ margin: '0 0 15px 0', color: '#2B3674', fontSize: '18px' }}>
-                    <CalendarOutlined /> Thông tin lịch hẹn
-                  </h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                    <div>
-                      <div style={{ color: '#707EAE', fontSize: '13px', marginBottom: '5px' }}>Dịch vụ</div>
-                      <div style={{ fontWeight: 'bold', color: '#2B3674', fontSize: '15px' }}>
-                        {detailAppointment.service?.serviceName || detailAppointment.service?.name || getServiceName(detailAppointment.serviceId)}
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ color: '#707EAE', fontSize: '13px', marginBottom: '5px' }}>Giá dịch vụ</div>
-                      <div style={{ fontWeight: 'bold', color: '#05CD99', fontSize: '15px' }}>
-                        {(detailAppointment.service?.price || services.find(s => s.serviceId === detailAppointment.serviceId)?.price || 0).toLocaleString('vi-VN')}₫
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ color: '#707EAE', fontSize: '13px', marginBottom: '5px' }}>Ngày hẹn</div>
-                      <div style={{ fontWeight: 'bold', color: '#2B3674', fontSize: '15px' }}>
-                        {formatDate(detailAppointment.appointmentDate)}
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ color: '#707EAE', fontSize: '13px', marginBottom: '5px' }}>Giờ hẹn</div>
-                      <div style={{ fontWeight: 'bold', color: '#2B3674', fontSize: '15px' }}>
-                        {formatTime(detailAppointment.appointmentDate)}
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ color: '#707EAE', fontSize: '13px', marginBottom: '5px' }}>Nhân viên</div>
-                      <div style={{ fontWeight: 'bold', color: '#2B3674', fontSize: '15px' }}>
-                        {detailAppointment.staff?.fullName || (detailAppointment.staffId ? getUserName(detailAppointment.staffId) : 'Chưa phân công')}
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ color: '#707EAE', fontSize: '13px', marginBottom: '5px' }}>Trạng thái</div>
-                      <div>
-                        <StatusBadge className={getStatusBadgeClass(detailAppointment.status)}>
-                          {getStatusIcon(detailAppointment.status)}
-                          {statusEnToVi[detailAppointment.status] || detailAppointment.status}
-                        </StatusBadge>
-                      </div>
-                    </div>
-                  </div>
-
-                {/* Ghi chú */}
-                {detailAppointment.notes && (
-                  <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e8f0fe' }}>
-                    <div style={{ color: '#707EAE', fontSize: '13px', marginBottom: '8px' }}>Ghi chú</div>
-                    <div style={{ 
-                      background: 'white',
-                      padding: '15px',
-                      borderRadius: '8px',
-                      color: '#2B3674',
-                      fontSize: '14px',
-                      lineHeight: '1.6'
-                    }}>
-                      {detailAppointment.notes}
-                    </div>
-                  </div>
-                )}
-
-                {/* Thông tin thời gian */}
-                <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e8f0fe' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', fontSize: '13px' }}>
-                    <div>
-                      <div style={{ color: '#707EAE', marginBottom: '5px' }}>Ngày tạo</div>
-                      <div style={{ color: '#2B3674' }}>
-                        {dayjs(detailAppointment.createdAt).format('DD/MM/YYYY HH:mm')}
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ color: '#707EAE', marginBottom: '5px' }}>Cập nhật lần cuối</div>
-                      <div style={{ color: '#2B3674' }}>
-                        {dayjs(detailAppointment.updatedAt).format('DD/MM/YYYY HH:mm')}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <p className="site-description-item-profile-p">Thông tin khách hàng</p>
+            <Row>
+              <Col span={12}>
+                <DescriptionItem title="Tên khách hàng" content={<strong>{detailAppointment.user?.fullName || users.find(u => u.userId === detailAppointment.userId)?.fullName || 'N/A'}</strong>} />
+              </Col>
+              <Col span={12}>
+                <DescriptionItem title="Số điện thoại" content={<strong>{detailAppointment.user?.phone || users.find(u => u.userId === detailAppointment.userId)?.phone || 'N/A'}</strong>} />
+              </Col>
+            </Row>
+            <Row>
+              <Col span={12}>
+                <DescriptionItem title="Email" content={detailAppointment.user?.email || users.find(u => u.userId === detailAppointment.userId)?.email || 'N/A'} />
+              </Col>
+              <Col span={12}>
+                <DescriptionItem title="Địa chỉ" content={detailAppointment.user?.address || users.find(u => u.userId === detailAppointment.userId)?.address || 'N/A'} />
+              </Col>
+            </Row>
+            
+            <Divider />
+            
+            <p className="site-description-item-profile-p">Thông tin thú cưng</p>
+            <Row>
+              <Col span={12}>
+                <DescriptionItem title="Tên thú cưng" content={<strong>{detailAppointment.pet?.name || pets.find(p => p.petId === detailAppointment.petId)?.name || 'N/A'}</strong>} />
+              </Col>
+              <Col span={12}>
+                <DescriptionItem title="Giống" content={detailAppointment.pet?.breed || pets.find(p => p.petId === detailAppointment.petId)?.breed || 'N/A'} />
+              </Col>
+            </Row>
+            <Row>
+              <Col span={12}>
+                <DescriptionItem title="Tuổi" content={<strong>{`${getPetAge(detailAppointment.pet || pets.find(p => p.petId === detailAppointment.petId))} tuổi`}</strong>} />
+              </Col>
+              <Col span={12}>
+                <DescriptionItem title="Cân nặng" content={`${detailAppointment.pet?.weight || pets.find(p => p.petId === detailAppointment.petId)?.weight || 'N/A'} kg`} />
+              </Col>
+            </Row>
+            
+            <Divider />
+            
+            <p className="site-description-item-profile-p">Thông tin lịch hẹn</p>
+            <Row>
+              <Col span={12}>
+                <DescriptionItem title="Dịch vụ" content={<strong>{detailAppointment.service?.serviceName || detailAppointment.service?.name || getServiceName(detailAppointment.serviceId)}</strong>} />
+              </Col>
+              <Col span={12}>
+                <DescriptionItem title="Giá dịch vụ" content={
+                  <strong style={{ color: '#05CD99' }}>{`${(detailAppointment.service?.price || services.find(s => s.serviceId === detailAppointment.serviceId)?.price || 0).toLocaleString('vi-VN')}₫`}</strong>
+                } />
+              </Col>
+            </Row>
+            <Row>
+              <Col span={12}>
+                <DescriptionItem title="Ngày hẹn" content={<strong>{formatDate(detailAppointment.appointmentDate)}</strong>} />
+              </Col>
+              <Col span={12}>
+                <DescriptionItem title="Giờ hẹn" content={<strong>{formatTime(detailAppointment.appointmentDate)}</strong>} />
+              </Col>
+            </Row>
+            <Row>
+              <Col span={12}>
+                <DescriptionItem title="Nhân viên" content={<strong>{detailAppointment.staff?.fullName || (detailAppointment.staffId ? getUserName(detailAppointment.staffId) : 'Chưa phân công')}</strong>} />
+              </Col>
+              <Col span={12}>
+                <DescriptionItem title="Trạng thái" content={<strong>{statusEnToVi[detailAppointment.status] || detailAppointment.status}</strong>} />
+              </Col>
+            </Row>
+            
+            {detailAppointment.notes && (
+              <Row>
+                <Col span={24}>
+                  <DescriptionItem title="Ghi chú" content={detailAppointment.notes} />
+                </Col>
+              </Row>
             )}
-            </div>
-
-            <div className="modal-footer" style={{ padding: '20px 30px', borderTop: '1px solid #eef0f7' }}>
-              <button 
-                className="cancel-button" 
-                onClick={handleCloseDetailModal}
-                style={{
-                  padding: '10px 24px',
-                  background: '#f7faff',
-                  border: '1px solid #e8f0fe',
-                  borderRadius: '8px',
-                  color: '#2B3674',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                Đóng
-              </button>
-            </div>
-          </DetailModalContent>
-        </DetailModalOverlay>
-      )}
+            
+            <Divider />
+            
+            <p className="site-description-item-profile-p">Hệ thống</p>
+            <Row>
+              <Col span={12}>
+                <DescriptionItem title="Ngày tạo" content={dayjs(detailAppointment.createdAt).format('DD/MM/YYYY HH:mm')} />
+              </Col>
+              <Col span={12}>
+                <DescriptionItem title="Cập nhật lần cuối" content={dayjs(detailAppointment.updatedAt).format('DD/MM/YYYY HH:mm')} />
+              </Col>
+            </Row>
+          </>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <p>Đang tải thông tin...</p>
+          </div>
+        )}
+      </Drawer>
     </AppointmentContainer>
   );
 };

@@ -1,3 +1,4 @@
+import CustomSpinner from '../components/common/CustomSpinner';
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
@@ -735,7 +736,7 @@ const OrderDetailPage = () => {
           <Title level={3} style={{ margin: 0, color: '#1890ff' }}>
             Đang tải thông tin đơn hàng
           </Title>
-          <Spin size="large" tip="Vui lòng đợi trong giây lát..." />
+          <CustomSpinner size="large" tip="Vui lòng đợi trong giây lát..." />
           <div style={{ 
             width: '200px', 
             height: '6px', 

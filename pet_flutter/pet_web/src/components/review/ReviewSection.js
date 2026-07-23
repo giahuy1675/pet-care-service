@@ -1,3 +1,4 @@
+import CustomSpinner from '../common/CustomSpinner';
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import {
   Card,
@@ -46,7 +47,7 @@ const OverviewCard = styled(Card)`
 const RatingOverview = styled.div`
   text-align: center;
   padding: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1677ff 0%, #0958d9 100%);
   border-radius: 16px;
   color: white;
   margin-bottom: 24px;
@@ -225,7 +226,7 @@ const ReviewSection = ({ productId }) => {
   if (loading) {
     return (
       <LoadingContainer>
-        <Spin size="large" tip="Đang tải đánh giá..." />
+        <CustomSpinner size="large" tip="Đang tải đánh giá..." />
       </LoadingContainer>
     );
   }

@@ -1,5 +1,6 @@
-﻿import * as signalR from '@microsoft/signalr';
+import * as signalR from '@microsoft/signalr';
 import { notification } from 'antd';
+import { SIGNALR_HUB_URL } from '../config/api';
 
 class SignalRService {
   constructor() {
@@ -26,7 +27,7 @@ class SignalRService {
       
       // Create connection to TimeSlotSharingHub for real-time slot sharing
       this.connection = new signalR.HubConnectionBuilder()
-        .withUrl(`${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}/timeSlotHub`, {
+        .withUrl(SIGNALR_HUB_URL, {
           skipNegotiation: false,
           transport: signalR.HttpTransportType.LongPolling | signalR.HttpTransportType.WebSockets
         })

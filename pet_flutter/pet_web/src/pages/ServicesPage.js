@@ -1,7 +1,9 @@
+import CustomSpinner from '../components/common/CustomSpinner';
 import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ServicesPage.css';
 import serviceService from '../services/serviceService';
+import BorderBeam from '../components/common/BorderBeam';
 
 import {
   Alert,
@@ -284,7 +286,7 @@ const ServicesPage = () => {
 
         {loading ? (
           <div className="services-loading">
-            <Spin size="large" tip="Đang tải danh sách dịch vụ..." />
+            <CustomSpinner size="large" tip="Đang tải danh sách dịch vụ..." />
           </div>
         ) : filteredServices.length === 0 ? (
           <div className="services-empty">
@@ -337,6 +339,7 @@ const ServicesPage = () => {
                     dataSource={categoryServices}
                     renderItem={(service) => (
                       <List.Item key={service?.serviceId}>
+                        <BorderBeam duration={3} borderRadius="18px" innerRadius="18px" className="service-card-wrapper">
                         <Card
                           hoverable
                           className="service-card"
@@ -398,6 +401,7 @@ const ServicesPage = () => {
                             </Button>
                           </Space>
                         </Card>
+                        </BorderBeam>
                       </List.Item>
                     )}
                   />

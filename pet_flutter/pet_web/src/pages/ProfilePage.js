@@ -1,7 +1,8 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import CustomSpinner from '../components/common/CustomSpinner';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled, { keyframes, css, ThemeProvider } from 'styled-components';
-import { 
+import {
   Layout,
   Typography,
   Avatar,
@@ -27,7 +28,7 @@ import {
   Skeleton,
   Modal
 } from 'antd';
-import { 
+import {
   UserOutlined,
   LockOutlined,
   MailOutlined,
@@ -65,6 +66,7 @@ import { getUserProfile, updateUserProfile } from '../services/userService';
 import petService from '../services/petService';
 import orderService from '../services/orderService';
 import appointmentService from '../services/appointmentService';
+import { BASE_URL } from '../config/api';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -321,7 +323,9 @@ const UserTag = styled(Tag)`
   border: none !important;
   font-weight: 500 !important;
   font-size: 12px !important;
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: white !important;
+  color: #52c41a !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
   
   .anticon {
     margin-right: 4px;
@@ -777,7 +781,7 @@ const ProfilePage = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [animatedStats, setAnimatedStats] = useState(false);
   const statsRef = useRef(null);
-  
+
   // Thay đổi state để kiểm soát hiển thị modal thay vì hiển thị form trong tab
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -830,10 +834,10 @@ const ProfilePage = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         if (user?.userId) {
           const data = await getUserProfile(user.userId);
-          
+
           if (isMounted) {
             setUserProfile(data);
           }
@@ -850,7 +854,7 @@ const ProfilePage = () => {
     };
 
     fetchUserProfile();
-    
+
     return () => {
       isMounted = false;
     };
@@ -860,20 +864,20 @@ const ProfilePage = () => {
   // Chỉ chạy lại khi userId thay đổi để tránh vòng lặp request vô hạn
   useEffect(() => {
     let isMounted = true;
-    
+
     const fetchUserStats = async () => {
       try {
         if (!user?.userId) return;
-        
+
         // Lấy dữ liệu thú cưng
         const petsData = await petService.getUserPets();
-        
+
         // Lấy dữ liệu đơn hàng
         const ordersData = await orderService.getUserOrders();
-        
+
         // Lấy dữ liệu lịch hẹn
         const appointmentsData = await appointmentService.getUserAppointments();
-        
+
         if (isMounted) {
           setUserStats({
             petCount: Array.isArray(petsData) ? petsData.length : 0,
@@ -887,9 +891,9 @@ const ProfilePage = () => {
         // Không hiện lỗi để người dùng vẫn có thể xem các thông tin khác
       }
     };
-    
+
     fetchUserStats();
-    
+
     return () => {
       isMounted = false;
     };
@@ -927,10 +931,10 @@ const ProfilePage = () => {
     try {
       if (user && user.userId) {
         const data = await updateUserProfile(user.userId, updatedData);
-        
+
         // Update local state
         setUserProfile(data);
-        
+
         // Update user in localStorage
         const storedUser = JSON.parse(localStorage.getItem('user'));
         const updatedUser = {
@@ -942,10 +946,10 @@ const ProfilePage = () => {
           avatar: data.avatar
         };
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        
+
         // Trigger userProfileUpdated event for header component to update
         window.dispatchEvent(new Event('userProfileUpdated'));
-        
+
         // Show success message
         messageApi.success({
           content: (
@@ -957,7 +961,7 @@ const ProfilePage = () => {
           duration: 4,
           icon: <CheckCircleOutlined style={{ color: token.colorSuccess }} />
         });
-        
+
         // Hide modal after successful update
         setShowProfileModal(false);
       }
@@ -982,7 +986,7 @@ const ProfilePage = () => {
         ),
         duration: 4
       });
-      
+
       // Hide modal after successful password change
       setShowPasswordModal(false);
     }
@@ -1015,15 +1019,15 @@ const ProfilePage = () => {
   // Get avatar URL
   const getUserAvatarUrl = (avatarPath) => {
     if (!avatarPath) return null;
-    return avatarPath.startsWith('http') 
-      ? avatarPath 
-      : `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${avatarPath.startsWith('/') ? avatarPath : '/' + avatarPath}`;
+    return avatarPath.startsWith('http')
+      ? avatarPath
+      : `${BASE_URL}${avatarPath.startsWith('/') ? avatarPath : '/' + avatarPath}`;
   };
 
   if (loading) {
     return (
       <ProfileLoading $theme={token}>
-        <Spin size="large" />
+        <CustomSpinner size="large" />
         <div className="loading-text">Đang tải thông tin...</div>
       </ProfileLoading>
     );
@@ -1042,10 +1046,10 @@ const ProfilePage = () => {
           type="error"
           showIcon
         />
-        <Button 
-          type="primary" 
-          danger 
-          size="large" 
+        <Button
+          type="primary"
+          danger
+          size="large"
           onClick={() => window.location.reload()}
           className="retry-button"
         >
@@ -1069,7 +1073,7 @@ const ProfilePage = () => {
       }}
     >
       {contextHolder}
-      
+
       <PageContainer>
         <div className="container" style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px' }}>
           <motion.div
@@ -1082,7 +1086,7 @@ const ProfilePage = () => {
                 <ProfileHeader>
                   <HeaderGradient $theme={token} />
                   <BackgroundPattern />
-                  
+
                   <HeaderContent>
                     <Row gutter={[30, 30]} align="middle">
                       <Col xs={24} sm={10} md={8} lg={6} style={{ textAlign: 'center' }}>
@@ -1096,14 +1100,14 @@ const ProfilePage = () => {
                             icon={<UserOutlined />}
                             src={getUserAvatarUrl(userProfile?.avatar)}
                           />
-                          <Button 
+                          <Button
                             className="camera-btn"
                             icon={<CameraOutlined />}
                             onClick={() => setShowProfileModal(true)}
                           />
                         </LuxuryAvatar>
                       </Col>
-                      
+
                       <Col xs={24} sm={14} md={16} lg={18}>
                         <motion.div
                           initial={{ opacity: 0, y: -10 }}
@@ -1114,49 +1118,32 @@ const ProfilePage = () => {
                             <UserName level={2}>
                               {getUserName()}
                             </UserName>
-                            
-                            <Badge
-                              count={
-                                <motion.div
-                                  animate={{ scale: [1, 1.2, 1] }}
-                                  transition={{ 
-                                    duration: 1,
-                                    repeat: Infinity,
-                                    repeatDelay: 3
-                                  }}
-                                >
-                                  <CheckCircleOutlined style={{ color: 'white' }} />
-                                </motion.div>
-                              }
-                              color={token.colorSuccess}
-                              offset={[0, 0]}
-                            >
-                              <UserTag color="success">
-                                <CheckCircleOutlined /> Đã xác thực
-                              </UserTag>
-                            </Badge>
+
+                            <UserTag>
+                              <CheckCircleOutlined /> Đã xác thực
+                            </UserTag>
                           </Space>
                         </motion.div>
-                        
+
                         <UserMeta>
                           <CalendarOutlined />
                           <Text style={{ color: 'inherit' }}>
                             Thành viên từ: {formatDate(userProfile?.createdAt)}
                           </Text>
                         </UserMeta>
-                        
+
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.4 }}
-                          style={{ 
-                            marginTop: 24, 
-                            display: 'flex', 
-                            gap: 12, 
-                            flexWrap: 'wrap' 
+                          style={{
+                            marginTop: 24,
+                            display: 'flex',
+                            gap: 12,
+                            flexWrap: 'wrap'
                           }}
                         >
-                          <ActionButton 
+                          <ActionButton
                             icon={<EditOutlined />}
                             onClick={() => setShowProfileModal(true)}
                             className="update-profile-btn"
@@ -1164,8 +1151,8 @@ const ProfilePage = () => {
                           >
                             Cập nhật thông tin
                           </ActionButton>
-                          
-                          <ActionButton 
+
+                          <ActionButton
                             icon={<LockOutlined />}
                             onClick={() => setShowPasswordModal(true)}
                             $theme={token}
@@ -1182,7 +1169,7 @@ const ProfilePage = () => {
                     </Row>
                   </HeaderContent>
                 </ProfileHeader>
-                
+
                 <ProfileSection>
                   <StatsContainer ref={statsRef} $light={true}>
                     <Row gutter={[24, 24]}>
@@ -1212,7 +1199,7 @@ const ProfilePage = () => {
                       </Col>
                     </Row>
                   </StatsContainer>
-                  
+
                   {/* Achievement section removed per user request */}
                   <TabContainer>
                     <CustomTabs
@@ -1244,7 +1231,7 @@ const ProfilePage = () => {
                                     <SectionTitle level={4} $theme={token}>
                                       Thông tin cơ bản
                                     </SectionTitle>
-                                    
+
                                     <Row gutter={[20, 20]}>
                                       {userProfile.email && (
                                         <Col xs={24} md={12}>
@@ -1259,7 +1246,7 @@ const ProfilePage = () => {
                                           </InfoBlock>
                                         </Col>
                                       )}
-                                      
+
                                       {userProfile.phone && (
                                         <Col xs={24} md={12}>
                                           <InfoBlock $theme={token}>
@@ -1273,7 +1260,7 @@ const ProfilePage = () => {
                                           </InfoBlock>
                                         </Col>
                                       )}
-                                      
+
                                       {userProfile.address && (
                                         <Col xs={24}>
                                           <InfoBlock $theme={token}>
@@ -1314,7 +1301,7 @@ const ProfilePage = () => {
                                 <SectionTitle level={4} $theme={token}>
                                   Thông tin bảo mật
                                 </SectionTitle>
-                                
+
                                 <motion.div
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
@@ -1354,7 +1341,7 @@ const ProfilePage = () => {
           </motion.div>
         </div>
       </PageContainer>
-      
+
       {/* Modal cập nhật thông tin */}
       <StyledModal
         title="Cập nhật thông tin cá nhân"
@@ -1366,13 +1353,13 @@ const ProfilePage = () => {
         centered
       >
         {mergedProfile && (
-          <ProfileForm 
-            userProfile={mergedProfile} 
+          <ProfileForm
+            userProfile={mergedProfile}
             onSubmit={handleProfileUpdate}
           />
         )}
       </StyledModal>
-      
+
       {/* Modal đổi mật khẩu */}
       <StyledModal
         title="Đổi mật khẩu"

@@ -1,9 +1,9 @@
-﻿import axios from 'axios';
+import axios from 'axios';
+import { API_URL } from '../config/api';
 
 const axiosClient = axios.create({
-  // Cấu hình baseURL linh hoạt
-  // baseURL mặc định - có thể thay đổi thủ công nếu cần
-  baseURL: process.env.REACT_APP_API_URL || 'https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api',
+  // Cấu hình baseURL linh hoạt - lấy từ config tập trung
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -15,12 +15,11 @@ const axiosClient = axios.create({
 
 // Thêm biến để quản lý việc retry
 const MAX_RETRIES = 2;
-const retryMap = new Map();
 
 // Interceptor cho request
 axiosClient.interceptors.request.use(
   (config) => {
-    // Dùng ID để theo dõi request khi retry
+    // Dùng ID để theo dõi request khi retry (nếu cần cho mục đích khác)
     config.requestId = config.requestId || Date.now() + Math.random().toString(36).substring(2, 9);
 
     const token = localStorage.getItem('token');
@@ -43,11 +42,6 @@ axiosClient.interceptors.request.use(
 // Interceptor cho response
 axiosClient.interceptors.response.use(
   (response) => {
-    // Xóa request khỏi retryMap khi thành công
-    if (response.config.requestId) {
-      retryMap.delete(response.config.requestId);
-    }
-    
     return response;
   },
   async (error) => {
@@ -57,20 +51,16 @@ axiosClient.interceptors.response.use(
     if ((error.code === 'ECONNABORTED' || error.message.includes('timeout') || 
          error.message.includes('Network Error')) && originalRequest) {
       
-      // Đảm bảo request có ID để theo dõi
-      originalRequest.requestId = originalRequest.requestId || 
-                               Date.now() + Math.random().toString(36).substring(2, 9);
-      
-      // Lấy số lần đã retry
-      const retryCount = retryMap.get(originalRequest.requestId) || 0;
+      // Lấy số lần đã retry từ headers (do Axios có thể xoá các custom properties ở root của config)
+      const currentRetry = parseInt(originalRequest.headers['X-Retry-Count'] || '0', 10);
       
       // Kiểm tra số lần retry
-      if (retryCount < MAX_RETRIES) {
-        // Tăng retry count
-        retryMap.set(originalRequest.requestId, retryCount + 1);
+      if (currentRetry < MAX_RETRIES) {
+        // Tăng retry count trong headers để request sau có thể đọc được
+        originalRequest.headers['X-Retry-Count'] = (currentRetry + 1).toString();
         
         // Chờ một lát trước khi retry
-        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+        await new Promise(resolve => setTimeout(resolve, 1000 * (currentRetry + 1)));
         
         // Thử lại request
         return axiosClient(originalRequest);

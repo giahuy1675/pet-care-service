@@ -37,6 +37,19 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
+  // Lắng nghe sự kiện cập nhật profile để đồng bộ state
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    };
+    
+    window.addEventListener('userProfileUpdated', handleProfileUpdate);
+    return () => window.removeEventListener('userProfileUpdated', handleProfileUpdate);
+  }, []);
+
   const login = async (usernameOrEmail, password) => {
     try {
       const result = await authService.login(usernameOrEmail, password);
@@ -82,6 +95,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const externalLogin = async (externalAuthData) => {
+    try {
+      const result = await authService.externalLogin(externalAuthData);
+      setUser(result.user);
+      return result;
+    } catch (error) {
+      console.error('External login failed:', error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -90,6 +114,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     forgotPassword,
     resetPassword,
+    externalLogin,
     isAuthenticated: authService.isAuthenticated,
     isAdmin: authService.isAdmin
   };

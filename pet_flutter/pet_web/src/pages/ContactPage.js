@@ -33,63 +33,23 @@ import {
   MessageOutlined
 } from '@ant-design/icons';
 import styled, { keyframes } from 'styled-components';
-import { motion } from 'framer-motion';
+
 
 const { Title, Text, Paragraph } = Typography;
 const { useToken } = theme;
 const { Content } = Layout;
 const { TextArea } = Input;
 
-// Animation keyframes
-const pulse = keyframes`
-  0% { box-shadow: 0 0 0 0 rgba(125, 86, 240, 0.4); }
-  70% { box-shadow: 0 0 0 15px rgba(125, 86, 240, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(125, 86, 240, 0); }
-`;
-
-const float = keyframes`
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-`;
-
-const shimmer = keyframes`
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-`;
-
 // Styled components
 const ContactHeader = styled.div`
   padding: 60px 0;
   text-align: center;
-  background: linear-gradient(135deg, #7D56F0, #3A82F3);
+  background: #1677ff;
   border-radius: 0 0 40px 40px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   margin-bottom: 60px;
   position: relative;
   overflow: hidden;
-  
-  &:before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    transform: rotate(30deg);
-  }
-  
-  &:after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: 0;
-    right: 0;
-    height: 20px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    animation: ${shimmer} 3s infinite linear;
-  }
 `;
 
 const StyledCard = styled(Card)`
@@ -110,21 +70,14 @@ const IconWrapper = styled.div`
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(125, 86, 240, 0.1), rgba(58, 130, 243, 0.15));
+  background: #e6f4ff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 24px;
-  color: #7D56F0;
+  color: #1677ff;
   margin-right: 16px;
-  transition: all 0.4s ease;
-  
-  &:hover {
-    animation: ${pulse} 1.5s infinite;
-    background: linear-gradient(135deg, #7D56F0, #3A82F3);
-    color: white;
-    transform: rotate(10deg);
-  }
+  transition: all 0.3s ease;
 `;
 
 const SocialButton = styled(Button)`
@@ -140,13 +93,13 @@ const SocialButton = styled(Button)`
   
   &:hover {
     transform: translateY(-5px) scale(1.1);
-    background: linear-gradient(135deg, #7D56F0, #3A82F3);
+    background: #1677ff;
     color: white;
   }
 `;
 
 const GradientButton = styled(Button)`
-  background: linear-gradient(135deg, #7D56F0, #3A82F3);
+  background: #1677ff;
   border: none;
   border-radius: 12px;
   height: 50px;
@@ -157,7 +110,7 @@ const GradientButton = styled(Button)`
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 15px 25px rgba(58, 130, 243, 0.4);
-    background: linear-gradient(135deg, #8A66FA, #4A92FF);
+    background: #4096ff;
   }
   
   &:active {
@@ -165,7 +118,7 @@ const GradientButton = styled(Button)`
   }
 `;
 
-const FloatingElement = styled(motion.div)`
+const FloatingElement = styled.div`
   position: absolute;
   background: linear-gradient(135deg, rgba(125, 86, 240, 0.15), rgba(58, 130, 243, 0.1));
   border-radius: 50%;
@@ -312,89 +265,37 @@ const ContactPage = () => {
       <Content>
         {/* Animated Header */}
         <ContactHeader>
-          <FloatingElement
-            initial={{ scale: 0.8, x: "10%", y: "10%" }}
-            animate={{ 
-              scale: [0.8, 1.2, 0.8],
-              x: ["10%", "15%", "10%"],
-              y: ["10%", "5%", "10%"]
-            }}
-            transition={{ 
-              repeat: Infinity,
-              duration: 10,
-              ease: "easeInOut"
-            }}
-            style={{ 
-              width: 200, 
-              height: 200, 
-              top: 20, 
-              right: "20%" 
-            }}
-          />
           
-          <FloatingElement
-            initial={{ scale: 0.5, x: "-20%", y: "20%" }}
-            animate={{ 
-              scale: [0.5, 0.8, 0.5],
-              x: ["-20%", "-25%", "-20%"],
-              y: ["20%", "15%", "20%"]
-            }}
-            transition={{ 
-              repeat: Infinity,
-              duration: 15,
-              ease: "easeInOut"
-            }}
-            style={{ 
-              width: 150, 
-              height: 150, 
-              bottom: 30, 
-              left: "15%" 
-            }}
-          />
+          
+          
           
           <div style={{ position: 'relative', zIndex: 2 }}>
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
+            <div>
               <Title level={1} style={{ color: 'white', fontWeight: 800, marginBottom: 16, fontSize: 48 }}>
                 Liên Hệ Với Chúng Tôi
               </Title>
-            </motion.div>
+            </div>
             
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
+            <div>
               <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 18 }}>
                 Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn
               </Text>
-            </motion.div>
+            </div>
           </div>
         </ContactHeader>
 
         <div ref={sectionRef} style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px 80px' }}>
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate={isVisible ? "visible" : "hidden"}
-          >
+          <div>
             <Row gutter={[32, 32]}>
               {/* Contact Form */}
-              <Col xs={24} lg={14}>
-                <motion.div variants={itemVariants}>
-                  <StyledCard>
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                    >
+              <Col xs={24} lg={14} style={{ display: 'flex' }}>
+                  <StyledCard style={{ width: '100%' }}>
+                    <div>
                       <Title level={3} style={{ fontWeight: 700, marginBottom: 12 }}>
                         <Badge
                           count="Liên hệ"
                           style={{
-                            backgroundColor: 'rgba(125, 86, 240, 0.15)',
+                            backgroundColor: '#e6f4ff',
                             color: '#7D56F0',
                             fontWeight: 600,
                             marginRight: 12
@@ -510,19 +411,14 @@ const ContactPage = () => {
                           </Col>
                         </Row>
                       </Form>
-                    </motion.div>
+                    </div>
                   </StyledCard>
-                </motion.div>
               </Col>
               
               {/* Contact Info */}
-              <Col xs={24} lg={10}>
-                <motion.div variants={itemVariants}>
-                  <StyledCard>
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                    >
+              <Col xs={24} lg={10} style={{ display: 'flex' }}>
+                  <StyledCard style={{ width: '100%' }}>
+                    <div>
                       <Title level={3} style={{ fontWeight: 700, marginBottom: 12 }}>
                         Thông tin liên hệ
                       </Title>
@@ -533,11 +429,7 @@ const ContactPage = () => {
                       
                       <Space direction="vertical" size={24} style={{ width: '100%' }}>
                         {contactInfo.map((info, index) => (
-                          <motion.div 
-                            key={index} 
-                            whileHover={{ x: 10 }}
-                            style={{ display: 'flex', alignItems: 'flex-start' }}
-                          >
+                          <div>
                             <IconWrapper>
                               {info.icon}
                             </IconWrapper>
@@ -553,7 +445,7 @@ const ContactPage = () => {
                                 </Text>
                               ))}
                             </div>
-                          </motion.div>
+                          </div>
                         ))}
                       </Space>
                       
@@ -569,44 +461,13 @@ const ContactPage = () => {
                         <SocialButton type="default" icon={<TwitterOutlined />} />
                         <SocialButton type="default" icon={<YoutubeOutlined />} />
                       </div>
-                    </motion.div>
+                    </div>
                   </StyledCard>
-                </motion.div>
               </Col>
             </Row>
             
-            {/* Map */}
-            <motion.div variants={itemVariants} style={{ marginTop: 32 }}>
-              <StyledCard style={{ padding: 0, overflow: 'hidden' }}>
-                <div style={{ padding: 24 }}>
-                  <Title level={4} style={{ fontWeight: 700, marginBottom: 16 }}>
-                    Vị trí của chúng tôi
-                  </Title>
-                </div>
-                
-                <div 
-                  style={{ 
-                    height: 400, 
-                    backgroundColor: token.colorBgContainer, 
-                    border: `1px solid ${token.colorBorderSecondary}`,
-                    position: 'relative',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <div style={{ textAlign: 'center', color: token.colorTextSecondary }}>
-                    <Avatar size={64} icon={<EnvironmentOutlined />} style={{ 
-                      backgroundColor: 'rgba(125, 86, 240, 0.1)', 
-                      color: '#7D56F0',
-                      marginBottom: 16
-                    }} />
-                    <Title level={5} style={{ margin: 0 }}>Bản đồ Google Maps sẽ được hiển thị ở đây</Title>
-                  </div>
-                </div>
-              </StyledCard>
-            </motion.div>
-          </motion.div>
+
+          </div>
         </div>
       </Content>
     </Layout>

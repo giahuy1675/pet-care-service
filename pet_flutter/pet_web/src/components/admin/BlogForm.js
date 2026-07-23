@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { Modal, Button as AntButton, Upload, message, Tooltip } from 'antd';
+import { Modal, Button as AntButton, Upload, message, Tooltip, Input, Select } from 'antd';
 import { 
   UploadOutlined, PictureOutlined, VideoCameraOutlined, 
   SaveOutlined, CloseOutlined, PlusOutlined, DeleteOutlined
@@ -742,32 +742,31 @@ const BlogForm = ({ initialData, onSubmit, onCancel, loading }) => {
       <form onSubmit={handleSubmit}>
         <FormGroup>
           <label htmlFor="title">Tiêu đề *</label>
-          <input
-            type="text"
+          <Input
             id="title"
             name="title"
             value={formData.title}
             onChange={handleChange}
             placeholder="Nhập tiêu đề bài viết"
-            className={validationErrors.title ? 'error' : ''}
+            status={validationErrors.title ? 'error' : ''}
+            size="large"
           />
           {validationErrors.title && <div className="error-text">{validationErrors.title}</div>}
         </FormGroup>
         
         <FormGroup>
           <label htmlFor="category">Danh mục *</label>
-          <select
+          <Select
             id="category"
-            name="category"
             value={formData.category}
-            onChange={handleChange}
-            className={validationErrors.category ? 'error' : ''}
-          >
-            <option value="">-- Chọn danh mục --</option>
-            {CATEGORIES.map((category) => (
-              <option key={category} value={category}>{category}</option>
-            ))}
-          </select>
+            onChange={(value) => handleChange({ target: { name: 'category', value } })}
+            status={validationErrors.category ? 'error' : ''}
+            style={{ width: '100%', height: '40px' }}
+            options={[
+              { value: '', label: '-- Chọn danh mục --' },
+              ...CATEGORIES.map((category) => ({ value: category, label: category }))
+            ]}
+          />
           {validationErrors.category && <div className="error-text">{validationErrors.category}</div>}
         </FormGroup>
         
@@ -806,28 +805,25 @@ const BlogForm = ({ initialData, onSubmit, onCancel, loading }) => {
         
         <FormGroup>
           <label htmlFor="tags">Tags (cách nhau bởi dấu phẩy)</label>
-          <input
-            type="text"
+          <Input
             id="tags"
             name="tags"
             value={formData.tags}
             onChange={handleChange}
             placeholder="Ví dụ: chó, mèo, thú cưng, chăm sóc"
+            size="large"
           />
         </FormGroup>
         
         <FormGroup>
           <label htmlFor="status">Trạng thái</label>
-          <select
+          <Select
             id="status"
-            name="status"
             value={formData.status}
-            onChange={handleChange}
-          >
-            {STATUSES.map((status) => (
-              <option key={status.value} value={status.value}>{status.label}</option>
-            ))}
-          </select>
+            onChange={(value) => handleChange({ target: { name: 'status', value } })}
+            style={{ width: '100%', height: '40px' }}
+            options={STATUSES.map(status => ({ value: status.value, label: status.label }))}
+          />
         </FormGroup>
         
         <FormGroup>
@@ -920,11 +916,11 @@ const BlogForm = ({ initialData, onSubmit, onCancel, loading }) => {
       >
         <VideoInputContainer>
           <p>Nhập URL video từ YouTube, Vimeo hoặc URL trực tiếp đến file video</p>
-          <input
-            type="text"
+          <Input
             value={videoUrl}
             onChange={(e) => setVideoUrl(e.target.value)}
             placeholder="https://www.youtube.com/watch?v=XXXX"
+            size="large"
           />
           
           {canPreviewVideo() && (

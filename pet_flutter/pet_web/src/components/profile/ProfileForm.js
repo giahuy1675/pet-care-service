@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled, { keyframes, css } from 'styled-components';
 import { 
@@ -40,6 +40,7 @@ import {
 } from '@ant-design/icons';
 import axiosClient from '../../utils/axiosClient';
 import { getUserFromToken } from '../../utils/tokenUtils';
+import { BASE_URL } from '../../config/api';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -442,7 +443,7 @@ const ProfileForm = ({ userProfile, onSubmit }) => {
       return avatarPath;
     }
     
-    const baseUrl = process.env.REACT_APP_API_URL || '${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}';
+    const baseUrl = BASE_URL;
     const formattedPath = avatarPath.startsWith('/') ? avatarPath : '/' + avatarPath;
     
     return `${baseUrl}${formattedPath}`;

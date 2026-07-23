@@ -1,4 +1,5 @@
-﻿import React, { useState, useContext, useEffect } from 'react';
+import CustomSpinner from '../common/CustomSpinner';
+import React, { useState, useContext, useEffect } from 'react';
 import { 
   Form, 
   Rate, 
@@ -24,6 +25,7 @@ import {
 } from '@ant-design/icons';
 import { AuthContext } from '../../context/AuthContext';
 import reviewService from '../../services/reviewService';
+import { BASE_URL, API_URL } from '../../config/api';
 import styled from 'styled-components';
 
 const { Title, Text } = Typography;
@@ -127,7 +129,7 @@ const ReviewForm = ({
           uid: `existing-${index}`,
           name: `image-${index + 1}`,
           status: 'done',
-          url: imagePath.startsWith('http') ? imagePath : `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${imagePath}`
+          url: imagePath.startsWith('http') ? imagePath : `${BASE_URL}${imagePath}`
         }));
         setImageFileList(fileList);
       }
@@ -208,7 +210,7 @@ const ReviewForm = ({
       formData.append('files', file);
       
       const token = localStorage.getItem('token');
-      const response = await fetch('${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Reviews/upload-images', {
+      const response = await fetch(`${API_URL}/Reviews/upload-images`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -344,7 +346,7 @@ const ReviewForm = ({
 
   const uploadButton = (
     <div>
-      {uploadingImages ? <Spin size="small" /> : <PlusOutlined />}
+      {uploadingImages ? <CustomSpinner size="small" /> : <PlusOutlined />}
       <div style={{ marginTop: 8 }}>Tải ảnh lên</div>
     </div>
   );
@@ -360,7 +362,7 @@ const ReviewForm = ({
         </Space>
       }
     >
-      <Spin spinning={loading}>
+      <CustomSpinner spinning={loading}>
         <Form
           form={form}
           layout="vertical"
@@ -428,7 +430,7 @@ const ReviewForm = ({
           >
             <ImageUploadContainer>
               <Upload
-                action={`${process.env.REACT_APP_API_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net/api"}/Reviews/upload-images`}
+                action={`${API_URL}/Reviews/upload-images`}
                 listType="picture-card"
                 fileList={imageFileList}
                 onChange={handleImageChange}
@@ -477,7 +479,7 @@ const ReviewForm = ({
             </Space>
           </Form.Item>
         </Form>
-      </Spin>
+      </CustomSpinner>
     </ReviewFormContainer>
   );
 };

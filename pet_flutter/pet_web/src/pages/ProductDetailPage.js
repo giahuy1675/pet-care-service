@@ -1,3 +1,4 @@
+import CustomSpinner from '../components/common/CustomSpinner';
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import cartService from '../services/cartService';
@@ -723,7 +724,7 @@ const ProductDetailPage = () => {
     return (
       <StyledContent>
         <LoadingContainer>
-          <Spin size="large" />
+          <CustomSpinner size="large" />
           <Title level={4} className="loading-text">
             Đang tải thông tin sản phẩm...
           </Title>

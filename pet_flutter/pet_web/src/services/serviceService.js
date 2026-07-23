@@ -1,4 +1,5 @@
-﻿import axiosClient from '../utils/axiosClient';
+import axiosClient from '../utils/axiosClient';
+import { BASE_URL } from '../config/api';
 
 // Chuyển đổi nhãn danh mục từ tiếng Việt sang tiếng Anh
 const getCategoryValue = (categoryLabel) => {
@@ -22,7 +23,7 @@ const serviceService = {
      const servicesWithFullImageUrls = response.data.map(service => ({
        ...service,
        photo: service.photo 
-         ? `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${service.photo.startsWith('/') ? service.photo : '/' + service.photo}`
+         ? `${BASE_URL}${service.photo.startsWith('/') ? service.photo : '/' + service.photo}`
          : null
      }));
      return servicesWithFullImageUrls;
@@ -40,7 +41,7 @@ const serviceService = {
      const servicesWithFullImageUrls = response.data.map(service => ({
        ...service,
        photo: service.photo 
-         ? `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${service.photo.startsWith('/') ? service.photo : '/' + service.photo}`
+         ? `${BASE_URL}${service.photo.startsWith('/') ? service.photo : '/' + service.photo}`
          : null
      }));
      return servicesWithFullImageUrls;
@@ -58,7 +59,7 @@ const serviceService = {
      const serviceWithFullImageUrl = {
        ...response.data,
        photo: response.data.photo 
-         ? `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${response.data.photo.startsWith('/') ? response.data.photo : '/' + response.data.photo}`
+         ? `${BASE_URL}${response.data.photo.startsWith('/') ? response.data.photo : '/' + response.data.photo}`
          : null
      };
      return serviceWithFullImageUrl;
@@ -76,7 +77,7 @@ const serviceService = {
      const servicesWithFullImageUrls = response.data.map(service => ({
        ...service,
        photo: service.photo 
-         ? `${process.env.REACT_APP_BASE_URL || "https://bepetwebapi20260223122715-hsfwcberazegd0hd.southeastasia-01.azurewebsites.net"}${service.photo.startsWith('/') ? service.photo : '/' + service.photo}`
+         ? `${BASE_URL}${service.photo.startsWith('/') ? service.photo : '/' + service.photo}`
          : null
      }));
      return servicesWithFullImageUrls;
