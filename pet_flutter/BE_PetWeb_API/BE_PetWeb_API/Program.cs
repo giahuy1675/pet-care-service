@@ -316,8 +316,8 @@ using (var scope = app.Services.CreateScope())
                 Address = "Việt Nam",
                 Avatar = "default-avatar.png",
                 Role = "Admin",
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
                 IsActive = true
             };
             
