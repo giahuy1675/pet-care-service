@@ -9,8 +9,8 @@
  */
 
 // === URL MẶC ĐỊNH (dùng khi .env không có giá trị) ===
-const DEFAULT_BASE_URL = 'https://localhost:7164';
-const DEFAULT_API_URL = 'https://localhost:7164/api';
+const DEFAULT_BASE_URL = 'https://pet-care-service-u88y.onrender.com';
+const DEFAULT_API_URL = 'https://pet-care-service-u88y.onrender.com/api';
 
 // === EXPORT CÁC GIÁ TRỊ CHÍNH ===
 
