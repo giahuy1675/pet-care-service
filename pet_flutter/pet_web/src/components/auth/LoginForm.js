@@ -407,11 +407,11 @@ const LoginForm = () => {
       </AnimatePresence>
 
       <Alert
-        message="Tài khoản demo Admin"
+        message="Tài khoản Demo"
         description={
           <div>
-            <div><strong>Username:</strong> admin</div>
-            <div><strong>Password:</strong> admin123</div>
+            <div><strong>Admin:</strong> admin / admin123</div>
+            <div><strong>User:</strong> giahuy / giahuy</div>
           </div>
         }
         type="info"
