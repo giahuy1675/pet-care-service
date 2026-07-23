@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -58,11 +58,11 @@ public class PetWebContext : DbContext
         // Default values that can't be set with Data Annotations
         modelBuilder.Entity<User>()
             .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<User>()
             .Property(e => e.UpdatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<User>()
             .Property(e => e.IsActive)
@@ -74,11 +74,11 @@ public class PetWebContext : DbContext
 
         modelBuilder.Entity<Pet>()
             .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<Pet>()
             .Property(e => e.UpdatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<Pet>()
             .Property(e => e.IsActive)
@@ -86,11 +86,11 @@ public class PetWebContext : DbContext
 
         modelBuilder.Entity<Staff>()
             .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<Staff>()
             .Property(e => e.UpdatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<Staff>()
             .Property(e => e.IsActive)
@@ -102,11 +102,11 @@ public class PetWebContext : DbContext
 
         modelBuilder.Entity<Service>()
             .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<Service>()
             .Property(e => e.UpdatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<Service>()
             .Property(e => e.IsActive)
@@ -114,11 +114,11 @@ public class PetWebContext : DbContext
 
         modelBuilder.Entity<Product>()
             .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<Product>()
             .Property(e => e.UpdatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<Product>()
             .Property(e => e.IsActive)
@@ -126,11 +126,11 @@ public class PetWebContext : DbContext
 
         modelBuilder.Entity<Appointment>()
             .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<Appointment>()
             .Property(e => e.UpdatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<Appointment>()
             .Property(e => e.Status)
@@ -138,11 +138,11 @@ public class PetWebContext : DbContext
 
         modelBuilder.Entity<Order>()
             .Property(e => e.OrderDate)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<Order>()
             .Property(e => e.UpdatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<Order>()
             .Property(e => e.Status)
@@ -154,11 +154,11 @@ public class PetWebContext : DbContext
 
         modelBuilder.Entity<BlogPost>()
             .Property(e => e.PublishDate)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<BlogPost>()
             .Property(e => e.UpdatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<BlogPost>()
             .Property(e => e.Status)
@@ -170,7 +170,7 @@ public class PetWebContext : DbContext
 
         modelBuilder.Entity<Comment>()
             .Property(e => e.CommentDate)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<Comment>()
             .Property(e => e.IsApproved)
@@ -178,23 +178,23 @@ public class PetWebContext : DbContext
 
         modelBuilder.Entity<MedicalRecord>()
             .Property(e => e.RecordDate)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
         modelBuilder.Entity<Review>()
             .Property(e => e.ReviewDate)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
         modelBuilder.Entity<ReviewReply>()
             .Property(e => e.ReplyDate)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<ReviewReply>()
             .Property(e => e.UpdatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
         modelBuilder.Entity<Notification>()
             .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<Notification>()
             .Property(e => e.IsRead)
@@ -202,7 +202,7 @@ public class PetWebContext : DbContext
 
         modelBuilder.Entity<PetCareReminder>()
             .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<PetCareReminder>()
             .Property(e => e.Frequency)
@@ -214,7 +214,7 @@ public class PetWebContext : DbContext
 
         modelBuilder.Entity<PetGallery>()
             .Property(e => e.UploadDate)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
         // One-to-One relationship
         modelBuilder.Entity<Staff>()
@@ -347,19 +347,19 @@ public class PetWebContext : DbContext
         // Cart configurations
         modelBuilder.Entity<Cart>()
             .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<Cart>()
             .Property(e => e.UpdatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
         modelBuilder.Entity<CartItem>()
             .Property(e => e.CreatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         modelBuilder.Entity<CartItem>()
             .Property(e => e.UpdatedAt)
-            .HasDefaultValueSql("(getdate())");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
         // Cart relationships
         modelBuilder.Entity<Cart>()

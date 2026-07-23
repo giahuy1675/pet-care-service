@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BE_PetWeb_API.Migrations
 {
     [DbContext(typeof(PetWebContext))]
-    [Migration("20260723142803_PostgresInitial")]
+    [Migration("20260723143312_PostgresInitial")]
     partial class PostgresInitial
     {
         /// <inheritdoc />
@@ -42,7 +42,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<DateTime?>("EndTime")
                         .HasColumnType("datetime");
@@ -69,7 +69,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -111,7 +111,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("PublishDate")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -131,7 +131,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -159,12 +159,12 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -191,7 +191,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Option")
                         .HasMaxLength(100)
@@ -206,7 +206,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("CartItemId");
 
@@ -265,7 +265,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("CommentDate")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -318,7 +318,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("RecordDate")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int?>("StaffId")
                         .HasColumnType("integer");
@@ -346,7 +346,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<bool?>("IsRead")
                         .ValueGeneratedOnAdd()
@@ -391,7 +391,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("OrderDate")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("PaymentMethod")
                         .IsRequired()
@@ -435,7 +435,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -502,7 +502,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<DateOnly?>("DateOfBirth")
                         .HasColumnType("date");
@@ -540,7 +540,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -566,7 +566,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
@@ -630,7 +630,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("UploadDate")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("GalleryId");
 
@@ -662,7 +662,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -691,7 +691,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("ProductId");
 
@@ -766,7 +766,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("ReviewDate")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int?>("ServiceId")
                         .HasColumnType("integer");
@@ -807,7 +807,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("ReplyDate")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int>("ReviewId")
                         .HasColumnType("integer");
@@ -815,7 +815,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("ReplyId");
 
@@ -845,7 +845,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -874,7 +874,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int>("ViewCount")
                         .HasColumnType("integer");
@@ -898,7 +898,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int?>("Experience")
                         .HasColumnType("integer");
@@ -921,7 +921,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -1062,7 +1062,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -1101,7 +1101,7 @@ namespace BE_PetWeb_API.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Username")
                         .IsRequired()
