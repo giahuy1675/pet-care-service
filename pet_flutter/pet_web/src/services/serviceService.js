@@ -23,7 +23,7 @@ const serviceService = {
      const servicesWithFullImageUrls = response.data.map(service => ({
        ...service,
        photo: service.photo 
-         ? `${BASE_URL}${service.photo.startsWith('/') ? service.photo : '/' + service.photo}`
+         ? (service.photo.startsWith('http') || service.photo.startsWith('data:') ? service.photo : `${BASE_URL}${service.photo.startsWith('/') ? service.photo : '/' + service.photo}`)
          : null
      }));
      return servicesWithFullImageUrls;
@@ -41,7 +41,7 @@ const serviceService = {
      const servicesWithFullImageUrls = response.data.map(service => ({
        ...service,
        photo: service.photo 
-         ? `${BASE_URL}${service.photo.startsWith('/') ? service.photo : '/' + service.photo}`
+         ? (service.photo.startsWith('http') || service.photo.startsWith('data:') ? service.photo : `${BASE_URL}${service.photo.startsWith('/') ? service.photo : '/' + service.photo}`)
          : null
      }));
      return servicesWithFullImageUrls;
@@ -59,7 +59,7 @@ const serviceService = {
      const serviceWithFullImageUrl = {
        ...response.data,
        photo: response.data.photo 
-         ? `${BASE_URL}${response.data.photo.startsWith('/') ? response.data.photo : '/' + response.data.photo}`
+         ? (response.data.photo.startsWith('http') || response.data.photo.startsWith('data:') ? response.data.photo : `${BASE_URL}${response.data.photo.startsWith('/') ? response.data.photo : '/' + response.data.photo}`)
          : null
      };
      return serviceWithFullImageUrl;
@@ -77,7 +77,7 @@ const serviceService = {
      const servicesWithFullImageUrls = response.data.map(service => ({
        ...service,
        photo: service.photo 
-         ? `${BASE_URL}${service.photo.startsWith('/') ? service.photo : '/' + service.photo}`
+         ? (service.photo.startsWith('http') ? service.photo : `${BASE_URL}${service.photo.startsWith('/') ? service.photo : '/' + service.photo}`)
          : null
      }));
      return servicesWithFullImageUrls;
