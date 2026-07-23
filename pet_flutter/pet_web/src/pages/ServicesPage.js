@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import './ServicesPage.css';
 import serviceService from '../services/serviceService';
 import BorderBeam from '../components/common/BorderBeam';
+import { getFullImageUrl } from '../config/api';
 
 import {
   Alert,
@@ -349,7 +350,7 @@ const ServicesPage = () => {
                                 preview={false}
                                 alt={service?.name}
                                 src={
-                                  service?.photo ||
+                                  getFullImageUrl(service?.photo) ||
                                   'https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png'
                                 }
                                 className="service-card__img"
@@ -437,7 +438,7 @@ const ServicesPage = () => {
                   <Image
                     alt={selectedService?.name}
                     src={
-                      selectedService?.photo ||
+                      getFullImageUrl(selectedService?.photo) ||
                       'https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png'
                     }
                     fallback="https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
