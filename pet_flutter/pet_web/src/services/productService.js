@@ -42,7 +42,7 @@ const productService = {
        brand: product.brand,
        stock: product.stockQuantity, // Ánh xạ từ stockQuantity sang stock
        imageUrl: product.photo 
-         ? `${API_BASE_URL}${product.photo.startsWith('/') ? product.photo : '/' + product.photo}` 
+         ? (product.photo.startsWith('http') || product.photo.startsWith('data:') ? product.photo : `${API_BASE_URL}${product.photo.startsWith('/') ? product.photo : '/' + product.photo}`) 
          : null
      }));
      
@@ -73,7 +73,7 @@ const productService = {
        brand: product.brand,
        stock: product.stockQuantity, // Ánh xạ từ stockQuantity sang stock
        imageUrl: product.photo 
-         ? `${API_BASE_URL}${product.photo.startsWith('/') ? product.photo : '/' + product.photo}` 
+         ? (product.photo.startsWith('http') || product.photo.startsWith('data:') ? product.photo : `${API_BASE_URL}${product.photo.startsWith('/') ? product.photo : '/' + product.photo}`) 
          : null,
        createdAt: product.createdAt,
        updatedAt: product.updatedAt,
@@ -210,7 +210,7 @@ const productService = {
        brand: product.brand,
        stock: product.stockQuantity, // Ánh xạ từ stockQuantity sang stock
        imageUrl: product.photo 
-         ? `${API_BASE_URL}${product.photo.startsWith('/') ? product.photo : '/' + product.photo}` 
+         ? (product.photo.startsWith('http') || product.photo.startsWith('data:') ? product.photo : `${API_BASE_URL}${product.photo.startsWith('/') ? product.photo : '/' + product.photo}`) 
          : null // Đường dẫn uploads/products
      }));
      
@@ -257,7 +257,7 @@ const productService = {
          ...img,
          id: img.imageId, // Map ImageId to id for frontend consistency
          imageUrl: img.imageUrl 
-           ? `${API_BASE_URL}${img.imageUrl.startsWith('/') ? img.imageUrl : '/' + img.imageUrl}`
+           ? (img.imageUrl.startsWith('http') || img.imageUrl.startsWith('data:') ? img.imageUrl : `${API_BASE_URL}${img.imageUrl.startsWith('/') ? img.imageUrl : '/' + img.imageUrl}`)
            : null
        }));
      }
@@ -279,7 +279,7 @@ const productService = {
        ...img,
        id: img.imageId, // Map ImageId to id for frontend consistency
        imageUrl: img.imageUrl 
-         ? `${API_BASE_URL}${img.imageUrl.startsWith('/') ? img.imageUrl : '/' + img.imageUrl}`
+         ? (img.imageUrl.startsWith('http') || img.imageUrl.startsWith('data:') ? img.imageUrl : `${API_BASE_URL}${img.imageUrl.startsWith('/') ? img.imageUrl : '/' + img.imageUrl}`)
          : null
      }));
      
