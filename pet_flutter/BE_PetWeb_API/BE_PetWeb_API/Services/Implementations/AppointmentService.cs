@@ -414,13 +414,30 @@ namespace BE_PetWeb_API.Services.Implementations
                     var user = await _context.Users.FindAsync(userId);
                     if (user != null && !string.IsNullOrEmpty(user.Email))
                     {
-                        await _emailService.SendAppointmentConfirmationEmail(
-                            user.Email,
-                            user.FullName,
-                            appointment.AppointmentDate,
-                            service.Name,
-                            staff?.User?.FullName,
-                            appointment.AppointmentId);
+                        var emailStr = user.Email;
+                        var fullName = user.FullName;
+                        var apptDate = appointment.AppointmentDate;
+                        var srvName = service.Name;
+                        var stfName = staff?.User?.FullName;
+                        var apptId = appointment.AppointmentId;
+
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                await _emailService.SendAppointmentConfirmationEmail(
+                                    emailStr,
+                                    fullName,
+                                    apptDate,
+                                    srvName,
+                                    stfName,
+                                    apptId);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Failed to send confirmation email in background");
+                            }
+                        });
                     }
 
                     await transaction.CommitAsync();
@@ -682,14 +699,32 @@ namespace BE_PetWeb_API.Services.Implementations
 
                         if (user != null && !string.IsNullOrEmpty(user.Email))
                         {
-                            await _emailService.SendAppointmentUpdateEmail(
-                                user.Email,
-                                user.FullName,
-                                appointment.AppointmentDate,
-                                service.Name,
-                                staff?.User?.FullName,
-                                appointment.AppointmentId,
-                                appointment.Status);
+                            var emailStr = user.Email;
+                            var fullName = user.FullName;
+                            var apptDate = appointment.AppointmentDate;
+                            var srvName = service.Name;
+                            var stfName = staff?.User?.FullName;
+                            var apptId = appointment.AppointmentId;
+                            var apptStatus = appointment.Status;
+
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await _emailService.SendAppointmentUpdateEmail(
+                                        emailStr,
+                                        fullName,
+                                        apptDate,
+                                        srvName,
+                                        stfName,
+                                        apptId,
+                                        apptStatus);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, "Failed to send update email in background");
+                                }
+                            });
                         }
                     }
 
@@ -782,13 +817,29 @@ namespace BE_PetWeb_API.Services.Implementations
 
             if (user != null && !string.IsNullOrEmpty(user.Email))
             {
-                await _emailService.SendAppointmentCancellationEmail(
-                    user.Email,
-                    user.FullName,
-                    appointment.AppointmentDate,
-                    service.Name,
-                    appointment.AppointmentId,
-                    reason);
+                var emailStr = user.Email;
+                var fullName = user.FullName;
+                var apptDate = appointment.AppointmentDate;
+                var srvName = service.Name;
+                var apptId = appointment.AppointmentId;
+
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _emailService.SendAppointmentCancellationEmail(
+                            emailStr,
+                            fullName,
+                            apptDate,
+                            srvName,
+                            apptId,
+                            reason);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send cancellation email in background");
+                    }
+                });
             }
 
             return true;

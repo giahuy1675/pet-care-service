@@ -1,4 +1,4 @@
-﻿using BE_PetWeb_API.Services;
+using BE_PetWeb_API.Services;
 using BE_PetWeb_API.Services.Implementations;
 using BE_PetWeb_API.Services.Interfaces;
 
@@ -27,7 +27,7 @@ namespace BE_PetWeb_API.Extensions
             services.AddScoped<IReviewReplyService, ReviewReplyService>();
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<ICartService, CartService>();
-            services.AddScoped<IEmailService, EmailService>();
+            services.AddSingleton<IEmailService, EmailService>();
             services.AddScoped<IStaffScheduleService, StaffScheduleService>();
             services.AddScoped<IOneSignalChatService, OneSignalChatService>();
             services.AddScoped<IFirebaseMessagingService, FirebaseMessagingService>();
